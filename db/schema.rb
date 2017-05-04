@@ -233,6 +233,7 @@ ActiveRecord::Schema.define(version: 20170525174156) do
     t.string "coverage_regex"
     t.integer "auto_canceled_by_id"
     t.boolean "retried"
+    t.integer "artifacts_storage"
   end
 
   add_index "ci_builds", ["auto_canceled_by_id"], name: "index_ci_builds_on_auto_canceled_by_id", using: :btree
