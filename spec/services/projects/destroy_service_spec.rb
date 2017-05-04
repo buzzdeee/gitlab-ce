@@ -94,6 +94,17 @@ describe Projects::DestroyService, services: true do
     it_behaves_like 'deleting the project with pipeline and build'
   end
 
+  context 'without namespace and skip_repo' do
+    it 'deletes the project' do
+      admin = create(:admin)
+      allow_any_instance_of(Project).to receive(:namespace_id).and_return(nil)
+
+      destroy_project(project, admin, {})
+
+      expect(Project.unscoped.all).not_to include(project)
+    end
+  end
+
   describe 'container registry' do
     context 'when there are regular container repositories' do
       let(:container_repository) { create(:container_repository) }

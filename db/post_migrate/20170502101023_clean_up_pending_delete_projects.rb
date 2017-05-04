@@ -1,6 +1,5 @@
-# See http://doc.gitlab.com/ce/development/migration_style_guide.html
-# for more information on how to write migrations for GitLab.
-
+# This is the counterpart of RequeuePendingDeleteProjects and cleans all
+# projects with `pending_delete = true` and that do not have a namespace.
 class CleanUpPendingDeleteProjects < ActiveRecord::Migration
   include Gitlab::Database::MigrationHelpers
 
@@ -9,7 +8,22 @@ class CleanUpPendingDeleteProjects < ActiveRecord::Migration
   disable_ddl_transaction!
 
   def up
-    Project.unscoped.where(pending_delete: true).each { |project| delete_project(project, admin) }
+    admin = User.find_by(admin: true)
+    return unless admin
+
+    @offset = 0
+
+    loop do
+      ids = pending_delete_batch
+
+      break if ids.rows.count.zero?
+
+      args = ids.map { |id| [id['id'], admin.id, {}] }
+
+      NamespacelessProjectDestroyWorker.bulk_perform_async(args)
+
+      @offset += 1
+    end
   end
 
   def down
@@ -18,27 +32,19 @@ class CleanUpPendingDeleteProjects < ActiveRecord::Migration
 
   private
 
-  def delete_project(project)
-    project.team.truncate
-
-    unlink_fork(project) if project.forked?
-
-    [:events, :issues, :merge_requests, :labels, :milestones, :notes, :snippets].each do |thing|
-      project.send(thing).delete_all
-    end
-
-    # Override Project#remove_pages for this instance so it doesn't do anything
-    def project.remove_pages
-    end
-
-    project.destroy!
+  def pending_delete_batch
+    connection.exec_query(find_batch)
   end
 
-  def unlink_fork(project)
-    merge_requests = project.forked_from_project.merge_requests.opened.from_project(project)
+  BATCH_SIZE = 5000
 
-    merge_requests.update_all(state: 'closed')
-
-    project.forked_project_link.destroy
+  def find_batch
+    projects = Arel::Table.new(:projects)
+    projects.project(projects[:id]).
+      where(projects[:pending_delete].eq(true)).
+      where(projects[:namespace_id].eq(nil)).
+      skip(@offset * BATCH_SIZE).
+      take(BATCH_SIZE).
+      to_sql
   end
 end
