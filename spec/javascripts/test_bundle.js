@@ -14,8 +14,9 @@ Vue.config.productionTip = false;
 Vue.use(VueResource);
 
 // enable test fixtures
-jasmine.getFixtures().fixturesPath = '/base/spec/javascripts/fixtures';
-jasmine.getJSONFixtures().fixturesPath = '/base/spec/javascripts/fixtures';
+const fixturesPath = '/base/spec/javascripts/fixtures'
+jasmine.getFixtures().fixturesPath = fixturesPath;
+jasmine.getJSONFixtures().fixturesPath = fixturesPath;
 
 // globalize common libraries
 window.$ = window.jQuery = $;
@@ -63,6 +64,22 @@ const builtinVueHttpInterceptors = Vue.http.interceptors.slice();
 beforeEach(() => {
   // restore interceptors so we have no remaining ones from previous tests
   Vue.http.interceptors = builtinVueHttpInterceptors.slice();
+});
+
+beforeAll(() => {
+  const allowedAjaxUrls = [
+    fixturesPath,
+    window.location.origin,
+  ];
+
+  const openRequest = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function requestFallback(method, url) {
+    if (allowedAjaxUrls.find(allowedUrl => url.indexOf(allowedUrl) === 0)) {
+      return openRequest.apply(this, arguments);
+    }
+
+    fail(`Ajax request was not mocked: ${method} ${url}`);
+  };
 });
 
 // render all of our tests
