@@ -231,6 +231,25 @@ module API
         end
       end
 
+      resource :users, requirements: { user_id: %r{[^/]+} } do
+        desc 'Get a user projects' do
+          success Entities::BasicProjectDetails
+        end
+        params do
+          requires :user_id, type: String, desc: 'The ID or username of the user'
+          use :collection_params
+          use :statistics_params
+        end
+        get ":user_id/projects" do
+          user = find_user(params[:user_id])
+          not_found!('User') unless user
+
+          params[:user] = user
+
+          present_projects
+        end
+      end
+
       params do
         requires :id, type: String, desc: 'The ID of a project'
       end

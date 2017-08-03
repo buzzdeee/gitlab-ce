@@ -15,6 +15,19 @@ module API
           }
         end
 
+        def assign_file_vars!
+          authorize! :download_code, user_project
+
+          @commit = user_project.commit(params[:ref])
+          not_found!('Commit') unless @commit
+
+          @repo = user_project.repository
+          @blob = @repo.blob_at(@commit.sha, params[:file_path])
+
+          not_found!('File') unless @blob
+          @blob.load_all_data!
+        end
+
         def commit_response(attrs)
           {
             file_path: attrs[:file_path],

@@ -4,7 +4,6 @@ module API
       before { authenticate! }
 
       subscribable_types = {
-        'merge_request' => proc { |id| find_merge_request_with_access(id, :update_merge_request) },
         'merge_requests' => proc { |id| find_merge_request_with_access(id, :update_merge_request) },
         'issues' => proc { |id| find_project_issue(id) },
         'labels' => proc { |id| find_project_label(id) }
@@ -17,12 +16,12 @@ module API
       resource :projects, requirements: { id: %r{[^/]+} } do
         subscribable_types.each do |type, finder|
           type_singularized = type.singularize
-          entity_class = ::API::Entities.const_get(type_singularized.camelcase)
+          entity_class = Entities.const_get(type_singularized.camelcase)
 
           desc 'Subscribe to a resource' do
             success entity_class
           end
-          post ":id/#{type}/:subscribable_id/subscription" do
+          post ":id/#{type}/:subscribable_id/subscribe" do
             resource = instance_exec(params[:subscribable_id], &finder)
 
             if resource.subscribed?(current_user, user_project)
@@ -36,7 +35,7 @@ module API
           desc 'Unsubscribe from a resource' do
             success entity_class
           end
-          delete ":id/#{type}/:subscribable_id/subscription" do
+          post ":id/#{type}/:subscribable_id/unsubscribe" do
             resource = instance_exec(params[:subscribable_id], &finder)
 
             if !resource.subscribed?(current_user, user_project)

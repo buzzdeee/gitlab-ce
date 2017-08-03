@@ -23,28 +23,28 @@ module API
         end
 
         desc 'Get all project snippets' do
-          success ::API::V3::Entities::ProjectSnippet
+          success Entities::ProjectSnippet
         end
         params do
           use :pagination
         end
         get ":id/snippets" do
-          present paginate(snippets_for_current_user), with: ::API::V3::Entities::ProjectSnippet
+          present paginate(snippets_for_current_user), with: Entities::ProjectSnippet
         end
 
         desc 'Get a single project snippet' do
-          success ::API::V3::Entities::ProjectSnippet
+          success Entities::ProjectSnippet
         end
         params do
           requires :snippet_id, type: Integer, desc: 'The ID of a project snippet'
         end
         get ":id/snippets/:snippet_id" do
           snippet = snippets_for_current_user.find(params[:snippet_id])
-          present snippet, with: ::API::V3::Entities::ProjectSnippet
+          present snippet, with: Entities::ProjectSnippet
         end
 
         desc 'Create a new project snippet' do
-          success ::API::V3::Entities::ProjectSnippet
+          success Entities::ProjectSnippet
         end
         params do
           requires :title, type: String, desc: 'The title of the snippet'
@@ -66,14 +66,14 @@ module API
           render_spam_error! if snippet.spam?
 
           if snippet.persisted?
-            present snippet, with: ::API::V3::Entities::ProjectSnippet
+            present snippet, with: Entities::ProjectSnippet
           else
             render_validation_error!(snippet)
           end
         end
 
         desc 'Update an existing project snippet' do
-          success ::API::V3::Entities::ProjectSnippet
+          success Entities::ProjectSnippet
         end
         params do
           requires :snippet_id, type: Integer, desc: 'The ID of a project snippet'
@@ -120,8 +120,6 @@ module API
 
           authorize! :admin_project_snippet, snippet
           snippet.destroy
-
-          status(200)
         end
 
         desc 'Get a raw project snippet'
@@ -135,6 +133,22 @@ module API
           env['api.format'] = :txt
           content_type 'text/plain'
           present snippet.content
+        end
+
+        desc 'Get the user agent details for a project snippet' do
+          success Entities::UserAgentDetail
+        end
+        params do
+          requires :snippet_id, type: Integer, desc: 'The ID of a project snippet'
+        end
+        get ":id/snippets/:snippet_id/user_agent_detail" do
+          authenticated_as_admin!
+
+          snippet = Snippet.find_by!(id: params[:id])
+
+          return not_found!('UserAgentDetail') unless snippet.user_agent_detail
+
+          present snippet.user_agent_detail, with: Entities::UserAgentDetail
         end
       end
     end

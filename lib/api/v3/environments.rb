@@ -1,7 +1,7 @@
 module API
   module V3
     class Environments < Grape::API
-      include ::API::Helpers::CustomValidators
+      include Helpers::CustomValidators
       include PaginationParams
 
       before { authenticate! }

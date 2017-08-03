@@ -5,7 +5,7 @@ module API
 
       before { authenticate! }
 
-      helpers ::API::Helpers::MembersHelpers
+      helpers Helpers::MembersHelpers
 
       %w[group project].each do |source_type|
         params do
@@ -13,7 +13,7 @@ module API
         end
         resource source_type.pluralize, requirements: { id: %r{[^/]+} } do
           desc 'Gets a list of group or project members viewable by the authenticated user.' do
-            success ::API::Entities::Member
+            success Entities::Member
           end
           params do
             optional :query, type: String, desc: 'A query string to search for members'
@@ -25,11 +25,11 @@ module API
             users = source.users
             users = users.merge(User.search(params[:query])) if params[:query]
 
-            present paginate(users), with: ::API::Entities::Member, source: source
+            present paginate(users), with: Entities::Member, source: source
           end
 
           desc 'Gets a member of a group or project.' do
-            success ::API::Entities::Member
+            success Entities::Member
           end
           params do
             requires :user_id, type: Integer, desc: 'The user ID of the member'
@@ -40,11 +40,11 @@ module API
             members = source.members
             member = members.find_by!(user_id: params[:user_id])
 
-            present member.user, with: ::API::Entities::Member, member: member
+            present member.user, with: Entities::Member, member: member
           end
 
           desc 'Adds a member to a group or project.' do
-            success ::API::Entities::Member
+            success Entities::Member
           end
           params do
             requires :user_id, type: Integer, desc: 'The user ID of the new member'
@@ -78,7 +78,7 @@ module API
           end
 
           desc 'Updates a member of a group or project.' do
-            success ::API::Entities::Member
+            success Entities::Member
           end
           params do
             requires :user_id, type: Integer, desc: 'The user ID of the new member'
@@ -92,7 +92,7 @@ module API
             member = source.members.find_by!(user_id: params.delete(:user_id))
 
             if member.update_attributes(declared_params(include_missing: false))
-              present member.user, with: ::API::Entities::Member, member: member
+              present member.user, with: Entities::Member, member: member
             else
               # This is to ensure back-compatibility but 400 behavior should be used
               # for all validation errors in 9.0!

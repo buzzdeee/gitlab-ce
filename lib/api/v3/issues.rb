@@ -228,6 +228,37 @@ module API
           status(200)
           issue.destroy
         end
+
+        desc 'List merge requests closing issue'  do
+          success Entities::MergeRequestBasic
+        end
+        params do
+          requires :issue_iid, type: Integer, desc: 'The internal ID of a project issue'
+        end
+        get ':id/issues/:issue_iid/closed_by' do
+          issue = find_project_issue(params[:issue_iid])
+
+          merge_request_ids = MergeRequestsClosingIssues.where(issue_id: issue).select(:merge_request_id)
+          merge_requests = MergeRequestsFinder.new(current_user, project_id: user_project.id).execute.where(id: merge_request_ids)
+
+          present paginate(merge_requests), with: Entities::MergeRequestBasic, current_user: current_user, project: user_project
+        end
+
+        desc 'Get the user agent details for an issue' do
+          success Entities::UserAgentDetail
+        end
+        params do
+          requires :issue_iid, type: Integer, desc: 'The internal ID of a project issue'
+        end
+        get ":id/issues/:issue_iid/user_agent_detail" do
+          authenticated_as_admin!
+
+          issue = find_project_issue(params[:issue_iid])
+
+          return not_found!('UserAgentDetail') unless issue.user_agent_detail
+
+          present issue.user_agent_detail, with: Entities::UserAgentDetail
+        end
       end
     end
   end

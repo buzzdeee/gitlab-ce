@@ -13,7 +13,7 @@ module API
       end
       resource :projects, requirements: { id: %r{[^/]+} } do
         desc 'Get a project repository commits' do
-          success ::API::Entities::RepoCommit
+          success Entities::RepoCommit
         end
         params do
           optional :ref_name, type: String, desc: 'The name of a repository branch or tag, if not given the default branch is used'
@@ -34,11 +34,11 @@ module API
                                                     after: params[:since],
                                                     before: params[:until])
 
-          present commits, with: ::API::Entities::RepoCommit
+          present commits, with: Entities::RepoCommit
         end
 
         desc 'Commit multiple file changes as one commit' do
-          success ::API::Entities::RepoCommitDetail
+          success Entities::RepoCommitDetail
           detail 'This feature was introduced in GitLab 8.13'
         end
         params do
@@ -59,14 +59,14 @@ module API
 
           if result[:status] == :success
             commit_detail = user_project.repository.commits(result[:result], limit: 1).first
-            present commit_detail, with: ::API::Entities::RepoCommitDetail
+            present commit_detail, with: Entities::RepoCommitDetail
           else
             render_api_error!(result[:message], 400)
           end
         end
 
         desc 'Get a specific commit of a project' do
-          success ::API::Entities::RepoCommitDetail
+          success Entities::RepoCommitDetail
           failure [[404, 'Not Found']]
         end
         params do
@@ -77,7 +77,7 @@ module API
 
           not_found! "Commit" unless commit
 
-          present commit, with: ::API::Entities::RepoCommitDetail
+          present commit, with: Entities::RepoCommitDetail
         end
 
         desc 'Get the diff for a specific commit of a project' do
@@ -95,7 +95,7 @@ module API
         end
 
         desc "Get a commit's comments" do
-          success ::API::Entities::CommitNote
+          success Entities::CommitNote
           failure [[404, 'Not Found']]
         end
         params do
@@ -108,12 +108,12 @@ module API
           not_found! 'Commit' unless commit
           notes = Note.where(commit_id: commit.id).order(:created_at)
 
-          present paginate(notes), with: ::API::Entities::CommitNote
+          present paginate(notes), with: Entities::CommitNote
         end
 
         desc 'Cherry pick commit into a branch' do
           detail 'This feature was introduced in GitLab 8.15'
-          success ::API::Entities::RepoCommit
+          success Entities::RepoCommit
         end
         params do
           requires :sha, type: String, desc: 'A commit sha to be cherry picked'
@@ -138,14 +138,14 @@ module API
 
           if result[:status] == :success
             branch = user_project.repository.find_branch(params[:branch])
-            present user_project.repository.commit(branch.dereferenced_target), with: ::API::Entities::RepoCommit
+            present user_project.repository.commit(branch.dereferenced_target), with: Entities::RepoCommit
           else
             render_api_error!(result[:message], 400)
           end
         end
 
         desc 'Post comment to commit' do
-          success ::API::Entities::CommitNote
+          success Entities::CommitNote
         end
         params do
           requires :sha, type: String, regexp: /\A\h{6,40}\z/, desc: "The commit's SHA"
@@ -185,7 +185,7 @@ module API
           note = ::Notes::CreateService.new(user_project, current_user, opts).execute
 
           if note.save
-            present note, with: ::API::Entities::CommitNote
+            present note, with: Entities::CommitNote
           else
             render_api_error!("Failed to save note #{note.errors.messages}", 400)
           end

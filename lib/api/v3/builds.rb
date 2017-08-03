@@ -26,7 +26,7 @@ module API
         end
 
         desc 'Get a project builds' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           use :optional_scope
@@ -36,11 +36,11 @@ module API
           builds = user_project.builds.order('id DESC')
           builds = filter_builds(builds, params[:scope])
 
-          present paginate(builds), with: ::API::V3::Entities::Build
+          present paginate(builds), with: Entities::Build
         end
 
         desc 'Get builds for a specific commit of a project' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :sha, type: String, desc: 'The SHA id of a commit'
@@ -56,11 +56,11 @@ module API
           builds = user_project.builds.where(pipeline: pipelines).order('id DESC')
           builds = filter_builds(builds, params[:scope])
 
-          present paginate(builds), with: ::API::V3::Entities::Build
+          present paginate(builds), with: Entities::Build
         end
 
         desc 'Get a specific build of a project' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :build_id, type: Integer, desc: 'The ID of a build'
@@ -70,7 +70,7 @@ module API
 
           build = get_build!(params[:build_id])
 
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
 
         desc 'Download the artifacts file from build' do
@@ -125,7 +125,7 @@ module API
         end
 
         desc 'Cancel a specific build of a project' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :build_id, type: Integer, desc: 'The ID of a build'
@@ -138,11 +138,11 @@ module API
 
           build.cancel
 
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
 
         desc 'Retry a specific build of a project' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :build_id, type: Integer, desc: 'The ID of a build'
@@ -156,11 +156,11 @@ module API
 
           build = Ci::Build.retry(build, current_user)
 
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
 
         desc 'Erase build (remove artifacts and build trace)' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :build_id, type: Integer, desc: 'The ID of a build'
@@ -173,11 +173,11 @@ module API
           return forbidden!('Build is not erasable!') unless build.erasable?
 
           build.erase(erased_by: current_user)
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
 
         desc 'Keep the artifacts to prevent them from being deleted' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
         end
         params do
           requires :build_id, type: Integer, desc: 'The ID of a build'
@@ -192,11 +192,11 @@ module API
           build.keep_artifacts!
 
           status 200
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
 
         desc 'Trigger a manual build' do
-          success ::API::V3::Entities::Build
+          success Entities::Build
           detail 'This feature was added in GitLab 8.11'
         end
         params do
@@ -212,7 +212,7 @@ module API
           build.play(current_user)
 
           status 200
-          present build, with: ::API::V3::Entities::Build
+          present build, with: Entities::Build
         end
       end
 

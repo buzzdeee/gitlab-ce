@@ -6,11 +6,11 @@ module API
       included do
         helpers do
           def issuable_name
-            declared_params.key?(:issue_id) ? 'issue' : 'merge_request'
+            declared_params.key?(:issue_iid) ? 'issue' : 'merge_request'
           end
 
           def issuable_key
-            "#{issuable_name}_id".to_sym
+            "#{issuable_name}_iid".to_sym
           end
 
           def update_issuable_key
@@ -38,7 +38,7 @@ module API
 
             issuable = update_service.new(user_project, current_user, custom_params).execute(load_issuable)
             if issuable.valid?
-              present issuable, with: ::API::Entities::IssuableTimeStats
+              present issuable, with: Entities::IssuableTimeStats
             else
               render_validation_error!(issuable)
             end
@@ -51,7 +51,7 @@ module API
 
         issuable_name            = name.end_with?('Issues') ? 'issue' : 'merge_request'
         issuable_collection_name = issuable_name.pluralize
-        issuable_key             = "#{issuable_name}_id".to_sym
+        issuable_key             = "#{issuable_name}_iid".to_sym
 
         desc "Set a time estimate for a project #{issuable_name}"
         params do
@@ -108,7 +108,7 @@ module API
         get ":id/#{issuable_collection_name}/:#{issuable_key}/time_stats" do
           authorize! read_issuable_key, load_issuable
 
-          present load_issuable, with: ::API::Entities::IssuableTimeStats
+          present load_issuable, with: Entities::IssuableTimeStats
         end
       end
     end

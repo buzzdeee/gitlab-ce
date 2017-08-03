@@ -15,7 +15,7 @@ module API
           noteables_str = noteable_type.to_s.underscore.pluralize
 
           desc 'Get a list of project +noteable+ notes' do
-            success ::API::V3::Entities::Note
+            success Entities::Note
           end
           params do
             requires :noteable_id, type: Integer, desc: 'The ID of the noteable'
@@ -36,14 +36,14 @@ module API
                 # array returned, but this is really a edge-case.
                 paginate(noteable.notes)
                 .reject { |n| n.cross_reference_not_visible_for?(current_user) }
-              present notes, with: ::API::V3::Entities::Note
+              present notes, with: Entities::Note
             else
               not_found!("Notes")
             end
           end
 
           desc 'Get a single +noteable+ note' do
-            success ::API::V3::Entities::Note
+            success Entities::Note
           end
           params do
             requires :note_id, type: Integer, desc: 'The ID of a note'
@@ -55,14 +55,14 @@ module API
             can_read_note = can?(current_user, noteable_read_ability_name(noteable), noteable) && !note.cross_reference_not_visible_for?(current_user)
 
             if can_read_note
-              present note, with: ::API::V3::Entities::Note
+              present note, with: Entities::Note
             else
               not_found!("Note")
             end
           end
 
           desc 'Create a new +noteable+ note' do
-            success ::API::V3::Entities::Note
+            success Entities::Note
           end
           params do
             requires :noteable_id, type: Integer, desc: 'The ID of the noteable'
@@ -73,7 +73,7 @@ module API
             opts = {
               note: params[:body],
               noteable_type: noteables_str.classify,
-              noteable_id: params[:noteable_id]
+              noteable_id: noteable.id
             }
 
             noteable = user_project.public_send(noteables_str.to_sym).find(params[:noteable_id]) # rubocop:disable GitlabSecurity/PublicSend
@@ -84,8 +84,9 @@ module API
               end
 
               note = ::Notes::CreateService.new(user_project, current_user, opts).execute
+
               if note.valid?
-                present note, with: ::API::V3::Entities.const_get(note.class.name)
+                present note, with: Entities.const_get(note.class.name)
               else
                 not_found!("Note #{note.errors.messages}")
               end
@@ -95,7 +96,7 @@ module API
           end
 
           desc 'Update an existing +noteable+ note' do
-            success ::API::V3::Entities::Note
+            success Entities::Note
           end
           params do
             requires :noteable_id, type: Integer, desc: 'The ID of the noteable'
@@ -114,14 +115,14 @@ module API
             note = ::Notes::UpdateService.new(user_project, current_user, opts).execute(note)
 
             if note.valid?
-              present note, with: ::API::V3::Entities::Note
+              present note, with: Entities::Note
             else
               render_api_error!("Failed to save note #{note.errors.messages}", 400)
             end
           end
 
           desc 'Delete a +noteable+ note' do
-            success ::API::V3::Entities::Note
+            success Entities::Note
           end
           params do
             requires :noteable_id, type: Integer, desc: 'The ID of the noteable'

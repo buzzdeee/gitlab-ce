@@ -108,26 +108,6 @@ module API
             desc: 'Enable SSL verification for communication'
           }
         ],
-        'builds-email' => [
-          {
-            required: true,
-            name: :recipients,
-            type: String,
-            desc: 'Comma-separated list of recipient email addresses'
-          },
-          {
-            required: false,
-            name: :add_pusher,
-            type: Boolean,
-            desc: 'Add pusher to recipients list'
-          },
-          {
-            required: false,
-            name: :notify_only_broken_builds,
-            type: Boolean,
-            desc: 'Notify only broken builds'
-          }
-        ],
         'campfire' => [
           {
             required: true,
@@ -325,13 +305,13 @@ module API
             required: true,
             name: :url,
             type: String,
-            desc: 'The URL to the JIRA project which is being linked to this GitLab project, e.g., https://jira.example.com'
+            desc: 'The base URL to the JIRA instance web interface which is being linked to this GitLab project. E.g., https://jira.example.com'
           },
           {
-            required: true,
-            name: :project_key,
+            required: false,
+            name: :api_url,
             type: String,
-            desc: 'The short identifier for your JIRA project, all uppercase, e.g., PROJ'
+            desc: 'The base URL to the JIRA instance API. Web URL value will be used if not set. E.g., https://jira-api.example.com'
           },
           {
             required: false,
@@ -404,9 +384,9 @@ module API
           },
           {
             required: false,
-            name: :notify_only_broken_builds,
+            name: :notify_only_broken_pipelines,
             type: Boolean,
-            desc: 'Notify only broken builds'
+            desc: 'Notify only broken pipelines'
           }
         ],
         'pivotaltracker' => [
@@ -421,6 +401,14 @@ module API
             name: :restrict_to_branch,
             type: String,
             desc: 'Comma-separated list of branches which will be automatically inspected. Leave blank to include all branches.'
+          }
+        ],
+        'prometheus' => [
+          {
+            required: true,
+            name: :api_url,
+            type: String,
+            desc: 'Prometheus API Base URL, like http://prometheus.example.com/'
           }
         ],
         'pushover' => [
@@ -502,10 +490,12 @@ module API
           }
         ],
         'microsoft-teams' => [
-          required: true,
-          name: :webhook,
-          type: String,
-          desc: 'The Microsoft Teams webhook. e.g. https://outlook.office.com/webhook/…'
+          {
+            required: true,
+            name: :webhook,
+            type: String,
+            desc: 'The Microsoft Teams webhook. e.g. https://outlook.office.com/webhook/…'
+          }
         ],
         'mattermost' => [
           {
@@ -543,6 +533,55 @@ module API
         ]
       }
 
+      service_classes = [
+        AsanaService,
+        AssemblaService,
+        BambooService,
+        BugzillaService,
+        BuildkiteService,
+        CampfireService,
+        CustomIssueTrackerService,
+        DroneCiService,
+        EmailsOnPushService,
+        ExternalWikiService,
+        FlowdockService,
+        GemnasiumService,
+        HipchatService,
+        IrkerService,
+        JiraService,
+        KubernetesService,
+        MattermostSlashCommandsService,
+        SlackSlashCommandsService,
+        PipelinesEmailService,
+        PivotaltrackerService,
+        PrometheusService,
+        PushoverService,
+        RedmineService,
+        SlackService,
+        MattermostService,
+        MicrosoftTeamsService,
+        TeamcityService
+      ]
+
+      if Rails.env.development?
+        services['mock-ci'] = [
+          {
+            required: true,
+            name: :mock_service_url,
+            type: String,
+            desc: 'URL to the mock service'
+          }
+        ]
+        services['mock-deployment'] = []
+        services['mock-monitoring'] = []
+
+        service_classes += [
+          MockCiService,
+          MockDeploymentService,
+          MockMonitoringService
+        ]
+      end
+
       trigger_services = {
         'mattermost-slash-commands' => [
           {
@@ -575,6 +614,42 @@ module API
           end
         end
 
+        services.each do |service_slug, settings|
+          desc "Set #{service_slug} service for project"
+          params do
+            service_classes.each do |service|
+              event_names = service.try(:event_names) || next
+              event_names.each do |event_name|
+                services[service.to_param.tr("_", "-")] << {
+                  required: false,
+                  name: event_name.to_sym,
+                  type: String,
+                  desc: ServicesHelper.service_event_description(event_name)
+                }
+              end
+            end
+            services.freeze
+
+            settings.each do |setting|
+              if setting[:required]
+                requires setting[:name], type: setting[:type], desc: setting[:desc]
+              else
+                optional setting[:name], type: setting[:type], desc: setting[:desc]
+              end
+            end
+          end
+          put ":id/services/#{service_slug}" do
+            service = user_project.find_or_initialize_service(service_slug.underscore)
+            service_params = declared_params(include_missing: false).merge(active: true)
+
+            if service.update_attributes(service_params)
+              present service, with: Entities::ProjectService, include_passwords: current_user.admin?
+            else
+              render_api_error!('400 Bad Request', 400)
+            end
+          end
+        end
+
         desc "Delete a service for project"
         params do
           requires :service_slug, type: String, values: services.keys, desc: 'The name of the service'
@@ -586,10 +661,7 @@ module API
             hash.merge!(key => nil)
           end
 
-          if service.update_attributes(attrs.merge(active: false))
-            status(200)
-            true
-          else
+          unless service.update_attributes(attrs.merge(active: false))
             render_api_error!('400 Bad Request', 400)
           end
         end

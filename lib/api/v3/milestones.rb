@@ -20,7 +20,7 @@ module API
       end
       resource :projects, requirements: { id: %r{[^/]+} } do
         desc 'Get a list of project milestones' do
-          success ::API::Entities::Milestone
+          success Entities::Milestone
         end
         params do
           optional :state, type: String, values: %w[active closed all], default: 'all',
@@ -35,11 +35,11 @@ module API
           milestones = filter_milestones_state(milestones, params[:state])
           milestones = filter_by_iid(milestones, params[:iid]) if params[:iid].present?
 
-          present paginate(milestones), with: ::API::Entities::Milestone
+          present paginate(milestones), with: Entities::Milestone
         end
 
         desc 'Get all issues for a single project milestone' do
-          success ::API::V3::Entities::Issue
+          success Entities::Issue
         end
         params do
           requires :milestone_id, type: Integer, desc: 'The ID of a project milestone'
@@ -56,7 +56,7 @@ module API
           }
 
           issues = IssuesFinder.new(current_user, finder_params).execute
-          present paginate(issues), with: ::API::V3::Entities::Issue, current_user: current_user, project: user_project
+          present paginate(issues), with: Entities::Issue, current_user: current_user, project: user_project
         end
       end
     end

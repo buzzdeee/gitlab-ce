@@ -27,7 +27,7 @@ module API
       end
       resource :projects, requirements: { id: %r{[^/]+} } do
         desc 'Get project hooks' do
-          success ::API::V3::Entities::ProjectHook
+          success Entities::ProjectHook
         end
         params do
           use :pagination
@@ -39,18 +39,18 @@ module API
         end
 
         desc 'Get a project hook' do
-          success ::API::V3::Entities::ProjectHook
+          success Entities::ProjectHook
         end
         params do
           requires :hook_id, type: Integer, desc: 'The ID of a project hook'
         end
         get ":id/hooks/:hook_id" do
           hook = user_project.hooks.find(params[:hook_id])
-          present hook, with: ::API::V3::Entities::ProjectHook
+          present hook, with: Entities::ProjectHook
         end
 
         desc 'Add hook to project' do
-          success ::API::V3::Entities::ProjectHook
+          success Entities::ProjectHook
         end
         params do
           use :project_hook_properties

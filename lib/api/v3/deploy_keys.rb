@@ -7,7 +7,7 @@ module API
         authenticated_as_admin!
 
         keys = DeployKey.all
-        present keys, with: ::API::Entities::SSHKey
+        present keys, with: Entities::SSHKey
       end
 
       params do
@@ -18,25 +18,25 @@ module API
 
         %w(keys deploy_keys).each do |path|
           desc "Get a specific project's deploy keys" do
-            success ::API::Entities::SSHKey
+            success Entities::SSHKey
           end
           get ":id/#{path}" do
-            present user_project.deploy_keys, with: ::API::Entities::SSHKey
+            present user_project.deploy_keys, with: Entities::SSHKey
           end
 
           desc 'Get single deploy key' do
-            success ::API::Entities::SSHKey
+            success Entities::SSHKey
           end
           params do
             requires :key_id, type: Integer, desc: 'The ID of the deploy key'
           end
           get ":id/#{path}/:key_id" do
             key = user_project.deploy_keys.find params[:key_id]
-            present key, with: ::API::Entities::SSHKey
+            present key, with: Entities::SSHKey
           end
 
           desc 'Add new deploy key to currently authenticated user' do
-            success ::API::Entities::SSHKey
+            success Entities::SSHKey
           end
           params do
             requires :key, type: String, desc: 'The new deploy key'
@@ -49,7 +49,7 @@ module API
             # Check for an existing key joined to this project
             key = user_project.deploy_keys.find_by(key: params[:key])
             if key
-              present key, with: ::API::Entities::SSHKey
+              present key, with: Entities::SSHKey
               break
             end
 
@@ -57,14 +57,14 @@ module API
             key = current_user.accessible_deploy_keys.find_by(key: params[:key])
             if key
               user_project.deploy_keys << key
-              present key, with: ::API::Entities::SSHKey
+              present key, with: Entities::SSHKey
               break
             end
 
             # Create a new deploy key
             key = DeployKey.new(declared_params(include_missing: false))
             if key.valid? && user_project.deploy_keys << key
-              present key, with: ::API::Entities::SSHKey
+              present key, with: Entities::SSHKey
             else
               render_validation_error!(key)
             end
@@ -72,7 +72,7 @@ module API
 
           desc 'Enable a deploy key for a project' do
             detail 'This feature was added in GitLab 8.11'
-            success ::API::Entities::SSHKey
+            success Entities::SSHKey
           end
           params do
             requires :key_id, type: Integer, desc: 'The ID of the deploy key'
@@ -82,7 +82,7 @@ module API
                                                           current_user, declared_params).execute
 
             if key
-              present key, with: ::API::Entities::SSHKey
+              present key, with: Entities::SSHKey
             else
               not_found!('Deploy Key')
             end
@@ -90,7 +90,7 @@ module API
 
           desc 'Disable a deploy key for a project' do
             detail 'This feature was added in GitLab 8.11'
-            success ::API::Entities::SSHKey
+            success Entities::SSHKey
           end
           params do
             requires :key_id, type: Integer, desc: 'The ID of the deploy key'
@@ -99,7 +99,7 @@ module API
             key = user_project.deploy_keys_projects.find_by(deploy_key_id: params[:key_id])
             key.destroy
 
-            present key.deploy_key, with: ::API::Entities::SSHKey
+            present key.deploy_key, with: Entities::SSHKey
           end
 
           desc 'Delete deploy key for a project' do
