@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Notes do
+describe API::V3::V3::Notes do
   let(:user) { create(:user) }
   let!(:project) { create(:project, :public, namespace: user.namespace) }
   let!(:issue) { create(:issue, project: project, author: user) }

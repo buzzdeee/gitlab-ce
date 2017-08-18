@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Lint do
+describe API::V3::V3::Lint do
   describe 'POST /ci/lint' do
     context 'with valid .gitlab-ci.yaml content' do
       let(:yaml_content) do

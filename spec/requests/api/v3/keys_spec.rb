@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Keys do
+describe API::V3::V3::Keys do
   let(:user)  { create(:user) }
   let(:admin) { create(:admin) }
   let(:key)   { create(:key, user: user) }

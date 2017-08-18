@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Events do
+describe API::V3::V3::Events do
   include ApiHelpers
   let(:user) { create(:user) }
   let(:non_member) { create(:user) }

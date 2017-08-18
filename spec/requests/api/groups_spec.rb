@@ -10,9 +10,9 @@ describe API::Groups, api: true  do
   let(:admin) { create(:admin) }
   let!(:group1) { create(:group, avatar: File.open(uploaded_image_temp_path)) }
   let!(:group2) { create(:group, :private) }
-  let!(:project1) { create(:empty_project, namespace: group1) }
-  let!(:project2) { create(:empty_project, namespace: group2) }
-  let!(:project3) { create(:empty_project, namespace: group1, path: 'test', visibility_level: Gitlab::VisibilityLevel::PRIVATE) }
+  let!(:project1) { create(:project, namespace: group1) }
+  let!(:project2) { create(:project, namespace: group2) }
+  let!(:project3) { create(:project, namespace: group1, path: 'test', visibility_level: Gitlab::VisibilityLevel::PRIVATE) }
 
   before do
     group1.add_owner(user1)
@@ -163,7 +163,7 @@ describe API::Groups, api: true  do
   describe "GET /groups/:id" do
     context "when authenticated as user" do
       it "returns one of user1's groups" do
-        project = create(:empty_project, namespace: group2, path: 'Foo')
+        project = create(:project, namespace: group2, path: 'Foo')
         create(:project_group_link, project: project, group: group1)
 
         get api("/groups/#{group1.id}", user1)
@@ -176,9 +176,6 @@ describe API::Groups, api: true  do
         expect(json_response['visibility_level']).to eq(group1.visibility_level)
         expect(json_response['avatar_url']).to eq(group1.avatar_url)
         expect(json_response['web_url']).to eq(group1.web_url)
-        expect(json_response['request_access_enabled']).to eq(group1.request_access_enabled)
-        expect(json_response['full_name']).to eq(group1.full_name)
-        expect(json_response['full_path']).to eq(group1.full_path)
         expect(json_response['projects']).to be_an Array
         expect(json_response['projects'].length).to eq(2)
         expect(json_response['shared_projects']).to be_an Array
@@ -290,7 +287,7 @@ describe API::Groups, api: true  do
         expect(json_response.length).to eq(2)
         project_names = json_response.map { |proj| proj['name' ] }
         expect(project_names).to match_array([project1.name, project3.name])
-        expect(json_response.first['visibility_level']).to be_present
+        expect(json_response.first['default_branch']).to be_present
       end
 
       it "returns the group's projects with simple representation" do
@@ -300,11 +297,11 @@ describe API::Groups, api: true  do
         expect(json_response.length).to eq(2)
         project_names = json_response.map { |proj| proj['name' ] }
         expect(project_names).to match_array([project1.name, project3.name])
-        expect(json_response.first['visibility_level']).not_to be_present
+        expect(json_response.first['default_branch']).not_to be_present
       end
 
       it 'filters the groups projects' do
-        public_project = create(:empty_project, :public, path: 'test1', group: group1)
+        public_project = create(:project, :public, path: 'test1', group: group1)
 
         get api("/groups/#{group1.id}/projects", user1), visibility: 'public'
 
@@ -326,7 +323,7 @@ describe API::Groups, api: true  do
         expect(response).to have_http_status(404)
       end
 
-      it "only returns projects to which user has access" do
+      it "should only return projects to which user has access" do
         project3.team << [user3, :developer]
 
         get api("/groups/#{group1.id}/projects", user3)
@@ -338,7 +335,7 @@ describe API::Groups, api: true  do
     end
 
     context "when authenticated as admin" do
-      it "returns any existing group" do
+      it "should return any existing group" do
         get api("/groups/#{group2.id}/projects", admin)
 
         expect(response).to have_http_status(200)
@@ -346,7 +343,7 @@ describe API::Groups, api: true  do
         expect(json_response.first['name']).to eq(project2.name)
       end
 
-      it "does not return a non existing group" do
+      it "should not return a non existing group" do
         get api("/groups/1328/projects", admin)
 
         expect(response).to have_http_status(404)
@@ -354,7 +351,7 @@ describe API::Groups, api: true  do
     end
 
     context 'when using group path in URL' do
-      it 'returns any existing group' do
+      it 'should return any existing group' do
         get api("/groups/#{group1.path}/projects", admin)
 
         expect(response).to have_http_status(200)
@@ -465,7 +462,7 @@ describe API::Groups, api: true  do
   end
 
   describe "POST /groups/:id/projects/:project_id" do
-    let(:project) { create(:empty_project) }
+    let(:project) { create(:project) }
     let(:project_path) { "#{project.namespace.path}%2F#{project.path}" }
 
     before(:each) do

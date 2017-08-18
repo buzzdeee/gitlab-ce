@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::PipelineSchedules do
+describe API::V3::V3::PipelineSchedules do
   set(:developer) { create(:user) }
   set(:user) { create(:user) }
   set(:project) { create(:project, :repository) }

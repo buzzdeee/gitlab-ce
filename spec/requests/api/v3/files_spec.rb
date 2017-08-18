@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Files do
+describe API::V3::V3::Files do
   let(:user) { create(:user) }
   let!(:project) { create(:project, :repository, namespace: user.namespace ) }
   let(:guest) { create(:user) { |u| project.add_guest(u) } }

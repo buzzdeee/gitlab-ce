@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Triggers do
+describe API::V3::V3::Triggers do
   let(:user) { create(:user) }
   let(:user2) { create(:user) }
   let!(:trigger_token) { 'secure_token' }

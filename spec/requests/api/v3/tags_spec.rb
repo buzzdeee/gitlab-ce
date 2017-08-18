@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Tags do
+describe API::V3::V3::Tags do
   let(:user) { create(:user) }
   let(:guest) { create(:user).tap { |u| project.add_guest(u) } }
   let(:project) { create(:project, :repository, creator: user, path: 'my.project') }

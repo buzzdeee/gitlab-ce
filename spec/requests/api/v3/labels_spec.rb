@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Labels do
+describe API::V3::V3::Labels do
   let(:user) { create(:user) }
   let(:project) { create(:project, creator_id: user.id, namespace: user.namespace) }
   let!(:label1) { create(:label, title: 'label1', project: project) }

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Features do
+describe API::V3::V3::Features do
   let(:user)  { create(:user) }
   let(:admin) { create(:admin) }
 

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Runners do
+describe API::V3::V3::Runners do
   let(:admin) { create(:user, :admin) }
   let(:user) { create(:user) }
   let(:user2) { create(:user) }

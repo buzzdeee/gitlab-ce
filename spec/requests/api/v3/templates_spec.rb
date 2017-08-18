@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Templates do
+describe API::V3::V3::Templates do
   context 'the Template Entity' do
     before do
       get v3_api('/templates/gitignores/Ruby')

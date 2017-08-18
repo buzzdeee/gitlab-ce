@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
 
-describe API::V3::Projects do
+describe API::V3::V3::Projects do
   include Gitlab::CurrentSettings
 
   let(:user) { create(:user) }

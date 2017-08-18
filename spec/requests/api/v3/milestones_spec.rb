@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Milestones do
+describe API::V3::V3::Milestones do
   let(:user) { create(:user) }
   let!(:project) { create(:project, namespace: user.namespace ) }
   let!(:closed_milestone) { create(:closed_milestone, project: project) }

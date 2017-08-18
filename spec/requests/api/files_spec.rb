@@ -3,8 +3,8 @@ require 'spec_helper'
 describe API::Files, api: true  do
   include ApiHelpers
   let(:user) { create(:user) }
-  let!(:project) { create(:project, :repository, namespace: user.namespace ) }
-  let(:guest) { create(:user) { |u| project.add_guest(u) } }
+  let!(:project) { create(:project, namespace: user.namespace ) }
+  let(:guest) { create(:user).tap { |u| create(:project_member, :guest, user: u, project: project) } }
   let(:file_path) { 'files/ruby/popen.rb' }
   let(:params) do
     {
@@ -145,20 +145,6 @@ describe API::Files, api: true  do
         last_commit = project.repository.commit.raw
         expect(last_commit.author_email).to eq(author_email)
         expect(last_commit.author_name).to eq(author_name)
-      end
-    end
-
-    context 'when the repo is empty' do
-      let!(:project) { create(:project_empty_repo, namespace: user.namespace ) }
-
-      it "creates a new file in project repo" do
-        post api("/projects/#{project.id}/repository/files", user), valid_params
-
-        expect(response).to have_http_status(201)
-        expect(json_response['file_path']).to eq('newfile.rb')
-        last_commit = project.repository.commit.raw
-        expect(last_commit.author_email).to eq(user.email)
-        expect(last_commit.author_name).to eq(user.name)
       end
     end
   end

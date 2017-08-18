@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Boards do
+describe API::V3::V3::Boards do
   let(:user)        { create(:user) }
   let(:user2)       { create(:user) }
   let(:non_member)  { create(:user) }

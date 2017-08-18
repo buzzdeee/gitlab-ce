@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Session do
+describe API::V3::V3::Session do
   let(:user) { create(:user) }
 
   describe "POST /session" do

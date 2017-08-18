@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe API::V3::ProjectSnippets do
+describe API::V3::V3::ProjectSnippets do
   let(:project) { create(:project, :public) }
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }

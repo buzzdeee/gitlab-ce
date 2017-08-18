@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Members do
+describe API::V3::V3::Members do
   let(:master) { create(:user, username: 'master_user') }
   let(:developer) { create(:user) }
   let(:access_requester) { create(:user) }

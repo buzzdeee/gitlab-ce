@@ -5,7 +5,7 @@ describe API::Builds, api: true do
 
   let(:user) { create(:user) }
   let(:api_user) { user }
-  let!(:project) { create(:project, :repository, creator: user, public_builds: false) }
+  let!(:project) { create(:project, creator_id: user.id, public_builds: false) }
   let!(:developer) { create(:project_member, :developer, user: user, project: project) }
   let(:reporter) { create(:project_member, :reporter, project: project) }
   let(:guest) { create(:project_member, :guest, project: project) }
@@ -67,7 +67,7 @@ describe API::Builds, api: true do
     context 'unauthorized user' do
       let(:api_user) { nil }
 
-      it 'does not return project builds' do
+      it 'should not return project builds' do
         expect(response).to have_http_status(401)
       end
     end
@@ -86,7 +86,7 @@ describe API::Builds, api: true do
 
     context 'when commit exists in repository' do
       context 'when user is authorized' do
-        context 'when pipeline has jobs' do
+        context 'when pipeline has builds' do
           before do
             create(:ci_pipeline, project: project, sha: project.commit.id)
             create(:ci_build, pipeline: pipeline)
@@ -95,7 +95,7 @@ describe API::Builds, api: true do
             get api("/projects/#{project.id}/repository/commits/#{project.commit.id}/builds", api_user)
           end
 
-          it 'returns project jobs for specific commit' do
+          it 'returns project builds for specific commit' do
             expect(response).to have_http_status(200)
             expect(json_response).to be_an Array
             expect(json_response.size).to eq 2
@@ -111,7 +111,7 @@ describe API::Builds, api: true do
           end
         end
 
-        context 'when pipeline has no jobs' do
+        context 'when pipeline has no builds' do
           before do
             branch_head = project.commit('feature').id
             get api("/projects/#{project.id}/repository/commits/#{branch_head}/builds", api_user)
@@ -133,7 +133,7 @@ describe API::Builds, api: true do
           get api("/projects/#{project.id}/repository/commits/#{project.commit.id}/builds", nil)
         end
 
-        it 'does not return project jobs' do
+        it 'does not return project builds' do
           expect(response).to have_http_status(401)
           expect(json_response.except('message')).to be_empty
         end
@@ -147,7 +147,7 @@ describe API::Builds, api: true do
     end
 
     context 'authorized user' do
-      it 'returns specific job data' do
+      it 'returns specific build data' do
         expect(response).to have_http_status(200)
         expect(json_response['name']).to eq('test')
       end
@@ -165,7 +165,7 @@ describe API::Builds, api: true do
     context 'unauthorized user' do
       let(:api_user) { nil }
 
-      it 'does not return specific job data' do
+      it 'does not return specific build data' do
         expect(response).to have_http_status(401)
       end
     end
@@ -176,7 +176,7 @@ describe API::Builds, api: true do
       get api("/projects/#{project.id}/builds/#{build.id}/artifacts", api_user)
     end
 
-    context 'job with artifacts' do
+    context 'build with artifacts' do
       let(:build) { create(:ci_build, :artifacts, pipeline: pipeline) }
 
       context 'authorized user' do
@@ -185,7 +185,7 @@ describe API::Builds, api: true do
             'Content-Disposition' => 'attachment; filename=ci_build_artifacts.zip' }
         end
 
-        it 'returns specific job artifacts' do
+        it 'returns specific build artifacts' do
           expect(response).to have_http_status(200)
           expect(response.headers).to include(download_headers)
           expect(response.body).to match_file(build.artifacts_file.file.file)
@@ -195,13 +195,13 @@ describe API::Builds, api: true do
       context 'unauthorized user' do
         let(:api_user) { nil }
 
-        it 'does not return specific job artifacts' do
+        it 'does not return specific build artifacts' do
           expect(response).to have_http_status(401)
         end
       end
     end
 
-    it 'does not return job artifacts if not uploaded' do
+    it 'does not return build artifacts if not uploaded' do
       expect(response).to have_http_status(404)
     end
   end
@@ -242,7 +242,7 @@ describe API::Builds, api: true do
       end
     end
 
-    context 'non-existing job' do
+    context 'non-existing build' do
       shared_examples 'not found' do
         it { expect(response).to have_http_status(:not_found) }
       end
@@ -255,7 +255,7 @@ describe API::Builds, api: true do
         it_behaves_like 'not found'
       end
 
-      context 'has no such job' do
+      context 'has no such build' do
         before do
           get path_for_ref(pipeline.ref, 'NOBUILD')
         end
@@ -264,7 +264,7 @@ describe API::Builds, api: true do
       end
     end
 
-    context 'find proper job' do
+    context 'find proper build' do
       shared_examples 'a valid file' do
         let(:download_headers) do
           { 'Content-Transfer-Encoding' => 'binary',
@@ -312,7 +312,7 @@ describe API::Builds, api: true do
     end
 
     context 'authorized user' do
-      it 'returns specific job trace' do
+      it 'returns specific build trace' do
         expect(response).to have_http_status(200)
         expect(response.body).to eq(build.trace)
       end
@@ -321,7 +321,7 @@ describe API::Builds, api: true do
     context 'unauthorized user' do
       let(:api_user) { nil }
 
-      it 'does not return specific job trace' do
+      it 'does not return specific build trace' do
         expect(response).to have_http_status(401)
       end
     end
@@ -334,7 +334,7 @@ describe API::Builds, api: true do
 
     context 'authorized user' do
       context 'user with :update_build persmission' do
-        it 'cancels running or pending job' do
+        it 'cancels running or pending build' do
           expect(response).to have_http_status(201)
           expect(project.builds.first.status).to eq('canceled')
         end
@@ -343,7 +343,7 @@ describe API::Builds, api: true do
       context 'user without :update_build permission' do
         let(:api_user) { reporter.user }
 
-        it 'does not cancel job' do
+        it 'does not cancel build' do
           expect(response).to have_http_status(403)
         end
       end
@@ -352,7 +352,7 @@ describe API::Builds, api: true do
     context 'unauthorized user' do
       let(:api_user) { nil }
 
-      it 'does not cancel job' do
+      it 'does not cancel build' do
         expect(response).to have_http_status(401)
       end
     end
@@ -367,7 +367,7 @@ describe API::Builds, api: true do
 
     context 'authorized user' do
       context 'user with :update_build permission' do
-        it 'retries non-running job' do
+        it 'retries non-running build' do
           expect(response).to have_http_status(201)
           expect(project.builds.first.status).to eq('canceled')
           expect(json_response['status']).to eq('pending')
@@ -377,7 +377,7 @@ describe API::Builds, api: true do
       context 'user without :update_build permission' do
         let(:api_user) { reporter.user }
 
-        it 'does not retry job' do
+        it 'does not retry build' do
           expect(response).to have_http_status(403)
         end
       end
@@ -386,7 +386,7 @@ describe API::Builds, api: true do
     context 'unauthorized user' do
       let(:api_user) { nil }
 
-      it 'does not retry job' do
+      it 'does not retry build' do
         expect(response).to have_http_status(401)
       end
     end
@@ -397,23 +397,23 @@ describe API::Builds, api: true do
       post api("/projects/#{project.id}/builds/#{build.id}/erase", user)
     end
 
-    context 'job is erasable' do
+    context 'build is erasable' do
       let(:build) { create(:ci_build, :trace, :artifacts, :success, project: project, pipeline: pipeline) }
 
-      it 'erases job content' do
+      it 'erases build content' do
         expect(response.status).to eq 201
         expect(build.trace).to be_empty
         expect(build.artifacts_file.exists?).to be_falsy
         expect(build.artifacts_metadata.exists?).to be_falsy
       end
 
-      it 'updates job' do
+      it 'updates build' do
         expect(build.reload.erased_at).to be_truthy
         expect(build.reload.erased_by).to eq user
       end
     end
 
-    context 'job is not erasable' do
+    context 'build is not erasable' do
       let(:build) { create(:ci_build, :trace, project: project, pipeline: pipeline) }
 
       it 'responds with forbidden' do
@@ -453,20 +453,20 @@ describe API::Builds, api: true do
       post api("/projects/#{project.id}/builds/#{build.id}/play", user)
     end
 
-    context 'on an playable job' do
+    context 'on an playable build' do
       let(:build) { create(:ci_build, :manual, project: project, pipeline: pipeline) }
 
-      it 'plays the job' do
+      it 'plays the build' do
         expect(response).to have_http_status 200
         expect(json_response['user']['id']).to eq(user.id)
         expect(json_response['id']).to eq(build.id)
       end
     end
 
-    context 'on a non-playable job' do
+    context 'on a non-playable build' do
       it 'returns a status code 400, Bad Request' do
         expect(response).to have_http_status 400
-        expect(response.body).to match("Unplayable Job")
+        expect(response.body).to match("Unplayable Build")
       end
     end
   end

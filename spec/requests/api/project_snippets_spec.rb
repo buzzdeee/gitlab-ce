@@ -7,6 +7,18 @@ describe API::ProjectSnippets, api: true do
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
 
+  describe 'GET /projects/:project_id/snippets/:id' do
+    # TODO (rspeicher): Deprecated; remove in 9.0
+    it 'always exposes expires_at as nil' do
+      snippet = create(:project_snippet, author: admin)
+
+      get api("/projects/#{snippet.project.id}/snippets/#{snippet.id}", admin)
+
+      expect(json_response).to have_key('expires_at')
+      expect(json_response['expires_at']).to be_nil
+    end
+  end
+
   describe 'GET /projects/:project_id/snippets/' do
     let(:user) { create(:user) }
 
@@ -73,33 +85,43 @@ describe API::ProjectSnippets, api: true do
         allow_any_instance_of(AkismetService).to receive(:is_spam?).and_return(true)
       end
 
-      context 'when the snippet is private' do
-        it 'creates the snippet' do
-          expect { create_snippet(project, visibility_level: Snippet::PRIVATE) }.
-            to change { Snippet.count }.by(1)
+      context 'when the project is private' do
+        let(:private_project) { create(:project_empty_repo, :private) }
+
+        context 'when the snippet is public' do
+          it 'creates the snippet' do
+            expect { create_snippet(private_project, visibility_level: Snippet::PUBLIC) }.
+              to change { Snippet.count }.by(1)
+          end
         end
       end
 
-      context 'when the snippet is public' do
-        it 'rejects the shippet' do
-          expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }.
-            not_to change { Snippet.count }
-
-          expect(response).to have_http_status(400)
-          expect(json_response['message']).to eq({ "error" => "Spam detected" })
+      context 'when the project is public' do
+        context 'when the snippet is private' do
+          it 'creates the snippet' do
+            expect { create_snippet(project, visibility_level: Snippet::PRIVATE) }.
+              to change { Snippet.count }.by(1)
+          end
         end
 
-        it 'creates a spam log' do
-          expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }.
-            to change { SpamLog.count }.by(1)
+        context 'when the snippet is public' do
+          it 'rejects the shippet' do
+            expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }.
+              not_to change { Snippet.count }
+            expect(response).to have_http_status(400)
+          end
+
+          it 'creates a spam log' do
+            expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }.
+              to change { SpamLog.count }.by(1)
+          end
         end
       end
     end
   end
 
   describe 'PUT /projects/:project_id/snippets/:id/' do
-    let(:visibility_level) { Snippet::PUBLIC }
-    let(:snippet) { create(:project_snippet, author: admin, visibility_level: visibility_level) }
+    let(:snippet) { create(:project_snippet, author: admin) }
 
     it 'updates snippet' do
       new_content = 'New content'
@@ -122,56 +144,6 @@ describe API::ProjectSnippets, api: true do
       put api("/projects/#{project.id}/snippets/1234", admin)
 
       expect(response).to have_http_status(400)
-    end
-
-    context 'when the snippet is spam' do
-      def update_snippet(snippet_params = {})
-        put api("/projects/#{snippet.project.id}/snippets/#{snippet.id}", admin), snippet_params
-      end
-
-      before do
-        allow_any_instance_of(AkismetService).to receive(:is_spam?).and_return(true)
-      end
-
-      context 'when the snippet is private' do
-        let(:visibility_level) { Snippet::PRIVATE }
-
-        it 'creates the snippet' do
-          expect { update_snippet(title: 'Foo') }.
-            to change { snippet.reload.title }.to('Foo')
-        end
-      end
-
-      context 'when the snippet is public' do
-        let(:visibility_level) { Snippet::PUBLIC }
-
-        it 'rejects the snippet' do
-          expect { update_snippet(title: 'Foo') }.
-            not_to change { snippet.reload.title }
-        end
-
-        it 'creates a spam log' do
-          expect { update_snippet(title: 'Foo') }.
-            to change { SpamLog.count }.by(1)
-        end
-      end
-
-      context 'when the private snippet is made public' do
-        let(:visibility_level) { Snippet::PRIVATE }
-
-        it 'rejects the snippet' do
-          expect { update_snippet(title: 'Foo', visibility_level: Snippet::PUBLIC) }.
-            not_to change { snippet.reload.title }
-
-          expect(response).to have_http_status(400)
-          expect(json_response['message']).to eq({ "error" => "Spam detected" })
-        end
-
-        it 'creates a spam log' do
-          expect { update_snippet(title: 'Foo', visibility_level: Snippet::PUBLIC) }.
-            to change { SpamLog.count }.by(1)
-        end
-      end
     end
   end
 

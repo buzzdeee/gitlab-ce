@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::Todos do
+describe API::V3::V3::Todos do
   let(:project_1) { create(:project, :repository) }
   let(:project_2) { create(:project) }
   let(:author_1) { create(:user) }
