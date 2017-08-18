@@ -3,14 +3,85 @@ require 'spec_helper'
 describe API::V3::Users do
   let(:user)  { create(:user) }
   let(:admin) { create(:admin) }
-  let(:key)   { create(:key, user: user) }
-  let(:email)   { create(:email, user: user) }
+  let(:key) { create(:key, user: user) }
+  let(:email) { create(:email, user: user) }
+  let(:omniauth_user) { create(:omniauth_user) }
+  let(:ldap_user) { create(:omniauth_user, provider: 'ldapmain') }
   let(:ldap_blocked_user) { create(:omniauth_user, provider: 'ldapmain', state: 'ldap_blocked') }
+  let(:not_existing_user_id) { (User.maximum('id') || 0 ) + 10 }
+  let(:not_existing_pat_id) { (PersonalAccessToken.maximum('id') || 0 ) + 10 }
 
   describe 'GET /users' do
-    context 'when authenticated' do
-      it 'returns an array of users' do
-        get v3_api('/users', user)
+    context "when unauthenticated" do
+      it "returns authorization error when the `username` parameter is not passed" do
+        get v3_api("/users")
+
+        expect(response).to have_gitlab_http_status(403)
+      end
+
+      it "returns the user when a valid `username` parameter is passed" do
+        get v3_api("/users"), username: user.username
+
+        expect(response).to have_gitlab_http_status(200)
+        expect(json_response).to be_an Array
+        expect(json_response.size).to eq(1)
+        expect(json_response[0]['id']).to eq(user.id)
+        expect(json_response[0]['username']).to eq(user.username)
+      end
+
+      it "returns an empty response when an invalid `username` parameter is passed" do
+        get v3_api("/users"), username: 'invalid'
+
+        expect(response).to have_gitlab_http_status(200)
+        expect(json_response).to be_an Array
+        expect(json_response.size).to eq(0)
+      end
+
+      context "when public level is restricted" do
+        before do
+          stub_application_setting(restricted_visibility_levels: [Gitlab::VisibilityLevel::PUBLIC])
+        end
+
+        it "returns authorization error when the `username` parameter refers to an inaccessible user" do
+          get v3_api("/users"), username: user.username
+
+          expect(response).to have_gitlab_http_status(403)
+        end
+
+        it "returns authorization error when the `username` parameter is not passed" do
+          get v3_api("/users")
+
+          expect(response).to have_gitlab_http_status(403)
+        end
+      end
+    end
+
+    context "when authenticated" do
+      # These specs are written just in case API authentication is not required anymore
+      context "when public level is restricted" do
+        before do
+          stub_application_setting(restricted_visibility_levels: [Gitlab::VisibilityLevel::PUBLIC])
+        end
+
+        context 'when authenticate as a regular user' do
+          it "renders 200" do
+            get v3_api("/users", user)
+
+            expect(response).to have_gitlab_http_status(200)
+          end
+        end
+
+        context 'when authenticate as an admin' do
+          it "renders 200" do
+            get v3_api("/users", admin)
+
+            expect(response).to have_gitlab_http_status(200)
+          end
+        end
+      end
+
+      it "returns an array of users" do
+        get v3_api("/users", user)
 
         expect(response).to have_http_status(200)
         expect(response).to include_pagination_headers
@@ -20,9 +91,34 @@ describe API::V3::Users do
           user['username'] == username
         end['username']).to eq(username)
       end
-    end
 
-    context 'when authenticated as user' do
+      it "returns an array of blocked users" do
+        ldap_blocked_user
+        create(:user, state: 'blocked')
+
+        get v3_api("/users?blocked=true", user)
+
+        expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
+        expect(json_response).to be_an Array
+        expect(json_response).to all(include('state' => /(blocked|ldap_blocked)/))
+      end
+
+      it "returns one user" do
+        get v3_api("/users?username=#{omniauth_user.username}", user)
+
+        expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
+        expect(json_response).to be_an Array
+        expect(json_response.first['username']).to eq(omniauth_user.username)
+      end
+
+      it "returns a 403 when non-admin user searches by external UID" do
+        get v3_api("/users?extern_uid=#{omniauth_user.identities.first.extern_uid}&provider=#{omniauth_user.identities.first.provider}", user)
+
+        expect(response).to have_http_status(403)
+      end
+
       it 'does not reveal the `is_admin` flag of the user' do
         get v3_api('/users', user)
 
@@ -30,17 +126,560 @@ describe API::V3::Users do
       end
     end
 
-    context 'when authenticated as admin' do
-      it 'reveals the `is_admin` flag of the user' do
-        get v3_api('/users', admin)
+    context "when admin" do
+      it "returns an array of users" do
+        get v3_api("/users", admin)
 
+        expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
+        expect(json_response).to be_an Array
+        expect(json_response.first.keys).to include 'email'
+        expect(json_response.first.keys).to include 'organization'
+        expect(json_response.first.keys).to include 'identities'
+        expect(json_response.first.keys).to include 'can_create_project'
+        expect(json_response.first.keys).to include 'two_factor_enabled'
+        expect(json_response.first.keys).to include 'last_sign_in_at'
+        expect(json_response.first.keys).to include 'confirmed_at'
         expect(json_response.first.keys).to include 'is_admin'
+      end
+
+      it "returns an array of external users" do
+        create(:user, external: true)
+
+        get v3_api("/users?external=true", admin)
+
+        expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
+        expect(json_response).to be_an Array
+        expect(json_response).to all(include('external' => true))
+      end
+
+      it "returns one user by external UID" do
+        get v3_api("/users?extern_uid=#{omniauth_user.identities.first.extern_uid}&provider=#{omniauth_user.identities.first.provider}", admin)
+
+        expect(response).to have_http_status(200)
+        expect(json_response).to be_an Array
+        expect(json_response.size).to eq(1)
+        expect(json_response.first['username']).to eq(omniauth_user.username)
+      end
+
+      it "returns 400 error if provider with no extern_uid" do
+        get v3_api("/users?extern_uid=#{omniauth_user.identities.first.extern_uid}", admin)
+
+        expect(response).to have_http_status(400)
+      end
+
+      it "returns 400 error if provider with no extern_uid" do
+        get v3_api("/users?provider=#{omniauth_user.identities.first.provider}", admin)
+
+        expect(response).to have_http_status(400)
+      end
+
+      it "returns a user created before a specific date" do
+        user = create(:user, created_at: Date.new(2000, 1, 1))
+
+        get v3_api("/users?created_before=2000-01-02T00:00:00.060Z", admin)
+
+        expect(response).to have_http_status(200)
+        expect(json_response.size).to eq(1)
+        expect(json_response.first['username']).to eq(user.username)
+      end
+
+      it "returns no users created before a specific date" do
+        create(:user, created_at: Date.new(2001, 1, 1))
+
+        get v3_api("/users?created_before=2000-01-02T00:00:00.060Z", admin)
+
+        expect(response).to have_http_status(200)
+        expect(json_response.size).to eq(0)
+      end
+
+      it "returns users created before and after a specific date" do
+        user = create(:user, created_at: Date.new(2001, 1, 1))
+
+        get v3_api("/users?created_before=2001-01-02T00:00:00.060Z&created_after=1999-01-02T00:00:00.060", admin)
+
+        expect(response).to have_http_status(200)
+        expect(json_response.size).to eq(1)
+        expect(json_response.first['username']).to eq(user.username)
       end
     end
   end
 
+  describe "GET /users/:id" do
+    it "returns a user by id" do
+      get v3_api("/users/#{user.id}", user)
+
+      expect(response).to have_http_status(200)
+      expect(json_response['username']).to eq(user.username)
+    end
+
+    it "does not return the user's `is_admin` flag" do
+      get v3_api("/users/#{user.id}", user)
+
+      expect(response).to have_http_status(200)
+      expect(json_response['is_admin']).to be_nil
+    end
+
+    context 'when authenticated as admin' do
+      it 'includes the `is_admin` field' do
+        get v3_api("/users/#{user.id}", admin)
+
+        expect(response).to have_http_status(200)
+        expect(json_response['is_admin']).to be(false)
+      end
+    end
+
+    context 'for an anonymous user' do
+      it "returns a user by id" do
+        get v3_api("/users/#{user.id}")
+
+        expect(response).to have_http_status(200)
+        expect(json_response['username']).to eq(user.username)
+      end
+
+      it "returns a 404 if the target user is present but inaccessible" do
+        allow(Ability).to receive(:allowed?).and_call_original
+        allow(Ability).to receive(:allowed?).with(nil, :read_user, user).and_return(false)
+
+        get v3_api("/users/#{user.id}")
+
+        expect(response).to have_http_status(404)
+      end
+    end
+
+    it "returns a 404 error if user id not found" do
+      get v3_api("/users/9999", user)
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
+    end
+
+    it "returns a 404 for invalid ID" do
+      get v3_api("/users/1ASDF", user)
+
+      expect(response).to have_http_status(404)
+    end
+  end
+
+  describe "POST /users" do
+    before do
+      admin
+    end
+
+    it "creates user" do
+      expect do
+        post v3_api("/users", admin), attributes_for(:user, projects_limit: 3)
+      end.to change { User.count }.by(1)
+    end
+
+    it "creates user with correct attributes" do
+      post v3_api('/users', admin), attributes_for(:user, admin: true, can_create_group: true)
+      expect(response).to have_http_status(201)
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+      expect(new_user).not_to eq(nil)
+      expect(new_user.admin).to eq(true)
+      expect(new_user.can_create_group).to eq(true)
+    end
+
+    it "creates user with optional attributes" do
+      optional_attributes = { confirm: true }
+      attributes = attributes_for(:user).merge(optional_attributes)
+
+      post v3_api('/users', admin), attributes
+
+      expect(response).to have_http_status(201)
+    end
+
+    it "creates non-admin user" do
+      post v3_api('/users', admin), attributes_for(:user, admin: false, can_create_group: false)
+      expect(response).to have_http_status(201)
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+      expect(new_user).not_to eq(nil)
+      expect(new_user.admin).to eq(false)
+      expect(new_user.can_create_group).to eq(false)
+    end
+
+    it "creates non-admin users by default" do
+      post v3_api('/users', admin), attributes_for(:user)
+      expect(response).to have_http_status(201)
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+      expect(new_user).not_to eq(nil)
+      expect(new_user.admin).to eq(false)
+    end
+
+    it "returns 201 Created on success" do
+      post v3_api("/users", admin), attributes_for(:user, projects_limit: 3)
+      expect(response).to have_http_status(201)
+    end
+
+    it 'creates non-external users by default' do
+      post v3_api("/users", admin), attributes_for(:user)
+      expect(response).to have_http_status(201)
+
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+      expect(new_user).not_to eq nil
+      expect(new_user.external).to be_falsy
+    end
+
+    it 'allows an external user to be created' do
+      post v3_api("/users", admin), attributes_for(:user, external: true)
+      expect(response).to have_http_status(201)
+
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+      expect(new_user).not_to eq nil
+      expect(new_user.external).to be_truthy
+    end
+
+    it "creates user with reset password" do
+      post v3_api('/users', admin), attributes_for(:user, reset_password: true).except(:password)
+
+      expect(response).to have_http_status(201)
+
+      user_id = json_response['id']
+      new_user = User.find(user_id)
+
+      expect(new_user).not_to eq(nil)
+      expect(new_user.recently_sent_password_reset?).to eq(true)
+    end
+
+    it "does not create user with invalid email" do
+      post v3_api('/users', admin),
+           email: 'invalid email',
+           password: 'password',
+           name: 'test'
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 error if name not given' do
+      post v3_api('/users', admin), attributes_for(:user).except(:name)
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 error if password not given' do
+      post v3_api('/users', admin), attributes_for(:user).except(:password)
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 error if email not given' do
+      post v3_api('/users', admin), attributes_for(:user).except(:email)
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 error if username not given' do
+      post v3_api('/users', admin), attributes_for(:user).except(:username)
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 error if user does not validate' do
+      post v3_api('/users', admin),
+           password: 'pass',
+           email: 'test@example.com',
+           username: 'test!',
+           name: 'test',
+           bio: 'g' * 256,
+           projects_limit: -1
+      expect(response).to have_http_status(400)
+      expect(json_response['message']['password'])
+        .to eq(['is too short (minimum is 8 characters)'])
+      expect(json_response['message']['bio'])
+        .to eq(['is too long (maximum is 255 characters)'])
+      expect(json_response['message']['projects_limit'])
+        .to eq(['must be greater than or equal to 0'])
+      expect(json_response['message']['username'])
+        .to eq([Gitlab::PathRegex.namespace_format_message])
+    end
+
+    it "is not available for non admin users" do
+      post v3_api("/users", user), attributes_for(:user)
+      expect(response).to have_http_status(403)
+    end
+
+    context 'with existing user' do
+      before do
+        post v3_api('/users', admin),
+             email: 'test@example.com',
+             password: 'password',
+             username: 'test',
+             name: 'foo'
+      end
+
+      it 'returns 409 conflict error if user with same email exists' do
+        expect do
+          post v3_api('/users', admin),
+               name: 'foo',
+               email: 'test@example.com',
+               password: 'password',
+               username: 'foo'
+        end.to change { User.count }.by(0)
+        expect(response).to have_http_status(409)
+        expect(json_response['message']).to eq('Email has already been taken')
+      end
+
+      it 'returns 409 conflict error if same username exists' do
+        expect do
+          post v3_api('/users', admin),
+               name: 'foo',
+               email: 'foo@example.com',
+               password: 'password',
+               username: 'test'
+        end.to change { User.count }.by(0)
+        expect(response).to have_http_status(409)
+        expect(json_response['message']).to eq('Username has already been taken')
+      end
+
+      it 'creates user with new identity' do
+        post v3_api("/users", admin), attributes_for(:user, provider: 'github', extern_uid: '67890')
+
+        expect(response).to have_http_status(201)
+        expect(json_response['identities'].first['extern_uid']).to eq('67890')
+        expect(json_response['identities'].first['provider']).to eq('github')
+      end
+    end
+
+    context "scopes" do
+      let(:user) { admin }
+      let(:path) { '/users' }
+      let(:api_call) { method(:api) }
+
+      include_examples 'does not allow the "read_user" scope'
+    end
+  end
+
+  describe "GET /users/sign_up" do
+    it "redirects to sign in page" do
+      get "/users/sign_up"
+      expect(response).to have_http_status(302)
+      expect(response).to redirect_to(new_user_session_path)
+    end
+  end
+
+  describe "PUT /users/:id" do
+    let!(:admin_user) { create(:admin) }
+
+    before do
+      admin
+    end
+
+    it "updates user with new bio" do
+      put v3_api("/users/#{user.id}", admin), { bio: 'new test bio' }
+
+      expect(response).to have_http_status(200)
+      expect(json_response['bio']).to eq('new test bio')
+      expect(user.reload.bio).to eq('new test bio')
+    end
+
+    it "updates user with new password and forces reset on next login" do
+      put v3_api("/users/#{user.id}", admin), password: '12345678'
+
+      expect(response).to have_http_status(200)
+      expect(user.reload.password_expires_at).to be <= Time.now
+    end
+
+    it "updates user with organization" do
+      put v3_api("/users/#{user.id}", admin), { organization: 'GitLab' }
+
+      expect(response).to have_http_status(200)
+      expect(json_response['organization']).to eq('GitLab')
+      expect(user.reload.organization).to eq('GitLab')
+    end
+
+    it 'updates user with avatar' do
+      put v3_api("/users/#{user.id}", admin), { avatar: fixture_file_upload(Rails.root + 'spec/fixtures/banana_sample.gif', 'image/gif') }
+
+      user.reload
+
+      expect(user.avatar).to be_present
+      expect(response).to have_http_status(200)
+      expect(json_response['avatar_url']).to include(user.avatar_path)
+    end
+
+    it 'updates user with his own email' do
+      put v3_api("/users/#{user.id}", admin), email: user.email
+
+      expect(response).to have_http_status(200)
+      expect(json_response['email']).to eq(user.email)
+      expect(user.reload.email).to eq(user.email)
+    end
+
+    it 'updates user with a new email' do
+      put v3_api("/users/#{user.id}", admin), email: 'new@email.com'
+
+      expect(response).to have_http_status(200)
+      expect(user.reload.notification_email).to eq('new@email.com')
+    end
+
+    it 'updates user with his own username' do
+      put v3_api("/users/#{user.id}", admin), username: user.username
+
+      expect(response).to have_http_status(200)
+      expect(json_response['username']).to eq(user.username)
+      expect(user.reload.username).to eq(user.username)
+    end
+
+    it "updates user's existing identity" do
+      put v3_api("/users/#{omniauth_user.id}", admin), provider: 'ldapmain', extern_uid: '654321'
+
+      expect(response).to have_http_status(200)
+      expect(omniauth_user.reload.identities.first.extern_uid).to eq('654321')
+    end
+
+    it 'updates user with new identity' do
+      put v3_api("/users/#{user.id}", admin), provider: 'github', extern_uid: 'john'
+
+      expect(response).to have_http_status(200)
+      expect(user.reload.identities.first.extern_uid).to eq('john')
+      expect(user.reload.identities.first.provider).to eq('github')
+    end
+
+    it "updates admin status" do
+      put v3_api("/users/#{user.id}", admin), { admin: true }
+
+      expect(response).to have_http_status(200)
+      expect(user.reload.admin).to eq(true)
+    end
+
+    it "updates external status" do
+      put v3_api("/users/#{user.id}", admin), { external: true }
+
+      expect(response.status).to eq 200
+      expect(json_response['external']).to eq(true)
+      expect(user.reload.external?).to be_truthy
+    end
+
+    it "does not update admin status" do
+      put v3_api("/users/#{admin_user.id}", admin), { can_create_group: false }
+
+      expect(response).to have_http_status(200)
+      expect(admin_user.reload.admin).to eq(true)
+      expect(admin_user.can_create_group).to eq(false)
+    end
+
+    it "does not allow invalid update" do
+      put v3_api("/users/#{user.id}", admin), { email: 'invalid email' }
+
+      expect(response).to have_http_status(400)
+      expect(user.reload.email).not_to eq('invalid email')
+    end
+
+    context 'when the current user is not an admin' do
+      it "is not available" do
+        expect do
+          put v3_api("/users/#{user.id}", user), attributes_for(:user)
+        end.not_to change { user.reload.attributes }
+
+        expect(response).to have_http_status(403)
+      end
+    end
+
+    it "returns 404 for non-existing user" do
+      put v3_api("/users/999999", admin), { bio: 'update should fail' }
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
+    end
+
+    it "returns a 404 if invalid ID" do
+      put v3_api("/users/ASDF", admin)
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'returns 400 error if user does not validate' do
+      put v3_api("/users/#{user.id}", admin),
+          password: 'pass',
+          email: 'test@example.com',
+          username: 'test!',
+          name: 'test',
+          bio: 'g' * 256,
+          projects_limit: -1
+      expect(response).to have_http_status(400)
+      expect(json_response['message']['password'])
+        .to eq(['is too short (minimum is 8 characters)'])
+      expect(json_response['message']['bio'])
+        .to eq(['is too long (maximum is 255 characters)'])
+      expect(json_response['message']['projects_limit'])
+        .to eq(['must be greater than or equal to 0'])
+      expect(json_response['message']['username'])
+        .to eq([Gitlab::PathRegex.namespace_format_message])
+    end
+
+    it 'returns 400 if provider is missing for identity update' do
+      put v3_api("/users/#{omniauth_user.id}", admin), extern_uid: '654321'
+
+      expect(response).to have_http_status(400)
+    end
+
+    it 'returns 400 if external UID is missing for identity update' do
+      put v3_api("/users/#{omniauth_user.id}", admin), provider: 'ldap'
+
+      expect(response).to have_http_status(400)
+    end
+
+    context "with existing user" do
+      before do
+        post v3_api("/users", admin), { email: 'test@example.com', password: 'password', username: 'test', name: 'test' }
+        post v3_api("/users", admin), { email: 'foo@bar.com', password: 'password', username: 'john', name: 'john' }
+        @user = User.all.last
+      end
+
+      it 'returns 409 conflict error if email address exists' do
+        put v3_api("/users/#{@user.id}", admin), email: 'test@example.com'
+
+        expect(response).to have_http_status(409)
+        expect(@user.reload.email).to eq(@user.email)
+      end
+
+      it 'returns 409 conflict error if username taken' do
+        @user_id = User.all.last.id
+        put v3_api("/users/#{@user.id}", admin), username: 'test'
+
+        expect(response).to have_http_status(409)
+        expect(@user.reload.username).to eq(@user.username)
+      end
+    end
+  end
+
+  describe "POST /users/:id/keys" do
+    before do
+      admin
+    end
+
+    it "does not create invalid ssh key" do
+      post v3_api("/users/#{user.id}/keys", admin), { title: "invalid key" }
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('key is missing')
+    end
+
+    it 'does not create key without title' do
+      post v3_api("/users/#{user.id}/keys", admin), key: 'some key'
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('title is missing')
+    end
+
+    it "creates ssh key" do
+      key_attrs = attributes_for :key
+      expect do
+        post v3_api("/users/#{user.id}/keys", admin), key_attrs
+      end.to change { user.keys.count }.by(1)
+    end
+
+    it "returns 400 for invalid ID" do
+      post v3_api("/users/999999/keys", admin)
+      expect(response).to have_http_status(400)
+    end
+  end
+
   describe 'GET /user/:id/keys' do
-    before { admin }
+    before do
+      admin
+    end
 
     context 'when unauthenticated' do
       it 'returns authentication error' do
@@ -63,27 +702,83 @@ describe API::V3::Users do
         get v3_api("/users/#{user.id}/keys", admin)
 
         expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first['title']).to eq(key.title)
       end
     end
+  end
 
-    context "scopes" do
-      let(:user) { admin }
-      let(:path) { "/users/#{user.id}/keys" }
-      let(:api_call) { method(:v3_api) }
+  describe 'DELETE /user/:id/keys/:key_id' do
+    before do
+      admin
+    end
 
-      before do
+    context 'when unauthenticated' do
+      it 'returns authentication error' do
+        delete v3_api("/users/#{user.id}/keys/42")
+        expect(response).to have_http_status(401)
+      end
+    end
+
+    context 'when authenticated' do
+      it 'deletes existing key' do
         user.keys << key
         user.save
+
+        expect do
+          delete v3_api("/users/#{user.id}/keys/#{key.id}", admin)
+
+          expect(response).to have_http_status(204)
+        end.to change { user.keys.count }.by(-1)
       end
 
-      include_examples 'allows the "read_user" scope'
+      it 'returns 404 error if user not found' do
+        user.keys << key
+        user.save
+        delete v3_api("/users/999999/keys/#{key.id}", admin)
+        expect(response).to have_http_status(404)
+        expect(json_response['message']).to eq('404 User Not Found')
+      end
+
+      it 'returns 404 error if key not foud' do
+        delete v3_api("/users/#{user.id}/keys/42", admin)
+        expect(response).to have_http_status(404)
+        expect(json_response['message']).to eq('404 Key Not Found')
+      end
+    end
+  end
+
+  describe "POST /users/:id/emails" do
+    before do
+      admin
+    end
+
+    it "does not create invalid email" do
+      post v3_api("/users/#{user.id}/emails", admin), {}
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('email is missing')
+    end
+
+    it "creates email" do
+      email_attrs = attributes_for :email
+      expect do
+        post v3_api("/users/#{user.id}/emails", admin), email_attrs
+      end.to change { user.emails.count }.by(1)
+    end
+
+    it "returns a 400 for invalid ID" do
+      post v3_api("/users/999999/emails", admin)
+
+      expect(response).to have_http_status(400)
     end
   end
 
   describe 'GET /user/:id/emails' do
-    before { admin }
+    before do
+      admin
+    end
 
     context 'when unauthenticated' do
       it 'returns authentication error' do
@@ -106,14 +801,202 @@ describe API::V3::Users do
         get v3_api("/users/#{user.id}/emails", admin)
 
         expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first['email']).to eq(email.email)
       end
 
       it "returns a 404 for invalid ID" do
-        put v3_api("/users/ASDF/emails", admin)
+        get v3_api("/users/ASDF/emails", admin)
 
         expect(response).to have_http_status(404)
+      end
+    end
+  end
+
+  describe 'DELETE /user/:id/emails/:email_id' do
+    before do
+      admin
+    end
+
+    context 'when unauthenticated' do
+      it 'returns authentication error' do
+        delete v3_api("/users/#{user.id}/emails/42")
+        expect(response).to have_http_status(401)
+      end
+    end
+
+    context 'when authenticated' do
+      it 'deletes existing email' do
+        user.emails << email
+        user.save
+
+        expect do
+          delete v3_api("/users/#{user.id}/emails/#{email.id}", admin)
+
+          expect(response).to have_http_status(204)
+        end.to change { user.emails.count }.by(-1)
+      end
+
+      it 'returns 404 error if user not found' do
+        user.emails << email
+        user.save
+        delete v3_api("/users/999999/emails/#{email.id}", admin)
+        expect(response).to have_http_status(404)
+        expect(json_response['message']).to eq('404 User Not Found')
+      end
+
+      it 'returns 404 error if email not foud' do
+        delete v3_api("/users/#{user.id}/emails/42", admin)
+        expect(response).to have_http_status(404)
+        expect(json_response['message']).to eq('404 Email Not Found')
+      end
+
+      it "returns a 404 for invalid ID" do
+        delete v3_api("/users/ASDF/emails/bar", admin)
+
+        expect(response).to have_http_status(404)
+      end
+    end
+  end
+
+  describe "DELETE /users/:id" do
+    let!(:namespace) { user.namespace }
+    let!(:issue) { create(:issue, author: user) }
+
+    before do
+      admin
+    end
+
+    it "deletes user" do
+      Sidekiq::Testing.inline! { delete v3_api("/users/#{user.id}", admin) }
+
+      expect(response).to have_http_status(204)
+      expect { User.find(user.id) }.to raise_error ActiveRecord::RecordNotFound
+      expect { Namespace.find(namespace.id) }.to raise_error ActiveRecord::RecordNotFound
+    end
+
+    it "does not delete for unauthenticated user" do
+      Sidekiq::Testing.inline! { delete v3_api("/users/#{user.id}") }
+      expect(response).to have_http_status(401)
+    end
+
+    it "is not available for non admin users" do
+      Sidekiq::Testing.inline! { delete v3_api("/users/#{user.id}", user) }
+      expect(response).to have_http_status(403)
+    end
+
+    it "returns 404 for non-existing user" do
+      Sidekiq::Testing.inline! { delete v3_api("/users/999999", admin) }
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
+    end
+
+    it "returns a 404 for invalid ID" do
+      Sidekiq::Testing.inline! { delete v3_api("/users/ASDF", admin) }
+
+      expect(response).to have_http_status(404)
+    end
+
+    context "hard delete disabled" do
+      it "moves contributions to the ghost user" do
+        Sidekiq::Testing.inline! { delete v3_api("/users/#{user.id}", admin) }
+
+        expect(response).to have_http_status(204)
+        expect(issue.reload).to be_persisted
+        expect(issue.author.ghost?).to be_truthy
+      end
+    end
+
+    context "hard delete enabled" do
+      it "removes contributions" do
+        Sidekiq::Testing.inline! { delete v3_api("/users/#{user.id}?hard_delete=true", admin) }
+
+        expect(response).to have_http_status(204)
+        expect(Issue.exists?(issue.id)).to be_falsy
+      end
+    end
+  end
+
+  describe "GET /user" do
+    let(:personal_access_token) { create(:personal_access_token, user: user).token }
+
+    context 'with regular user' do
+      context 'with personal access token' do
+        it 'returns 403 without private token when sudo is defined' do
+          get v3_api("/user?private_token=#{personal_access_token}&sudo=123")
+
+          expect(response).to have_http_status(403)
+        end
+      end
+
+      context 'with private token' do
+        it 'returns 403 without private token when sudo defined' do
+          get v3_api("/user?private_token=#{user.private_token}&sudo=123")
+
+          expect(response).to have_http_status(403)
+        end
+      end
+
+      it 'returns current user without private token when sudo not defined' do
+        get v3_api("/user", user)
+
+        expect(response).to have_http_status(200)
+        expect(response).to match_response_schema('public_api/v4/user/public')
+        expect(json_response['id']).to eq(user.id)
+      end
+
+      context "scopes" do
+        let(:path) { "/user" }
+        let(:api_call) { method(:api) }
+
+        include_examples 'allows the "read_user" scope'
+      end
+    end
+
+    context 'with admin' do
+      let(:admin_personal_access_token) { create(:personal_access_token, user: admin).token }
+
+      context 'with personal access token' do
+        it 'returns 403 without private token when sudo defined' do
+          get v3_api("/user?private_token=#{admin_personal_access_token}&sudo=#{user.id}")
+
+          expect(response).to have_http_status(403)
+        end
+
+        it 'returns initial current user without private token but with is_admin when sudo not defined' do
+          get v3_api("/user?private_token=#{admin_personal_access_token}")
+
+          expect(response).to have_http_status(200)
+          expect(response).to match_response_schema('public_api/v4/user/admin')
+          expect(json_response['id']).to eq(admin.id)
+        end
+      end
+
+      context 'with private token' do
+        it 'returns sudoed user with private token when sudo defined' do
+          get v3_api("/user?private_token=#{admin.private_token}&sudo=#{user.id}")
+
+          expect(response).to have_http_status(200)
+          expect(response).to match_response_schema('public_api/v4/user/login')
+          expect(json_response['id']).to eq(user.id)
+        end
+
+        it 'returns initial current user without private token but with is_admin when sudo not defined' do
+          get v3_api("/user?private_token=#{admin.private_token}")
+
+          expect(response).to have_http_status(200)
+          expect(response).to match_response_schema('public_api/v4/user/admin')
+          expect(json_response['id']).to eq(admin.id)
+        end
+      end
+    end
+
+    context 'with unauthenticated user' do
+      it "returns 401 error if user is unauthenticated" do
+        get v3_api("/user")
+
+        expect(response).to have_http_status(401)
       end
     end
   end
@@ -134,9 +1017,123 @@ describe API::V3::Users do
         get v3_api("/user/keys", user)
 
         expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first["title"]).to eq(key.title)
       end
+
+      context "scopes" do
+        let(:path) { "/user/keys" }
+        let(:api_call) { method(:api) }
+
+        include_examples 'allows the "read_user" scope'
+      end
+    end
+  end
+
+  describe "GET /user/keys/:key_id" do
+    it "returns single key" do
+      user.keys << key
+      user.save
+      get v3_api("/user/keys/#{key.id}", user)
+      expect(response).to have_http_status(200)
+      expect(json_response["title"]).to eq(key.title)
+    end
+
+    it "returns 404 Not Found within invalid ID" do
+      get v3_api("/user/keys/42", user)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Key Not Found')
+    end
+
+    it "returns 404 error if admin accesses user's ssh key" do
+      user.keys << key
+      user.save
+      admin
+      get v3_api("/user/keys/#{key.id}", admin)
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Key Not Found')
+    end
+
+    it "returns 404 for invalid ID" do
+      get v3_api("/users/keys/ASDF", admin)
+
+      expect(response).to have_http_status(404)
+    end
+
+    context "scopes" do
+      let(:path) { "/user/keys/#{key.id}" }
+      let(:api_call) { method(:api) }
+
+      include_examples 'allows the "read_user" scope'
+    end
+  end
+
+  describe "POST /user/keys" do
+    it "creates ssh key" do
+      key_attrs = attributes_for :key
+      expect do
+        post v3_api("/user/keys", user), key_attrs
+      end.to change { user.keys.count }.by(1)
+      expect(response).to have_http_status(201)
+    end
+
+    it "returns a 401 error if unauthorized" do
+      post v3_api("/user/keys"), title: 'some title', key: 'some key'
+      expect(response).to have_http_status(401)
+    end
+
+    it "does not create ssh key without key" do
+      post v3_api("/user/keys", user), title: 'title'
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('key is missing')
+    end
+
+    it 'does not create ssh key without title' do
+      post v3_api('/user/keys', user), key: 'some key'
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('title is missing')
+    end
+
+    it "does not create ssh key without title" do
+      post v3_api("/user/keys", user), key: "somekey"
+      expect(response).to have_http_status(400)
+    end
+  end
+
+  describe "DELETE /user/keys/:key_id" do
+    it "deletes existed key" do
+      user.keys << key
+      user.save
+
+      expect do
+        delete v3_api("/user/keys/#{key.id}", user)
+
+        expect(response).to have_http_status(204)
+      end.to change { user.keys.count}.by(-1)
+    end
+
+    it "returns 404 if key ID not found" do
+      delete v3_api("/user/keys/42", user)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Key Not Found')
+    end
+
+    it "returns 401 error if unauthorized" do
+      user.keys << key
+      user.save
+      delete v3_api("/user/keys/#{key.id}")
+      expect(response).to have_http_status(401)
+    end
+
+    it "returns a 404 for invalid ID" do
+      delete v3_api("/users/keys/ASDF", admin)
+
+      expect(response).to have_http_status(404)
     end
   end
 
@@ -156,207 +1153,410 @@ describe API::V3::Users do
         get v3_api("/user/emails", user)
 
         expect(response).to have_http_status(200)
+        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first["email"]).to eq(email.email)
+      end
+
+      context "scopes" do
+        let(:path) { "/user/emails" }
+        let(:api_call) { method(:api) }
+
+        include_examples 'allows the "read_user" scope'
       end
     end
   end
 
-  describe 'PUT /users/:id/block' do
-    before { admin }
-    it 'blocks existing user' do
-      put v3_api("/users/#{user.id}/block", admin)
+  describe "GET /user/emails/:email_id" do
+    it "returns single email" do
+      user.emails << email
+      user.save
+      get v3_api("/user/emails/#{email.id}", user)
       expect(response).to have_http_status(200)
+      expect(json_response["email"]).to eq(email.email)
+    end
+
+    it "returns 404 Not Found within invalid ID" do
+      get v3_api("/user/emails/42", user)
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Email Not Found')
+    end
+
+    it "returns 404 error if admin accesses user's email" do
+      user.emails << email
+      user.save
+      admin
+      get v3_api("/user/emails/#{email.id}", admin)
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Email Not Found')
+    end
+
+    it "returns 404 for invalid ID" do
+      get v3_api("/users/emails/ASDF", admin)
+
+      expect(response).to have_http_status(404)
+    end
+
+    context "scopes" do
+      let(:path) { "/user/emails/#{email.id}" }
+      let(:api_call) { method(:api) }
+
+      include_examples 'allows the "read_user" scope'
+    end
+  end
+
+  describe "POST /user/emails" do
+    it "creates email" do
+      email_attrs = attributes_for :email
+      expect do
+        post v3_api("/user/emails", user), email_attrs
+      end.to change { user.emails.count }.by(1)
+      expect(response).to have_http_status(201)
+    end
+
+    it "returns a 401 error if unauthorized" do
+      post v3_api("/user/emails"), email: 'some email'
+      expect(response).to have_http_status(401)
+    end
+
+    it "does not create email with invalid email" do
+      post v3_api("/user/emails", user), {}
+
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('email is missing')
+    end
+  end
+
+  describe "DELETE /user/emails/:email_id" do
+    it "deletes existed email" do
+      user.emails << email
+      user.save
+
+      expect do
+        delete v3_api("/user/emails/#{email.id}", user)
+
+        expect(response).to have_http_status(204)
+      end.to change { user.emails.count}.by(-1)
+    end
+
+    it "returns 404 if email ID not found" do
+      delete v3_api("/user/emails/42", user)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Email Not Found')
+    end
+
+    it "returns 401 error if unauthorized" do
+      user.emails << email
+      user.save
+      delete v3_api("/user/emails/#{email.id}")
+      expect(response).to have_http_status(401)
+    end
+
+    it "returns 400 for invalid ID" do
+      delete v3_api("/user/emails/ASDF", admin)
+
+      expect(response).to have_http_status(400)
+    end
+  end
+
+  describe 'POST /users/:id/block' do
+    before do
+      admin
+    end
+
+    it 'blocks existing user' do
+      post v3_api("/users/#{user.id}/block", admin)
+      expect(response).to have_http_status(201)
       expect(user.reload.state).to eq('blocked')
     end
 
     it 'does not re-block ldap blocked users' do
-      put v3_api("/users/#{ldap_blocked_user.id}/block", admin)
+      post v3_api("/users/#{ldap_blocked_user.id}/block", admin)
       expect(response).to have_http_status(403)
       expect(ldap_blocked_user.reload.state).to eq('ldap_blocked')
     end
 
     it 'does not be available for non admin users' do
-      put v3_api("/users/#{user.id}/block", user)
+      post v3_api("/users/#{user.id}/block", user)
       expect(response).to have_http_status(403)
       expect(user.reload.state).to eq('active')
     end
 
     it 'returns a 404 error if user id not found' do
-      put v3_api('/users/9999/block', admin)
+      post v3_api('/users/9999/block', admin)
       expect(response).to have_http_status(404)
       expect(json_response['message']).to eq('404 User Not Found')
     end
   end
 
-  describe 'PUT /users/:id/unblock' do
+  describe 'POST /users/:id/unblock' do
     let(:blocked_user)  { create(:user, state: 'blocked') }
-    before { admin }
+
+    before do
+      admin
+    end
 
     it 'unblocks existing user' do
-      put v3_api("/users/#{user.id}/unblock", admin)
-      expect(response).to have_http_status(200)
+      post v3_api("/users/#{user.id}/unblock", admin)
+      expect(response).to have_http_status(201)
       expect(user.reload.state).to eq('active')
     end
 
     it 'unblocks a blocked user' do
-      put v3_api("/users/#{blocked_user.id}/unblock", admin)
-      expect(response).to have_http_status(200)
+      post v3_api("/users/#{blocked_user.id}/unblock", admin)
+      expect(response).to have_http_status(201)
       expect(blocked_user.reload.state).to eq('active')
     end
 
     it 'does not unblock ldap blocked users' do
-      put v3_api("/users/#{ldap_blocked_user.id}/unblock", admin)
+      post v3_api("/users/#{ldap_blocked_user.id}/unblock", admin)
       expect(response).to have_http_status(403)
       expect(ldap_blocked_user.reload.state).to eq('ldap_blocked')
     end
 
     it 'does not be available for non admin users' do
-      put v3_api("/users/#{user.id}/unblock", user)
+      post v3_api("/users/#{user.id}/unblock", user)
       expect(response).to have_http_status(403)
       expect(user.reload.state).to eq('active')
     end
 
     it 'returns a 404 error if user id not found' do
-      put v3_api('/users/9999/block', admin)
+      post v3_api('/users/9999/block', admin)
       expect(response).to have_http_status(404)
       expect(json_response['message']).to eq('404 User Not Found')
     end
 
     it "returns a 404 for invalid ID" do
-      put v3_api("/users/ASDF/block", admin)
+      post v3_api("/users/ASDF/block", admin)
 
       expect(response).to have_http_status(404)
     end
   end
 
-  describe 'GET /users/:id/events' do
-    let(:user) { create(:user) }
-    let(:project) { create(:project) }
-    let(:note) { create(:note_on_issue, note: 'What an awesome day!', project: project) }
+  context "user activities", :clean_gitlab_redis_shared_state do
+    let!(:old_active_user) { create(:user, last_activity_on: Time.utc(2000, 1, 1)) }
+    let!(:newly_active_user) { create(:user, last_activity_on: 2.days.ago.midday) }
 
-    before do
-      project.add_user(user, :developer)
-      EventCreateService.new.leave_note(note, user)
-    end
+    context 'last activity as normal user' do
+      it 'has no permission' do
+        get v3_api("/user/activities", user)
 
-    context "as a user than cannot see the event's project" do
-      it 'returns no events' do
-        other_user = create(:user)
-
-        get api("/users/#{user.id}/events", other_user)
-
-        expect(response).to have_http_status(200)
-        expect(json_response).to be_empty
+        expect(response).to have_http_status(403)
       end
     end
 
-    context "as a user than can see the event's project" do
-      context 'when the list of events includes push events' do
-        let(:event) { create(:push_event, author: user, project: project) }
-        let!(:payload) { create(:push_event_payload, event: event) }
-        let(:payload_hash) { json_response[0]['push_data'] }
+    context 'as admin' do
+      it 'returns the activities from the last 6 months' do
+        get v3_api("/user/activities", admin)
 
-        before do
-          get api("/users/#{user.id}/events?action=pushed", user)
-        end
+        expect(response).to include_pagination_headers
+        expect(json_response.size).to eq(1)
 
-        it 'responds with HTTP 200 OK' do
-          expect(response).to have_http_status(200)
-        end
+        activity = json_response.last
 
-        it 'includes the push payload as a Hash' do
-          expect(payload_hash).to be_an_instance_of(Hash)
-        end
-
-        it 'includes the push payload details' do
-          expect(payload_hash['commit_count']).to eq(payload.commit_count)
-          expect(payload_hash['action']).to eq(payload.action)
-          expect(payload_hash['ref_type']).to eq(payload.ref_type)
-          expect(payload_hash['commit_to']).to eq(payload.commit_to)
-        end
+        expect(activity['username']).to eq(newly_active_user.username)
+        expect(activity['last_activity_on']).to eq(2.days.ago.to_date.to_s)
+        expect(activity['last_activity_at']).to eq(2.days.ago.to_date.to_s)
       end
 
-      context 'joined event' do
-        it 'returns the "joined" event' do
-          get v3_api("/users/#{user.id}/events", user)
+      context 'passing a :from parameter' do
+        it 'returns the activities from the given date' do
+          get v3_api("/user/activities?from=2000-1-1", admin)
 
-          expect(response).to have_http_status(200)
           expect(response).to include_pagination_headers
-          expect(json_response).to be_an Array
+          expect(json_response.size).to eq(2)
 
-          comment_event = json_response.find { |e| e['action_name'] == 'commented on' }
+          activity = json_response.first
 
-          expect(comment_event['project_id'].to_i).to eq(project.id)
-          expect(comment_event['author_username']).to eq(user.username)
-          expect(comment_event['note']['id']).to eq(note.id)
-          expect(comment_event['note']['body']).to eq('What an awesome day!')
-
-          joined_event = json_response.find { |e| e['action_name'] == 'joined' }
-
-          expect(joined_event['project_id'].to_i).to eq(project.id)
-          expect(joined_event['author_username']).to eq(user.username)
-          expect(joined_event['author']['name']).to eq(user.name)
-        end
-      end
-
-      context 'when there are multiple events from different projects' do
-        let(:second_note) { create(:note_on_issue, project: create(:project)) }
-        let(:third_note) { create(:note_on_issue, project: project) }
-
-        before do
-          second_note.project.add_user(user, :developer)
-
-          [second_note, third_note].each do |note|
-            EventCreateService.new.leave_note(note, user)
-          end
-        end
-
-        it 'returns events in the correct order (from newest to oldest)' do
-          get v3_api("/users/#{user.id}/events", user)
-
-          comment_events = json_response.select { |e| e['action_name'] == 'commented on' }
-
-          expect(comment_events[0]['target_id']).to eq(third_note.id)
-          expect(comment_events[1]['target_id']).to eq(second_note.id)
-          expect(comment_events[2]['target_id']).to eq(note.id)
+          expect(activity['username']).to eq(old_active_user.username)
+          expect(activity['last_activity_on']).to eq(Time.utc(2000, 1, 1).to_date.to_s)
+          expect(activity['last_activity_at']).to eq(Time.utc(2000, 1, 1).to_date.to_s)
         end
       end
     end
+  end
 
-    it 'returns a 404 error if not found' do
-      get v3_api('/users/420/events', user)
+  describe 'GET /users/:user_id/impersonation_tokens' do
+    let!(:active_personal_access_token) { create(:personal_access_token, user: user) }
+    let!(:revoked_personal_access_token) { create(:personal_access_token, :revoked, user: user) }
+    let!(:expired_personal_access_token) { create(:personal_access_token, :expired, user: user) }
+    let!(:impersonation_token) { create(:personal_access_token, :impersonation, user: user) }
+    let!(:revoked_impersonation_token) { create(:personal_access_token, :impersonation, :revoked, user: user) }
+
+    it 'returns a 404 error if user not found' do
+      get v3_api("/users/#{not_existing_user_id}/impersonation_tokens", admin)
 
       expect(response).to have_http_status(404)
       expect(json_response['message']).to eq('404 User Not Found')
     end
+
+    it 'returns a 403 error when authenticated as normal user' do
+      get v3_api("/users/#{not_existing_user_id}/impersonation_tokens", user)
+
+      expect(response).to have_http_status(403)
+      expect(json_response['message']).to eq('403 Forbidden')
+    end
+
+    it 'returns an array of all impersonated tokens' do
+      get v3_api("/users/#{user.id}/impersonation_tokens", admin)
+
+      expect(response).to have_http_status(200)
+      expect(response).to include_pagination_headers
+      expect(json_response).to be_an Array
+      expect(json_response.size).to eq(2)
+    end
+
+    it 'returns an array of active impersonation tokens if state active' do
+      get v3_api("/users/#{user.id}/impersonation_tokens?state=active", admin)
+
+      expect(response).to have_http_status(200)
+      expect(response).to include_pagination_headers
+      expect(json_response).to be_an Array
+      expect(json_response.size).to eq(1)
+      expect(json_response).to all(include('active' => true))
+    end
+
+    it 'returns an array of inactive personal access tokens if active is set to false' do
+      get v3_api("/users/#{user.id}/impersonation_tokens?state=inactive", admin)
+
+      expect(response).to have_http_status(200)
+      expect(json_response).to be_an Array
+      expect(json_response.size).to eq(1)
+      expect(json_response).to all(include('active' => false))
+    end
   end
 
-  describe 'POST /users' do
-    it 'creates confirmed user when confirm parameter is false' do
-      optional_attributes = { confirm: false }
-      attributes = attributes_for(:user).merge(optional_attributes)
+  describe 'POST /users/:user_id/impersonation_tokens' do
+    let(:name) { 'my new pat' }
+    let(:expires_at) { '2016-12-28' }
+    let(:scopes) { %w(api read_user) }
+    let(:impersonation) { true }
 
-      post v3_api('/users', admin), attributes
+    it 'returns validation error if impersonation token misses some attributes' do
+      post v3_api("/users/#{user.id}/impersonation_tokens", admin)
 
-      user_id = json_response['id']
-      new_user = User.find(user_id)
-
-      expect(new_user).to be_confirmed
+      expect(response).to have_http_status(400)
+      expect(json_response['error']).to eq('name is missing')
     end
 
-    it 'does not reveal the `is_admin` flag of the user' do
-      post v3_api('/users', admin), attributes_for(:user)
+    it 'returns a 404 error if user not found' do
+      post v3_api("/users/#{not_existing_user_id}/impersonation_tokens", admin),
+        name: name,
+        expires_at: expires_at
 
-      expect(json_response['is_admin']).to be_nil
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
     end
 
-    context "scopes" do
-      let(:user) { admin }
-      let(:path) { '/users' }
-      let(:api_call) { method(:v3_api) }
+    it 'returns a 403 error when authenticated as normal user' do
+      post v3_api("/users/#{user.id}/impersonation_tokens", user),
+        name: name,
+        expires_at: expires_at
 
-      include_examples 'does not allow the "read_user" scope'
+      expect(response).to have_http_status(403)
+      expect(json_response['message']).to eq('403 Forbidden')
+    end
+
+    it 'creates a impersonation token' do
+      post v3_api("/users/#{user.id}/impersonation_tokens", admin),
+        name: name,
+        expires_at: expires_at,
+        scopes: scopes,
+        impersonation: impersonation
+
+      expect(response).to have_http_status(201)
+      expect(json_response['name']).to eq(name)
+      expect(json_response['scopes']).to eq(scopes)
+      expect(json_response['expires_at']).to eq(expires_at)
+      expect(json_response['id']).to be_present
+      expect(json_response['created_at']).to be_present
+      expect(json_response['active']).to be_falsey
+      expect(json_response['revoked']).to be_falsey
+      expect(json_response['token']).to be_present
+      expect(json_response['impersonation']).to eq(impersonation)
+    end
+  end
+
+  describe 'GET /users/:user_id/impersonation_tokens/:impersonation_token_id' do
+    let!(:personal_access_token) { create(:personal_access_token, user: user) }
+    let!(:impersonation_token) { create(:personal_access_token, :impersonation, user: user) }
+
+    it 'returns 404 error if user not found' do
+      get v3_api("/users/#{not_existing_user_id}/impersonation_tokens/1", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
+    end
+
+    it 'returns a 404 error if impersonation token not found' do
+      get v3_api("/users/#{user.id}/impersonation_tokens/#{not_existing_pat_id}", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Impersonation Token Not Found')
+    end
+
+    it 'returns a 404 error if token is not impersonation token' do
+      get v3_api("/users/#{user.id}/impersonation_tokens/#{personal_access_token.id}", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Impersonation Token Not Found')
+    end
+
+    it 'returns a 403 error when authenticated as normal user' do
+      get v3_api("/users/#{user.id}/impersonation_tokens/#{impersonation_token.id}", user)
+
+      expect(response).to have_http_status(403)
+      expect(json_response['message']).to eq('403 Forbidden')
+    end
+
+    it 'returns a personal access token' do
+      get v3_api("/users/#{user.id}/impersonation_tokens/#{impersonation_token.id}", admin)
+
+      expect(response).to have_http_status(200)
+      expect(json_response['token']).to be_present
+      expect(json_response['impersonation']).to be_truthy
+    end
+  end
+
+  describe 'DELETE /users/:user_id/impersonation_tokens/:impersonation_token_id' do
+    let!(:personal_access_token) { create(:personal_access_token, user: user) }
+    let!(:impersonation_token) { create(:personal_access_token, :impersonation, user: user) }
+
+    it 'returns a 404 error if user not found' do
+      delete v3_api("/users/#{not_existing_user_id}/impersonation_tokens/1", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 User Not Found')
+    end
+
+    it 'returns a 404 error if impersonation token not found' do
+      delete v3_api("/users/#{user.id}/impersonation_tokens/#{not_existing_pat_id}", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Impersonation Token Not Found')
+    end
+
+    it 'returns a 404 error if token is not impersonation token' do
+      delete v3_api("/users/#{user.id}/impersonation_tokens/#{personal_access_token.id}", admin)
+
+      expect(response).to have_http_status(404)
+      expect(json_response['message']).to eq('404 Impersonation Token Not Found')
+    end
+
+    it 'returns a 403 error when authenticated as normal user' do
+      delete v3_api("/users/#{user.id}/impersonation_tokens/#{impersonation_token.id}", user)
+
+      expect(response).to have_http_status(403)
+      expect(json_response['message']).to eq('403 Forbidden')
+    end
+
+    it 'revokes a impersonation token' do
+      delete v3_api("/users/#{user.id}/impersonation_tokens/#{impersonation_token.id}", admin)
+
+      expect(response).to have_http_status(204)
+      expect(impersonation_token.revoked).to be_falsey
+      expect(impersonation_token.reload.revoked).to be_truthy
     end
   end
 end
