@@ -1,6 +1,7 @@
 require 'spec_helper'
 
-describe API::Groups do
+describe API::Groups, api: true  do
+  include ApiHelpers
   include UploadHelpers
 
   let(:user1) { create(:user, can_create_group: false) }
@@ -9,9 +10,9 @@ describe API::Groups do
   let(:admin) { create(:admin) }
   let!(:group1) { create(:group, avatar: File.open(uploaded_image_temp_path)) }
   let!(:group2) { create(:group, :private) }
-  let!(:project1) { create(:project, namespace: group1) }
-  let!(:project2) { create(:project, namespace: group2) }
-  let!(:project3) { create(:project, namespace: group1, path: 'test', visibility_level: Gitlab::VisibilityLevel::PRIVATE) }
+  let!(:project1) { create(:empty_project, namespace: group1) }
+  let!(:project2) { create(:empty_project, namespace: group2) }
+  let!(:project3) { create(:empty_project, namespace: group1, path: 'test', visibility_level: Gitlab::VisibilityLevel::PRIVATE) }
 
   before do
     group1.add_owner(user1)
@@ -32,18 +33,15 @@ describe API::Groups do
         get api("/groups", user1)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.length).to eq(1)
-        expect(json_response)
-          .to satisfy_one { |group| group['name'] == group1.name }
+        expect(json_response.first['name']).to eq(group1.name)
       end
 
       it "does not include statistics" do
         get api("/groups", user1), statistics: true
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first).not_to include 'statistics'
       end
@@ -54,7 +52,6 @@ describe API::Groups do
         get api("/groups", admin)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.length).to eq(2)
       end
@@ -63,7 +60,6 @@ describe API::Groups do
         get api("/groups", admin)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first).not_to include('statistics')
       end
@@ -73,20 +69,16 @@ describe API::Groups do
           storage_size: 702,
           repository_size: 123,
           lfs_objects_size: 234,
-          build_artifacts_size: 345
-        }.stringify_keys
-        exposed_attributes = attributes.dup
-        exposed_attributes['job_artifacts_size'] = exposed_attributes.delete('build_artifacts_size')
+          build_artifacts_size: 345,
+        }
 
         project1.statistics.update!(attributes)
 
         get api("/groups", admin), statistics: true
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
-        expect(json_response)
-          .to satisfy_one { |group| group['statistics'] == exposed_attributes }
+        expect(json_response.first['statistics']).to eq attributes.stringify_keys
       end
     end
 
@@ -95,7 +87,6 @@ describe API::Groups do
         get api("/groups", admin), skip_groups: [group2.id]
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.length).to eq(1)
       end
@@ -110,7 +101,6 @@ describe API::Groups do
         get api("/groups", user1), all_available: true
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(response_groups).to contain_exactly(public_group.name, group1.name)
       end
@@ -128,7 +118,6 @@ describe API::Groups do
         get api("/groups", user1)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(response_groups).to eq([group3.name, group1.name])
       end
@@ -137,7 +126,6 @@ describe API::Groups do
         get api("/groups", user1), sort: "desc"
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(response_groups).to eq([group1.name, group3.name])
       end
@@ -146,18 +134,26 @@ describe API::Groups do
         get api("/groups", user1), order_by: "path"
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(response_groups).to eq([group1.name, group3.name])
       end
     end
+  end
 
-    context 'when using owned in the request' do
+  describe 'GET /groups/owned' do
+    context 'when unauthenticated' do
+      it 'returns authentication error' do
+        get api('/groups/owned')
+
+        expect(response).to have_http_status(401)
+      end
+    end
+
+    context 'when authenticated as group owner' do
       it 'returns an array of groups the user owns' do
-        get api('/groups', user2), owned: true
+        get api('/groups/owned', user2)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first['name']).to eq(group2.name)
       end
@@ -167,7 +163,7 @@ describe API::Groups do
   describe "GET /groups/:id" do
     context "when authenticated as user" do
       it "returns one of user1's groups" do
-        project = create(:project, namespace: group2, path: 'Foo')
+        project = create(:empty_project, namespace: group2, path: 'Foo')
         create(:project_group_link, project: project, group: group1)
 
         get api("/groups/#{group1.id}", user1)
@@ -177,13 +173,12 @@ describe API::Groups do
         expect(json_response['name']).to eq(group1.name)
         expect(json_response['path']).to eq(group1.path)
         expect(json_response['description']).to eq(group1.description)
-        expect(json_response['visibility']).to eq(Gitlab::VisibilityLevel.string_level(group1.visibility_level))
-        expect(json_response['avatar_url']).to eq(group1.avatar_url(only_path: false))
+        expect(json_response['visibility_level']).to eq(group1.visibility_level)
+        expect(json_response['avatar_url']).to eq(group1.avatar_url)
         expect(json_response['web_url']).to eq(group1.web_url)
         expect(json_response['request_access_enabled']).to eq(group1.request_access_enabled)
         expect(json_response['full_name']).to eq(group1.full_name)
         expect(json_response['full_path']).to eq(group1.full_path)
-        expect(json_response['parent_id']).to eq(group1.parent_id)
         expect(json_response['projects']).to be_an Array
         expect(json_response['projects'].length).to eq(2)
         expect(json_response['shared_projects']).to be_an Array
@@ -292,31 +287,28 @@ describe API::Groups do
         get api("/groups/#{group1.id}/projects", user1)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response.length).to eq(2)
-        project_names = json_response.map { |proj| proj['name'] }
+        project_names = json_response.map { |proj| proj['name' ] }
         expect(project_names).to match_array([project1.name, project3.name])
-        expect(json_response.first['visibility']).to be_present
+        expect(json_response.first['visibility_level']).to be_present
       end
 
       it "returns the group's projects with simple representation" do
         get api("/groups/#{group1.id}/projects", user1), simple: true
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response.length).to eq(2)
-        project_names = json_response.map { |proj| proj['name'] }
+        project_names = json_response.map { |proj| proj['name' ] }
         expect(project_names).to match_array([project1.name, project3.name])
-        expect(json_response.first['visibility']).not_to be_present
+        expect(json_response.first['visibility_level']).not_to be_present
       end
 
       it 'filters the groups projects' do
-        public_project = create(:project, :public, path: 'test1', group: group1)
+        public_project = create(:empty_project, :public, path: 'test1', group: group1)
 
         get api("/groups/#{group1.id}/projects", user1), visibility: 'public'
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an(Array)
         expect(json_response.length).to eq(1)
         expect(json_response.first['name']).to eq(public_project.name)
@@ -340,29 +332,8 @@ describe API::Groups do
         get api("/groups/#{group1.id}/projects", user3)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response.length).to eq(1)
         expect(json_response.first['name']).to eq(project3.name)
-      end
-
-      it 'only returns the projects owned by user' do
-        project2.group.add_owner(user3)
-
-        get api("/groups/#{project2.group.id}/projects", user3), owned: true
-
-        expect(response).to have_http_status(200)
-        expect(json_response.length).to eq(1)
-        expect(json_response.first['name']).to eq(project2.name)
-      end
-
-      it 'only returns the projects starred by user' do
-        user1.starred_projects = [project1]
-
-        get api("/groups/#{group1.id}/projects", user1), starred: true
-
-        expect(response).to have_http_status(200)
-        expect(json_response.length).to eq(1)
-        expect(json_response.first['name']).to eq(project1.name)
       end
     end
 
@@ -371,7 +342,6 @@ describe API::Groups do
         get api("/groups/#{group2.id}/projects", admin)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response.length).to eq(1)
         expect(json_response.first['name']).to eq(project2.name)
       end
@@ -388,8 +358,7 @@ describe API::Groups do
         get api("/groups/#{group1.path}/projects", admin)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
-        project_names = json_response.map { |proj| proj['name'] }
+        project_names = json_response.map { |proj| proj['name' ] }
         expect(project_names).to match_array([project1.name, project3.name])
       end
 
@@ -429,19 +398,6 @@ describe API::Groups do
         expect(json_response["request_access_enabled"]).to eq(group[:request_access_enabled])
       end
 
-      it "creates a nested group", :nested_groups do
-        parent = create(:group)
-        parent.add_owner(user3)
-        group = attributes_for(:group, { parent_id: parent.id })
-
-        post api("/groups", user3), group
-
-        expect(response).to have_http_status(201)
-
-        expect(json_response["full_path"]).to eq("#{parent.path}/#{group[:path]}")
-        expect(json_response["parent_id"]).to eq(parent.id)
-      end
-
       it "does not create group, duplicate" do
         post api("/groups", user3), { name: 'Duplicate Test', path: group2.path }
 
@@ -468,7 +424,7 @@ describe API::Groups do
       it "removes group" do
         delete api("/groups/#{group1.id}", user1)
 
-        expect(response).to have_http_status(204)
+        expect(response).to have_http_status(200)
       end
 
       it "does not remove a group if not an owner" do
@@ -497,7 +453,7 @@ describe API::Groups do
       it "removes any existing group" do
         delete api("/groups/#{group2.id}", admin)
 
-        expect(response).to have_http_status(204)
+        expect(response).to have_http_status(200)
       end
 
       it "does not remove a non existing group" do
@@ -509,12 +465,12 @@ describe API::Groups do
   end
 
   describe "POST /groups/:id/projects/:project_id" do
-    let(:project) { create(:project) }
-    let(:project_path) { CGI.escape(project.full_path) }
+    let(:project) { create(:empty_project) }
+    let(:project_path) { "#{project.namespace.path}%2F#{project.path}" }
 
-    before do
-      allow_any_instance_of(Projects::TransferService)
-        .to receive(:execute).and_return(true)
+    before(:each) do
+      allow_any_instance_of(Projects::TransferService).
+        to receive(:execute).and_return(true)
     end
 
     context "when authenticated as user" do

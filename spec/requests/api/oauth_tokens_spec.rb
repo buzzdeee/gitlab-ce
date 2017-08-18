@@ -1,6 +1,8 @@
 require 'spec_helper'
 
-describe 'OAuth tokens' do
+describe API::API, api: true  do
+  include ApiHelpers
+
   context 'Resource Owner Password Credentials' do
     def request_oauth_token(user)
       post '/oauth/token', username: user.username, password: user.password, grant_type: 'password'
@@ -25,28 +27,6 @@ describe 'OAuth tokens' do
 
         expect(response).to have_http_status(200)
         expect(json_response['access_token']).not_to be_nil
-      end
-    end
-
-    context "when user is blocked" do
-      it "does not create an access token" do
-        user = create(:user)
-        user.block
-
-        request_oauth_token(user)
-
-        expect(response).to have_http_status(401)
-      end
-    end
-
-    context "when user is ldap_blocked" do
-      it "does not create an access token" do
-        user = create(:user)
-        user.ldap_block
-
-        request_oauth_token(user)
-
-        expect(response).to have_http_status(401)
       end
     end
   end

@@ -1,10 +1,12 @@
 require "spec_helper"
 
-describe API::Services do
+describe API::Services, api: true  do
+  include ApiHelpers
+
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
   let(:user2) { create(:user) }
-  let(:project) { create(:project, creator_id: user.id, namespace: user.namespace) }
+  let(:project) { create(:empty_project, creator_id: user.id, namespace: user.namespace) }
 
   Service.available_services_names.each do |service|
     describe "PUT /projects/:id/services/#{service.dasherize}" do
@@ -53,7 +55,7 @@ describe API::Services do
       it "deletes #{service}" do
         delete api("/projects/#{project.id}/services/#{dashed_service}", user)
 
-        expect(response).to have_http_status(204)
+        expect(response).to have_http_status(200)
         project.send(service_method).reload
         expect(project.send(service_method).activated?).to be_falsey
       end
@@ -98,7 +100,7 @@ describe API::Services do
   end
 
   describe 'POST /projects/:id/services/:slug/trigger' do
-    let!(:project) { create(:project) }
+    let!(:project) { create(:empty_project) }
 
     describe 'Mattermost Service' do
       let(:service_name) { 'mattermost_slash_commands' }

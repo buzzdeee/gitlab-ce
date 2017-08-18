@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe API::Helpers do
+describe API::Helpers, api: true do
   include API::APIGuard::HelperMethods
-  include described_class
+  include API::Helpers
   include SentryHelper
 
   let(:user) { create(:user) }
@@ -10,21 +10,9 @@ describe API::Helpers do
   let(:key) { create(:key, user: user) }
 
   let(:params) { {} }
-  let(:csrf_token) { SecureRandom.base64(ActionController::RequestForgeryProtection::AUTHENTICITY_TOKEN_LENGTH) }
-  let(:env) do
-    {
-      'rack.input' => '',
-      'rack.session' => {
-        _csrf_token: csrf_token
-      },
-      'REQUEST_METHOD' => 'GET'
-    }
-  end
+  let(:env) { { 'REQUEST_METHOD' => 'GET' } }
+  let(:request) { Rack::Request.new(env) }
   let(:header) { }
-
-  before do
-    allow_any_instance_of(self.class).to receive(:options).and_return({})
-  end
 
   def set_env(user_or_token, identifier)
     clear_env
@@ -56,7 +44,7 @@ describe API::Helpers do
   end
 
   def doorkeeper_guard_returns(value)
-    allow_any_instance_of(self.class).to receive(:doorkeeper_guard) { value }
+    allow_any_instance_of(self.class).to receive(:doorkeeper_guard){ value }
   end
 
   def error!(message, status, header)
@@ -66,94 +54,42 @@ describe API::Helpers do
   describe ".current_user" do
     subject { current_user }
 
-    describe "Warden authentication", :allow_forgery_protection do
-      before do
-        doorkeeper_guard_returns false
-      end
+    describe "Warden authentication" do
+      before { doorkeeper_guard_returns false }
 
       context "with invalid credentials" do
         context "GET request" do
-          before do
-            env['REQUEST_METHOD'] = 'GET'
-          end
-
+          before { env['REQUEST_METHOD'] = 'GET' }
           it { is_expected.to be_nil }
         end
       end
 
       context "with valid credentials" do
-        before do
-          warden_authenticate_returns user
-        end
+        before { warden_authenticate_returns user }
 
         context "GET request" do
-          before do
-            env['REQUEST_METHOD'] = 'GET'
-          end
-
+          before { env['REQUEST_METHOD'] = 'GET' }
           it { is_expected.to eq(user) }
         end
 
         context "HEAD request" do
-          before do
-            env['REQUEST_METHOD'] = 'HEAD'
-          end
-
+          before { env['REQUEST_METHOD'] = 'HEAD' }
           it { is_expected.to eq(user) }
         end
 
         context "PUT request" do
-          before do
-            env['REQUEST_METHOD'] = 'PUT'
-          end
-
-          context 'without CSRF token' do
-            it { is_expected.to be_nil }
-          end
-
-          context 'with CSRF token' do
-            before do
-              env['HTTP_X_CSRF_TOKEN'] = csrf_token
-            end
-
-            it { is_expected.to eq(user) }
-          end
+          before { env['REQUEST_METHOD'] = 'PUT' }
+          it { is_expected.to be_nil }
         end
 
         context "POST request" do
-          before do
-            env['REQUEST_METHOD'] = 'POST'
-          end
-
-          context 'without CSRF token' do
-            it { is_expected.to be_nil }
-          end
-
-          context 'with CSRF token' do
-            before do
-              env['HTTP_X_CSRF_TOKEN'] = csrf_token
-            end
-
-            it { is_expected.to eq(user) }
-          end
+          before { env['REQUEST_METHOD'] = 'POST' }
+          it { is_expected.to be_nil }
         end
 
         context "DELETE request" do
-          before do
-            env['REQUEST_METHOD'] = 'DELETE'
-          end
-
-          context 'without CSRF token' do
-            it { is_expected.to be_nil }
-          end
-
-          context 'with CSRF token' do
-            before do
-              env['HTTP_X_CSRF_TOKEN'] = csrf_token
-            end
-
-            it { is_expected.to eq(user) }
-          end
+          before { env['REQUEST_METHOD'] = 'DELETE' }
+          it { is_expected.to be_nil }
         end
       end
     end
@@ -161,7 +97,7 @@ describe API::Helpers do
     describe "when authenticating using a user's private token" do
       it "returns nil for an invalid token" do
         env[API::APIGuard::PRIVATE_TOKEN_HEADER] = 'invalid token'
-        allow_any_instance_of(self.class).to receive(:doorkeeper_guard) { false }
+        allow_any_instance_of(self.class).to receive(:doorkeeper_guard){ false }
 
         expect(current_user).to be_nil
       end
@@ -209,6 +145,7 @@ describe API::Helpers do
       it "returns nil for a token without the appropriate scope" do
         personal_access_token = create(:personal_access_token, user: user, scopes: ['read_user'])
         env[API::APIGuard::PRIVATE_TOKEN_HEADER] = personal_access_token.token
+        allow_access_with_scope('write_user')
 
         expect(current_user).to be_nil
       end
@@ -490,7 +427,6 @@ describe API::Helpers do
     context 'current_user is nil' do
       before do
         expect_any_instance_of(self.class).to receive(:current_user).and_return(nil)
-        allow_any_instance_of(self.class).to receive(:initial_current_user).and_return(nil)
       end
 
       it 'returns a 401 response' do
@@ -499,36 +435,11 @@ describe API::Helpers do
     end
 
     context 'current_user is present' do
-      let(:user) { build(:user) }
-
       before do
-        expect_any_instance_of(self.class).to receive(:current_user).at_least(:once).and_return(user)
-        expect_any_instance_of(self.class).to receive(:initial_current_user).and_return(user)
+        expect_any_instance_of(self.class).to receive(:current_user).and_return(true)
       end
 
       it 'does not raise an error' do
-        expect { authenticate! }.not_to raise_error
-      end
-    end
-
-    context 'current_user is blocked' do
-      let(:user) { build(:user, :blocked) }
-
-      before do
-        expect_any_instance_of(self.class).to receive(:current_user).at_least(:once).and_return(user)
-      end
-
-      it 'raises an error' do
-        expect_any_instance_of(self.class).to receive(:initial_current_user).and_return(user)
-
-        expect { authenticate! }.to raise_error '401 - {"message"=>"401 Unauthorized"}'
-      end
-
-      it "doesn't raise an error if an admin user is impersonating a blocked user (via sudo)" do
-        admin_user = build(:user, :admin)
-
-        expect_any_instance_of(self.class).to receive(:initial_current_user).and_return(admin_user)
-
         expect { authenticate! }.not_to raise_error
       end
     end

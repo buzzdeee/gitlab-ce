@@ -1,6 +1,8 @@
 require 'spec_helper'
 
-describe API::Session do
+describe API::Session, api: true  do
+  include ApiHelpers
+
   let(:user) { create(:user) }
 
   describe "POST /session" do
@@ -11,7 +13,7 @@ describe API::Session do
 
         expect(json_response['email']).to eq(user.email)
         expect(json_response['private_token']).to eq(user.private_token)
-        expect(json_response['is_admin']).to eq(user.admin?)
+        expect(json_response['is_admin']).to eq(user.is_admin?)
         expect(json_response['can_create_project']).to eq(user.can_create_project?)
         expect(json_response['can_create_group']).to eq(user.can_create_group?)
       end
@@ -35,7 +37,7 @@ describe API::Session do
 
         expect(json_response['email']).to eq user.email
         expect(json_response['private_token']).to eq user.private_token
-        expect(json_response['is_admin']).to eq user.admin?
+        expect(json_response['is_admin']).to eq user.is_admin?
         expect(json_response['can_create_project']).to eq user.can_create_project?
         expect(json_response['can_create_group']).to eq user.can_create_group?
       end
@@ -48,7 +50,7 @@ describe API::Session do
 
         expect(json_response['email']).to eq user.email
         expect(json_response['private_token']).to eq user.private_token
-        expect(json_response['is_admin']).to eq user.admin?
+        expect(json_response['is_admin']).to eq user.is_admin?
         expect(json_response['can_create_project']).to eq user.can_create_project?
         expect(json_response['can_create_group']).to eq user.can_create_group?
       end
@@ -83,24 +85,6 @@ describe API::Session do
         post api("/session"), password: user.password
 
         expect(response).to have_http_status(400)
-      end
-    end
-
-    context "when user is blocked" do
-      it "returns authentication error" do
-        user.block
-        post api("/session"), email: user.username, password: user.password
-
-        expect(response).to have_http_status(401)
-      end
-    end
-
-    context "when user is ldap_blocked" do
-      it "returns authentication error" do
-        user.ldap_block
-        post api("/session"), email: user.username, password: user.password
-
-        expect(response).to have_http_status(401)
       end
     end
   end

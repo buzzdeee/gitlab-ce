@@ -1,12 +1,14 @@
 require 'spec_helper'
 
-describe API::Version do
+describe API::Version, api: true do
+  include ApiHelpers
+
   describe 'GET /version' do
     context 'when unauthenticated' do
       it 'returns authentication error' do
         get api('/version')
 
-        expect(response).to have_gitlab_http_status(401)
+        expect(response).to have_http_status(401)
       end
     end
 
@@ -16,7 +18,7 @@ describe API::Version do
       it 'returns the version information' do
         get api('/version', user)
 
-        expect(response).to have_gitlab_http_status(200)
+        expect(response).to have_http_status(200)
         expect(json_response['version']).to eq(Gitlab::VERSION)
         expect(json_response['revision']).to eq(Gitlab::REVISION)
       end

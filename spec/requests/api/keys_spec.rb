@@ -1,12 +1,16 @@
 require 'spec_helper'
 
-describe API::Keys do
+describe API::Keys, api: true  do
+  include ApiHelpers
+
   let(:user)  { create(:user) }
   let(:admin) { create(:admin) }
   let(:key)   { create(:key, user: user) }
-  let(:email) { create(:email, user: user) }
+  let(:email)   { create(:email, user: user) }
 
   describe 'GET /keys/:uid' do
+    before { admin }
+
     context 'when unauthenticated' do
       it 'returns authentication error' do
         get api("/keys/#{key.id}")
@@ -29,12 +33,6 @@ describe API::Keys do
         expect(json_response['title']).to eq(key.title)
         expect(json_response['user']['id']).to eq(user.id)
         expect(json_response['user']['username']).to eq(user.username)
-      end
-
-      it "does not include the user's `is_admin` flag" do
-        get api("/keys/#{key.id}", admin)
-
-        expect(json_response['user']['is_admin']).to be_nil
       end
     end
   end
