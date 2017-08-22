@@ -120,12 +120,12 @@ module API
             present user, with: Entities::UserPublic
           else
             conflict!('Email has already been taken') if User
-                                                           .where(email: user.email)
-                                                           .count > 0
+              .where(email: user.email)
+              .count > 0
 
             conflict!('Username has already been taken') if User
-                                                              .where(username: user.username)
-                                                              .count > 0
+              .where(username: user.username)
+              .count > 0
 
             render_validation_error!(user)
           end
@@ -316,7 +316,7 @@ module API
         params do
           requires :id, type: Integer, desc: 'The ID of the user'
         end
-        post ':id/block' do
+        put ':id/block' do
           authenticated_as_admin!
           user = User.find_by(id: params[:id])
           not_found!('User') unless user
@@ -332,7 +332,7 @@ module API
         params do
           requires :id, type: Integer, desc: 'The ID of the user'
         end
-        post ':id/unblock' do
+        put ':id/unblock' do
           authenticated_as_admin!
           user = User.find_by(id: params[:id])
           not_found!('User') unless user

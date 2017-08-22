@@ -67,11 +67,11 @@ module API
         end
 
         desc 'Mark all todos as done'
-        post '/mark_as_done' do
-          todos = find_todos
-          TodoService.new.mark_todos_as_done(todos, current_user)
+        delete do
+          status(200)
 
-          no_content!
+          todos = TodosFinder.new(current_user, params).execute
+          TodoService.new.mark_todos_as_done(todos, current_user).size
         end
       end
     end

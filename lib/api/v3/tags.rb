@@ -46,7 +46,7 @@ module API
           authorize_push_project
 
           result = ::Tags::CreateService.new(user_project, current_user)
-                     .execute(params[:tag_name], params[:ref], params[:message], params[:release_description])
+            .execute(params[:tag_name], params[:ref], params[:message], params[:release_description])
 
           if result[:status] == :success
             present result[:tag],
@@ -65,9 +65,14 @@ module API
           authorize_push_project
 
           result = ::Tags::DestroyService.new(user_project, current_user)
-                     .execute(params[:tag_name])
+            .execute(params[:tag_name])
 
-          if result[:status] != :success
+          if result[:status] == :success
+            status(200)
+            {
+              tag_name: params[:tag_name]
+            }
+          else
             render_api_error!(result[:message], result[:return_code])
           end
         end

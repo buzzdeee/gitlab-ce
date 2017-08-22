@@ -89,8 +89,7 @@ module API
           variable = user_project.variables.find_by(key: params[:key])
           not_found!('Variable') unless variable
 
-          status 204
-          variable.destroy
+          present variable.destroy, with: ::API::Entities::Variable
         end
       end
     end

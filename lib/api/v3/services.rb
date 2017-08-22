@@ -108,6 +108,26 @@ module API
             desc: 'Enable SSL verification for communication'
           }
         ],
+        'builds-email' => [
+          {
+            required: true,
+            name: :recipients,
+            type: String,
+            desc: 'Comma-separated list of recipient email addresses'
+          },
+          {
+            required: false,
+            name: :add_pusher,
+            type: Boolean,
+            desc: 'Add pusher to recipients list'
+          },
+          {
+            required: false,
+            name: :notify_only_broken_builds,
+            type: Boolean,
+            desc: 'Notify only broken builds'
+          }
+        ],
         'campfire' => [
           {
             required: true,
@@ -305,13 +325,13 @@ module API
             required: true,
             name: :url,
             type: String,
-            desc: 'The base URL to the JIRA instance web interface which is being linked to this GitLab project. E.g., https://jira.example.com'
+            desc: 'The URL to the JIRA project which is being linked to this GitLab project, e.g., https://jira.example.com'
           },
           {
-            required: false,
-            name: :api_url,
+            required: true,
+            name: :project_key,
             type: String,
-            desc: 'The base URL to the JIRA instance API. Web URL value will be used if not set. E.g., https://jira-api.example.com'
+            desc: 'The short identifier for your JIRA project, all uppercase, e.g., PROJ'
           },
           {
             required: false,
@@ -384,9 +404,9 @@ module API
           },
           {
             required: false,
-            name: :notify_only_broken_pipelines,
+            name: :notify_only_broken_builds,
             type: Boolean,
-            desc: 'Notify only broken pipelines'
+            desc: 'Notify only broken builds'
           }
         ],
         'pivotaltracker' => [
@@ -661,7 +681,10 @@ module API
             hash.merge!(key => nil)
           end
 
-          unless service.update_attributes(attrs.merge(active: false))
+          if service.update_attributes(attrs.merge(active: false))
+            status(200)
+            true
+          else
             render_api_error!('400 Bad Request', 400)
           end
         end

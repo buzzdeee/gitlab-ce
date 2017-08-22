@@ -1,6 +1,5 @@
 module API
   module V3
-    # Snippets API
     class Snippets < Grape::API
       include PaginationParams
 
@@ -59,11 +58,11 @@ module API
           requires :title, type: String, desc: 'The title of a snippet'
           requires :file_name, type: String, desc: 'The name of a snippet file'
           requires :content, type: String, desc: 'The content of a snippet'
+          optional :visibility_level, type: Integer,
+                                      values: Gitlab::VisibilityLevel.values,
+                                      default: Gitlab::VisibilityLevel::INTERNAL,
+                                      desc: 'The visibility level of the snippet'
           optional :description, type: String, desc: 'The description of a snippet'
-          optional :visibility, type: String,
-                   values: Gitlab::VisibilityLevel.string_values,
-                   default: 'internal',
-                   desc: 'The visibility of the snippet'
         end
         post do
           attrs = declared_params(include_missing: false).merge(request: request, api: true)
@@ -88,10 +87,10 @@ module API
           optional :file_name, type: String, desc: 'The name of a snippet file'
           optional :content, type: String, desc: 'The content of a snippet'
           optional :description, type: String, desc: 'The description of a snippet'
-          optional :visibility, type: String,
-                   values: Gitlab::VisibilityLevel.string_values,
-                   desc: 'The visibility of the snippet'
-          at_least_one_of :title, :file_name, :content, :visibility
+          optional :visibility_level, type: Integer,
+                                      values: Gitlab::VisibilityLevel.values,
+                                      desc: 'The visibility level of the snippet'
+          at_least_one_of :title, :file_name, :content, :visibility_level
         end
         put ':id' do
           snippet = snippets_for_current_user.find_by(id: params.delete(:id))
@@ -124,8 +123,8 @@ module API
 
           authorize! :destroy_personal_snippet, snippet
 
-          status 204
           snippet.destroy
+          no_content!
         end
 
         desc 'Get a raw snippet' do

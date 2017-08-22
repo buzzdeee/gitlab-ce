@@ -77,11 +77,13 @@ module API
           requires :id, type: Integer, desc: 'The ID of the runner'
         end
         delete ':id' do
-          runner = get_runner(params[:id])
+          runner = Ci::Runner.find(params[:id])
+          not_found!('Runner') unless runner
+
           authenticate_delete_runner!(runner)
 
-          status 204
-          runner.destroy!
+          status(200)
+          runner.destroy
         end
       end
 
@@ -136,8 +138,9 @@ module API
           runner = runner_project.runner
           forbidden!("Only one project associated with the runner. Please remove the runner instead") if runner.projects.count == 1
 
-          status 204
           runner_project.destroy
+
+          present runner, with: ::API::Entities::Runner
         end
       end
 
