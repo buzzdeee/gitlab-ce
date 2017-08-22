@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::SidekiqMetrics do
+describe API::V3::SidekiqMetrics do
   let(:admin) { create(:user, :admin) }
 
   describe 'GET sidekiq/*' do

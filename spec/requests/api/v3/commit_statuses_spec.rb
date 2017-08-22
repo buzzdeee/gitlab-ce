@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::CommitStatuses do
+describe API::V3::CommitStatuses do
   let!(:project) { create(:project, :repository) }
   let(:commit) { project.repository.commit }
   let(:guest) { create_user(:guest) }

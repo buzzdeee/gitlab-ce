@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::GroupVariables do
+describe API::V3::GroupVariables do
   let(:group) { create(:group) }
   let(:user) { create(:user) }
 

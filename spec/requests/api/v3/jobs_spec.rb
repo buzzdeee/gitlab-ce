@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::Jobs do
+describe API::V3::Jobs do
   let!(:project) do
     create(:project, :repository, public_builds: false)
   end

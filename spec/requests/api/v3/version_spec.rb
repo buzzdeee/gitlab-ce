@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::Version do
+describe API::V3::Version do
   describe 'GET /version' do
     context 'when unauthenticated' do
       it 'returns authentication error' do

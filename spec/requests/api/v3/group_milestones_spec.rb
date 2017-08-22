@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3!::GroupMilestones do
+describe API::V3!::GroupMilestones do
   let(:user) { create(:user) }
   let(:group) { create(:group, :private) }
   let(:project) { create(:project, namespace: group) }

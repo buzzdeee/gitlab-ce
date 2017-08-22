@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::Internal do
+describe API::V3::Internal do
   let(:user) { create(:user) }
   let(:key) { create(:key, user: user) }
   let(:project) { create(:project, :repository) }
