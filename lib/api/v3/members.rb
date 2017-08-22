@@ -68,7 +68,7 @@ module API
               member = source.add_user(params[:user_id], params[:access_level], current_user: current_user, expires_at: params[:expires_at])
             end
             if member.persisted? && member.valid?
-              present member.user, with: ::API::Entities::Member, member: member
+              present member.user, with: Entities::Member, member: member
             else
               # This is to ensure back-compatibility but 400 behavior should be used
               # for all validation errors in 9.0!
@@ -124,7 +124,7 @@ module API
             else
               ::Members::DestroyService.new(source, current_user, declared_params).execute
 
-              present member.user, with: ::API::Entities::Member, member: member
+              present member.user, with: Entities::Member, member: member
             end
           end
         end

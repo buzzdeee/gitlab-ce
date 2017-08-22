@@ -67,7 +67,7 @@ module API
           hook = SystemHook.find_by(id: params[:id])
           not_found!('System hook') unless hook
 
-          present hook.destroy, with: ::API::Entities::Hook
+          present hook.destroy, with: Entities::Hook
         end
       end
     end

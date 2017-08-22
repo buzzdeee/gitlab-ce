@@ -43,7 +43,7 @@ module API
 
         def render_response(template_type, template)
           not_found!(template_type.to_s.singularize) unless template
-          present template, with: ::API::Entities::Template
+          present template, with: Entities::Template
         end
       end
 
@@ -52,7 +52,7 @@ module API
           detailed_desc = 'This feature was introduced in GitLab 8.7.'
           detailed_desc << DEPRECATION_MESSAGE unless status == :ok
           detail detailed_desc
-          success ::API::Entities::RepoLicense
+          success Entities::RepoLicense
         end
         params do
           optional :popular, type: Boolean, desc: 'If passed, returns only popular licenses'
@@ -61,7 +61,7 @@ module API
           options = {
             featured: declared(params)[:popular].present? ? true : nil
           }
-          present Licensee::License.all(options), with: ::API::Entities::RepoLicense
+          present Licensee::License.all(options), with: Entities::RepoLicense
         end
       end
 
@@ -70,7 +70,7 @@ module API
           detailed_desc = 'This feature was introduced in GitLab 8.7.'
           detailed_desc << DEPRECATION_MESSAGE unless status == :ok
           detail detailed_desc
-          success ::API::Entities::RepoLicense
+          success Entities::RepoLicense
         end
         params do
           requires :name, type: String, desc: 'The name of the template'
@@ -80,7 +80,7 @@ module API
 
           template = parsed_license_template
 
-          present template, with: ::API::Entities::RepoLicense
+          present template, with: Entities::RepoLicense
         end
       end
 
@@ -93,10 +93,10 @@ module API
             detailed_desc = "This feature was introduced in GitLab #{gitlab_version}."
             detailed_desc << DEPRECATION_MESSAGE unless status == :ok
             detail detailed_desc
-            success ::API::Entities::TemplatesList
+            success Entities::TemplatesList
           end
           get route do
-            present klass.all, with: ::API::Entities::TemplatesList
+            present klass.all, with: Entities::TemplatesList
           end
         end
 
@@ -105,7 +105,7 @@ module API
             detailed_desc = "This feature was introduced in GitLab #{gitlab_version}."
             detailed_desc << DEPRECATION_MESSAGE unless status == :ok
             detail detailed_desc
-            success ::API::Entities::Template
+            success Entities::Template
           end
           params do
             requires :name, type: String, desc: 'The name of the template'

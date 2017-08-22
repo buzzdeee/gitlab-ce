@@ -19,7 +19,7 @@ module API
         end
 
         desc 'Get a project repository tree' do
-          success ::API::Entities::RepoTreeObject
+          success Entities::RepoTreeObject
         end
         params do
           optional :ref_name, type: String, desc: 'The name of a repository branch or tag, if not given the default branch is used'
@@ -35,7 +35,7 @@ module API
 
           tree = user_project.repository.tree(commit.id, path, recursive: params[:recursive])
 
-          present tree.sorted_entries, with: ::API::Entities::RepoTreeObject
+          present tree.sorted_entries, with: Entities::RepoTreeObject
         end
 
         desc 'Get a raw file contents'
@@ -81,7 +81,7 @@ module API
         end
 
         desc 'Compare two branches, tags, or commits' do
-          success ::API::Entities::Compare
+          success Entities::Compare
         end
         params do
           requires :from, type: String, desc: 'The commit, branch name, or tag name to start comparison'
@@ -89,16 +89,16 @@ module API
         end
         get ':id/repository/compare' do
           compare = Gitlab::Git::Compare.new(user_project.repository.raw_repository, params[:from], params[:to])
-          present compare, with: ::API::Entities::Compare
+          present compare, with: Entities::Compare
         end
 
         desc 'Get repository contributors' do
-          success ::API::Entities::Contributor
+          success Entities::Contributor
         end
         get ':id/repository/contributors' do
           begin
             present user_project.repository.contributors,
-                    with: ::API::Entities::Contributor
+                    with: Entities::Contributor
           rescue
             not_found!
           end

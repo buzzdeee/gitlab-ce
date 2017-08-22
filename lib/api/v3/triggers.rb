@@ -32,7 +32,7 @@ module API
           pipeline = result.pipeline
 
           if pipeline.persisted?
-            present result.trigger_request, with: ::API::V3::Entities::TriggerRequest
+            present result.trigger_request, with: Entities::TriggerRequest
           else
             render_validation_error!(pipeline)
           end
@@ -78,7 +78,7 @@ module API
 
           trigger = user_project.triggers.create
 
-          present trigger, with: ::API::V3::Entities::Trigger
+          present trigger, with: Entities::Trigger
         end
 
         desc 'Delete a trigger' do
@@ -96,7 +96,7 @@ module API
 
           trigger.destroy
 
-          present trigger, with: ::API::V3::Entities::Trigger
+          present trigger, with: Entities::Trigger
         end
 
         desc 'Update a trigger' do

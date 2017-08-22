@@ -35,7 +35,7 @@ module API
         get ":id/hooks" do
           hooks = paginate user_project.hooks
 
-          present hooks, with: ::API::V3::Entities::ProjectHook
+          present hooks, with: Entities::ProjectHook
         end
 
         desc 'Get a project hook' do
@@ -61,7 +61,7 @@ module API
           hook = user_project.hooks.new(attrs)
 
           if hook.save
-            present hook, with: ::API::V3::Entities::ProjectHook
+            present hook, with: Entities::ProjectHook
           else
             error!("Invalid url given", 422) if hook.errors[:url].present?
 
@@ -70,7 +70,7 @@ module API
         end
 
         desc 'Update an existing project hook' do
-          success ::API::V3::Entities::ProjectHook
+          success Entities::ProjectHook
         end
         params do
           requires :hook_id, type: Integer, desc: "The ID of the hook to update"
@@ -82,7 +82,7 @@ module API
           attrs = declared_params(include_missing: false)
           attrs[:job_events] = attrs.delete(:build_events) if attrs.key?(:build_events)
           if hook.update_attributes(attrs)
-            present hook, with: ::API::V3::Entities::ProjectHook
+            present hook, with: Entities::ProjectHook
           else
             error!("Invalid url given", 422) if hook.errors[:url].present?
 
@@ -91,14 +91,14 @@ module API
         end
 
         desc 'Deletes project hook' do
-          success ::API::V3::Entities::ProjectHook
+          success Entities::ProjectHook
         end
         params do
           requires :hook_id, type: Integer, desc: 'The ID of the hook to delete'
         end
         delete ":id/hooks/:hook_id" do
           begin
-            present user_project.hooks.destroy(params[:hook_id]), with: ::API::V3::Entities::ProjectHook
+            present user_project.hooks.destroy(params[:hook_id]), with: Entities::ProjectHook
           rescue
             # ProjectHook can raise Error if hook_id not found
             not_found!("Error deleting hook #{params[:hook_id]}")

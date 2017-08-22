@@ -104,7 +104,7 @@ module API
           render_spam_error! if snippet.spam?
 
           if snippet.valid?
-            present snippet, with: ::API::V3::Entities::ProjectSnippet
+            present snippet, with: Entities::ProjectSnippet
           else
             render_validation_error!(snippet)
           end

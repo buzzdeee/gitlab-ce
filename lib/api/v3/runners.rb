@@ -11,7 +11,7 @@ module API
         end
         params do
           optional :scope, type: String, values: %w[active paused online],
-                   desc: 'The scope of specific runners to show'
+                           desc: 'The scope of specific runners to show'
           use :pagination
         end
         get do
@@ -24,7 +24,7 @@ module API
         end
         params do
           optional :scope, type: String, values: %w[active paused online specific shared],
-                   desc: 'The scope of specific runners to show'
+                           desc: 'The scope of specific runners to show'
           use :pagination
         end
         get 'all' do
@@ -140,7 +140,7 @@ module API
 
           runner_project.destroy
 
-          present runner, with: ::API::Entities::Runner
+          present runner, with: Entities::Runner
         end
       end
 

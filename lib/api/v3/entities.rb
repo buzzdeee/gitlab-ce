@@ -1,6 +1,21 @@
 module API
   module V3
     module Entities
+      class UserSafe < Grape::Entity
+        expose :name, :username
+      end
+
+      class UserBasic < UserSafe
+        expose :id, :state
+        expose :avatar_url do |user, options|
+          user.avatar_url(only_path: false)
+        end
+
+        expose :web_url do |user, options|
+          Gitlab::Routing.url_helpers.user_url(user)
+        end
+      end
+
       class ProjectSnippet < Grape::Entity
         expose :id, :title, :file_name
         expose :author, using: Entities::UserBasic
@@ -54,21 +69,6 @@ module API
         expose :user, using: Entities::UserBasic
         expose :created_at, :updated_at
         expose :awardable_id, :awardable_type
-      end
-
-      class UserSafe < Grape::Entity
-        expose :name, :username
-      end
-
-      class UserBasic < UserSafe
-        expose :id, :state
-        expose :avatar_url do |user, options|
-          user.avatar_url(only_path: false)
-        end
-
-        expose :web_url do |user, options|
-          Gitlab::Routing.url_helpers.user_url(user)
-        end
       end
 
       class User < UserBasic
@@ -171,6 +171,21 @@ module API
         expose :statistics, using: 'Entities::ProjectStatistics', if: :statistics
       end
 
+      class MemberAccess < Grape::Entity
+        expose :access_level
+        expose :notification_level do |member, options|
+          if member.notification_setting
+            ::NotificationSetting.levels[member.notification_setting.level]
+          end
+        end
+      end
+
+      class ProjectAccess < MemberAccess
+      end
+
+      class GroupAccess < MemberAccess
+      end
+
       class ProjectWithAccess < Project
         expose :permissions do
           expose :project_access, using: Entities::ProjectAccess do |project, options|
@@ -183,6 +198,16 @@ module API
             end
           end
         end
+      end
+
+      class Milestone < Grape::Entity
+        expose :id, :iid
+        expose :project_id, if: -> (entity, options) { entity&.project_id }
+        expose :group_id, if: -> (entity, options) { entity&.group_id }
+        expose :title, :description
+        expose :state, :created_at, :updated_at
+        expose :due_date
+        expose :start_date
       end
 
       class MergeRequest < Grape::Entity
@@ -294,6 +319,10 @@ module API
         expose :terminal_max_session_time
       end
 
+      class EnvironmentBasic < Grape::Entity
+        expose :id, :name, :slug, :external_url
+      end
+
       class Environment < Entities::EnvironmentBasic
         expose :project, using: Entities::Project
       end
@@ -307,18 +336,38 @@ module API
         expose :id, :variables
       end
 
-      class Build < Grape::Entity
-        expose :id, :status, :stage, :name, :ref, :tag, :coverage
-        expose :created_at, :started_at, :finished_at
-        expose :user, with: Entities::User
-        expose :artifacts_file, using: Entities::JobArtifactFile, if: -> (build, opts) { build.artifacts? }
-        expose :commit, with: Entities::RepoCommit
-        expose :runner, with: Entities::Runner
-        expose :pipeline, with: Entities::PipelineBasic
+      class RepoCommit < Grape::Entity
+        expose :id, :short_id, :title, :created_at
+        expose :parent_ids
+        expose :safe_message, as: :message
+        expose :author_name, :author_email, :authored_date
+        expose :committer_name, :committer_email, :committed_date
+      end
+
+      class Runner < Grape::Entity
+        expose :id
+        expose :description
+        expose :active
+        expose :is_shared
+        expose :name
+      end
+
+      class PipelineBasic < Grape::Entity
+        expose :id, :sha, :ref, :status
       end
 
       class BuildArtifactFile < Grape::Entity
         expose :filename, :size
+      end
+
+      class Build < Grape::Entity
+        expose :id, :status, :stage, :name, :ref, :tag, :coverage
+        expose :created_at, :started_at, :finished_at
+        expose :user, with: Entities::User
+        expose :artifacts_file, using: Entities::BuildArtifactFile, if: -> (build, opts) { build.artifacts? }
+        expose :commit, with: Entities::RepoCommit
+        expose :runner, with: Entities::Runner
+        expose :pipeline, with: Entities::PipelineBasic
       end
 
       class Deployment < Grape::Entity
@@ -326,6 +375,13 @@ module API
         expose :user,        using: Entities::UserBasic
         expose :environment, using: Entities::EnvironmentBasic
         expose :deployable,  using: Entities::Build
+      end
+
+      class RepoDiff < Grape::Entity
+        expose :old_path, :new_path, :a_mode, :b_mode, :diff
+        expose :new_file?, as: :new_file
+        expose :renamed_file?, as: :renamed_file
+        expose :deleted_file?, as: :deleted_file
       end
 
       class MergeRequestChanges < MergeRequest
@@ -367,14 +423,6 @@ module API
         expose(:project_id) { |entity| entity&.project.try(:id) }
         expose :title, :description
         expose :state, :created_at, :updated_at
-      end
-
-      class RepoCommit < Grape::Entity
-        expose :id, :short_id, :title, :created_at
-        expose :parent_ids
-        expose :safe_message, as: :message
-        expose :author_name, :author_email, :authored_date
-        expose :committer_name, :committer_email, :committed_date
       end
 
       class RepoCommitStats < Grape::Entity
@@ -433,13 +481,6 @@ module API
         end
       end
 
-      class RepoDiff < Grape::Entity
-        expose :old_path, :new_path, :a_mode, :b_mode, :diff
-        expose :new_file?, as: :new_file
-        expose :renamed_file?, as: :renamed_file
-        expose :deleted_file?, as: :deleted_file
-      end
-
       class ProtectedRefAccess < Grape::Entity
         expose :access_level
         expose :access_level_description do |protected_ref_access|
@@ -451,16 +492,6 @@ module API
         expose :name
         expose :push_access_levels, using: Entities::ProtectedRefAccess
         expose :merge_access_levels, using: Entities::ProtectedRefAccess
-      end
-
-      class Milestone < Grape::Entity
-        expose :id, :iid
-        expose :project_id, if: -> (entity, options) { entity&.project_id }
-        expose :group_id, if: -> (entity, options) { entity&.group_id }
-        expose :title, :description
-        expose :state, :created_at, :updated_at
-        expose :due_date
-        expose :start_date
       end
 
       class IssueBasic < ProjectEntity
@@ -644,21 +675,6 @@ module API
         end
       end
 
-      class MemberAccess < Grape::Entity
-        expose :access_level
-        expose :notification_level do |member, options|
-          if member.notification_setting
-            ::NotificationSetting.levels[member.notification_setting.level]
-          end
-        end
-      end
-
-      class ProjectAccess < MemberAccess
-      end
-
-      class GroupAccess < MemberAccess
-      end
-
       class NotificationSetting < Grape::Entity
         expose :level
         expose :events, if: ->(notification_setting, _) { notification_setting.custom? } do
@@ -758,14 +774,6 @@ module API
         end
       end
 
-      class Runner < Grape::Entity
-        expose :id
-        expose :description
-        expose :active
-        expose :is_shared
-        expose :name
-      end
-
       class RunnerDetails < Runner
         expose :tag_list
         expose :run_untagged
@@ -784,10 +792,6 @@ module API
 
       class RunnerRegistrationDetails < Grape::Entity
         expose :id, :token
-      end
-
-      class PipelineBasic < Grape::Entity
-        expose :id, :sha, :ref, :status
       end
 
       class Variable < Grape::Entity
@@ -813,10 +817,6 @@ module API
 
       class PipelineScheduleDetails < PipelineSchedule
         expose :last_pipeline, using: Entities::PipelineBasic
-      end
-
-      class EnvironmentBasic < Grape::Entity
-        expose :id, :name, :slug, :external_url
       end
 
       class RepoLicense < Grape::Entity

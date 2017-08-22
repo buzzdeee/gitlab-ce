@@ -8,14 +8,14 @@ module API
       end
       resource :projects, requirements: { id: %r{[^/]+} } do
         desc 'Get all labels of the project' do
-          success ::API::Entities::Label
+          success Entities::Label
         end
         get ':id/labels' do
-          present available_labels, with: ::API::Entities::Label, current_user: current_user, project: user_project
+          present available_labels, with: Entities::Label, current_user: current_user, project: user_project
         end
 
         desc 'Delete an existing label' do
-          success ::API::Entities::Label
+          success Entities::Label
         end
         params do
           requires :name, type: String, desc: 'The name of the label to be deleted'
@@ -26,7 +26,7 @@ module API
           label = user_project.labels.find_by(title: params[:name])
           not_found!('Label') unless label
 
-          present label.destroy, with: ::API::Entities::Label, current_user: current_user, project: user_project
+          present label.destroy, with: Entities::Label, current_user: current_user, project: user_project
         end
 
         desc 'Create a new label' do

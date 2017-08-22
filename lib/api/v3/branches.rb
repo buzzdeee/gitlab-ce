@@ -3,6 +3,8 @@ require 'mime/types'
 module API
   module V3
     class Branches < Grape::API
+      BRANCH_ENDPOINT_REQUIREMENTS = ::API::API::PROJECT_ENDPOINT_REQUIREMENTS.merge(branch: ::API::API::NO_SLASH_URL_PART_REGEX)
+
       before { authenticate! }
       before { authorize! :download_code, user_project }
 

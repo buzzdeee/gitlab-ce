@@ -134,7 +134,7 @@ module API
 
             ::Notes::DestroyService.new(user_project, current_user).execute(note)
 
-            present note, with: ::API::V3::Entities::Note
+            present note, with: Entities::Note
           end
         end
       end

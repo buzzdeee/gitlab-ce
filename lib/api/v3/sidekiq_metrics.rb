@@ -1,7 +1,6 @@
 require 'sidekiq/api'
-module V3
-
-  module API
+module API
+  module V3
     class SidekiqMetrics < Grape::API
       before { authenticated_as_admin! }
 
