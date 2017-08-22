@@ -1,27 +1,19 @@
 require 'rails_helper'
 
-describe API::V3::V3::ProjectSnippets do
+describe API::ProjectSnippets do
   let(:project) { create(:project, :public) }
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
 
-  describe "GET /projects/:project_id/snippets/:id/user_agent_detail" do
-    let(:snippet) { create(:project_snippet, :public, project: project) }
-    let!(:user_agent_detail) { create(:user_agent_detail, subject: snippet) }
+  describe 'GET /projects/:project_id/snippets/:id' do
+    # TODO (rspeicher): Deprecated; remove in 9.0
+    it 'always exposes expires_at as nil' do
+      snippet = create(:project_snippet, author: admin)
 
-    it 'exposes known attributes' do
-      get v3_api("/projects/#{project.id}/snippets/#{snippet.id}/user_agent_detail", admin)
+      get v3_api("/projects/#{snippet.project.id}/snippets/#{snippet.id}", admin)
 
-      expect(response).to have_http_status(200)
-      expect(json_response['user_agent']).to eq(user_agent_detail.user_agent)
-      expect(json_response['ip_address']).to eq(user_agent_detail.ip_address)
-      expect(json_response['akismet_submitted']).to eq(user_agent_detail.submitted)
-    end
-
-    it "returns unautorized for non-admin users" do
-      get v3_api("/projects/#{snippet.project.id}/snippets/#{snippet.id}/user_agent_detail", user)
-
-      expect(response).to have_http_status(403)
+      expect(json_response).to have_key('expires_at')
+      expect(json_response['expires_at']).to be_nil
     end
   end
 
@@ -34,13 +26,11 @@ describe API::V3::V3::ProjectSnippets do
       internal_snippet = create(:project_snippet, :internal, project: project)
       private_snippet = create(:project_snippet, :private, project: project)
 
-      get v3_api("/projects/#{project.id}/snippets", user)
+      get v3_api("/projects/#{project.id}/snippets/", user)
 
       expect(response).to have_http_status(200)
-      expect(response).to include_pagination_headers
-      expect(json_response).to be_an Array
       expect(json_response.size).to eq(3)
-      expect(json_response.map { |snippet| snippet['id'] }).to include(public_snippet.id, internal_snippet.id, private_snippet.id)
+      expect(json_response.map { |snippet| snippet['id']} ).to include(public_snippet.id, internal_snippet.id, private_snippet.id)
       expect(json_response.last).to have_key('web_url')
     end
 
@@ -48,33 +38,8 @@ describe API::V3::V3::ProjectSnippets do
       create(:project_snippet, :private, project: project)
 
       get v3_api("/projects/#{project.id}/snippets/", user)
-
       expect(response).to have_http_status(200)
-      expect(response).to include_pagination_headers
-      expect(json_response).to be_an Array
       expect(json_response.size).to eq(0)
-    end
-  end
-
-  describe 'GET /projects/:project_id/snippets/:id' do
-    let(:user) { create(:user) }
-    let(:snippet) { create(:project_snippet, :public, project: project) }
-
-    it 'returns snippet json' do
-      get v3_api("/projects/#{project.id}/snippets/#{snippet.id}", user)
-
-      expect(response).to have_http_status(200)
-
-      expect(json_response['title']).to eq(snippet.title)
-      expect(json_response['description']).to eq(snippet.description)
-      expect(json_response['file_name']).to eq(snippet.file_name)
-    end
-
-    it 'returns 404 for invalid snippet id' do
-      get v3_api("/projects/#{project.id}/snippets/1234", user)
-
-      expect(response).to have_http_status(404)
-      expect(json_response['message']).to eq('404 Not found')
     end
   end
 
@@ -83,9 +48,8 @@ describe API::V3::V3::ProjectSnippets do
       {
         title: 'Test Title',
         file_name: 'test.rb',
-        description: 'test description',
         code: 'puts "hello world"',
-        visibility: 'public'
+        visibility_level: Snippet::PUBLIC
       }
     end
 
@@ -95,10 +59,9 @@ describe API::V3::V3::ProjectSnippets do
       expect(response).to have_http_status(201)
       snippet = ProjectSnippet.find(json_response['id'])
       expect(snippet.content).to eq(params[:code])
-      expect(snippet.description).to eq(params[:description])
       expect(snippet.title).to eq(params[:title])
       expect(snippet.file_name).to eq(params[:file_name])
-      expect(snippet.visibility_level).to eq(Snippet::PUBLIC)
+      expect(snippet.visibility_level).to eq(params[:visibility_level])
     end
 
     it 'returns 400 for missing parameters' do
@@ -122,14 +85,14 @@ describe API::V3::V3::ProjectSnippets do
 
       context 'when the snippet is private' do
         it 'creates the snippet' do
-          expect { create_snippet(project, visibility: 'private') }
+          expect { create_snippet(project, visibility_level: Snippet::PRIVATE) }
             .to change { Snippet.count }.by(1)
         end
       end
 
       context 'when the snippet is public' do
-        it 'rejects the snippet' do
-          expect { create_snippet(project, visibility: 'public') }
+        it 'rejects the shippet' do
+          expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }
             .not_to change { Snippet.count }
 
           expect(response).to have_http_status(400)
@@ -137,7 +100,7 @@ describe API::V3::V3::ProjectSnippets do
         end
 
         it 'creates a spam log' do
-          expect { create_snippet(project, visibility: 'public') }
+          expect { create_snippet(project, visibility_level: Snippet::PUBLIC) }
             .to change { SpamLog.count }.by(1)
         end
       end
@@ -150,14 +113,12 @@ describe API::V3::V3::ProjectSnippets do
 
     it 'updates snippet' do
       new_content = 'New content'
-      new_description = 'New description'
 
-      put v3_api("/projects/#{snippet.project.id}/snippets/#{snippet.id}/", admin), code: new_content, description: new_description
+      put v3_api("/projects/#{snippet.project.id}/snippets/#{snippet.id}/", admin), code: new_content
 
       expect(response).to have_http_status(200)
       snippet.reload
       expect(snippet.content).to eq(new_content)
-      expect(snippet.description).to eq(new_description)
     end
 
     it 'returns 404 for invalid snippet id' do
@@ -209,7 +170,7 @@ describe API::V3::V3::ProjectSnippets do
         let(:visibility_level) { Snippet::PRIVATE }
 
         it 'rejects the snippet' do
-          expect { update_snippet(title: 'Foo', visibility: 'public') }
+          expect { update_snippet(title: 'Foo', visibility_level: Snippet::PUBLIC) }
             .not_to change { snippet.reload.title }
 
           expect(response).to have_http_status(400)
@@ -217,7 +178,7 @@ describe API::V3::V3::ProjectSnippets do
         end
 
         it 'creates a spam log' do
-          expect { update_snippet(title: 'Foo', visibility: 'public') }
+          expect { update_snippet(title: 'Foo', visibility_level: Snippet::PUBLIC) }
             .to change { SpamLog.count }.by(1)
         end
       end
@@ -233,7 +194,7 @@ describe API::V3::V3::ProjectSnippets do
 
       delete v3_api("/projects/#{snippet.project.id}/snippets/#{snippet.id}/", admin)
 
-      expect(response).to have_http_status(204)
+      expect(response).to have_http_status(200)
     end
 
     it 'returns 404 for invalid snippet id' do
@@ -256,7 +217,7 @@ describe API::V3::V3::ProjectSnippets do
     end
 
     it 'returns 404 for invalid snippet id' do
-      get v3_api("/projects/#{snippet.project.id}/snippets/1234/raw", admin)
+      delete v3_api("/projects/#{snippet.project.id}/snippets/1234", admin)
 
       expect(response).to have_http_status(404)
       expect(json_response['message']).to eq('404 Snippet Not Found')

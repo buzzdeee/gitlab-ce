@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::Environments do
+describe API::V3::Environments do
   let(:user)          { create(:user) }
   let(:non_member)    { create(:user) }
   let(:project)       { create(:project, :private, namespace: user.namespace) }
@@ -155,41 +155,6 @@ describe API::V3::V3::Environments do
     context 'a non member' do
       it 'rejects the request' do
         delete v3_api("/projects/#{project.id}/environments/#{environment.id}", non_member)
-
-        expect(response).to have_http_status(404)
-      end
-    end
-  end
-
-  describe 'POST /projects/:id/environments/:environment_id/stop' do
-    context 'as a master' do
-      context 'with a stoppable environment' do
-        before do
-          environment.update(state: :available)
-
-          post v3_api("/projects/#{project.id}/environments/#{environment.id}/stop", user)
-        end
-
-        it 'returns a 200' do
-          expect(response).to have_http_status(200)
-        end
-
-        it 'actually stops the environment' do
-          expect(environment.reload).to be_stopped
-        end
-      end
-
-      it 'returns a 404 for non existing id' do
-        post v3_api("/projects/#{project.id}/environments/12345/stop", user)
-
-        expect(response).to have_http_status(404)
-        expect(json_response['message']).to eq('404 Not found')
-      end
-    end
-
-    context 'a non member' do
-      it 'rejects the request' do
-        post v3_api("/projects/#{project.id}/environments/#{environment.id}/stop", non_member)
 
         expect(response).to have_http_status(404)
       end

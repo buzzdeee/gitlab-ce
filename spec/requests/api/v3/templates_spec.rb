@@ -1,59 +1,51 @@
 require 'spec_helper'
 
-describe API::V3::V3::Templates do
-  context 'the Template Entity' do
-    before do
-      get v3_api('/templates/gitignores/Ruby')
-    end
+describe API::V3::Templates do
+  shared_examples_for 'the Template Entity' do |path|
+    before { get v3_api(path) }
 
     it { expect(json_response['name']).to eq('Ruby') }
     it { expect(json_response['content']).to include('*.gem') }
   end
 
-  context 'the TemplateList Entity' do
-    before do
-      get v3_api('/templates/gitignores')
-    end
+  shared_examples_for 'the TemplateList Entity' do |path|
+    before { get v3_api(path) }
 
     it { expect(json_response.first['name']).not_to be_nil }
     it { expect(json_response.first['content']).to be_nil }
   end
 
-  context 'requesting gitignores' do
+  shared_examples_for 'requesting gitignores' do |path|
     it 'returns a list of available gitignore templates' do
-      get v3_api('/templates/gitignores')
+      get v3_api(path)
 
       expect(response).to have_http_status(200)
-      expect(response).to include_pagination_headers
       expect(json_response).to be_an Array
       expect(json_response.size).to be > 15
     end
   end
 
-  context 'requesting gitlab-ci-ymls' do
+  shared_examples_for 'requesting gitlab-ci-ymls' do |path|
     it 'returns a list of available gitlab_ci_ymls' do
-      get v3_api('/templates/gitlab_ci_ymls')
+      get v3_api(path)
 
       expect(response).to have_http_status(200)
-      expect(response).to include_pagination_headers
       expect(json_response).to be_an Array
       expect(json_response.first['name']).not_to be_nil
     end
   end
 
-  context 'requesting gitlab-ci-yml for Ruby' do
+  shared_examples_for 'requesting gitlab-ci-yml for Ruby' do |path|
     it 'adds a disclaimer on the top' do
-      get v3_api('/templates/gitlab_ci_ymls/Ruby')
+      get v3_api(path)
 
       expect(response).to have_http_status(200)
       expect(json_response['content']).to start_with("# This file is a template,")
     end
   end
 
-  context 'the License Template Entity' do
-    before do
-      get v3_api('/templates/licenses/mit')
-    end
+  shared_examples_for 'the License Template Entity' do |path|
+    before { get v3_api(path) }
 
     it 'returns a license template' do
       expect(json_response['key']).to eq('mit')
@@ -70,12 +62,11 @@ describe API::V3::V3::Templates do
     end
   end
 
-  context 'GET templates/licenses' do
+  shared_examples_for 'GET licenses' do |path|
     it 'returns a list of available license templates' do
-      get v3_api('/templates/licenses')
+      get v3_api(path)
 
       expect(response).to have_http_status(200)
-      expect(response).to include_pagination_headers
       expect(json_response).to be_an Array
       expect(json_response.size).to eq(12)
       expect(json_response.map { |l| l['key'] }).to include('agpl-3.0')
@@ -84,10 +75,9 @@ describe API::V3::V3::Templates do
     describe 'the popular parameter' do
       context 'with popular=1' do
         it 'returns a list of available popular license templates' do
-          get v3_api('/templates/licenses?popular=1')
+          get v3_api("#{path}?popular=1")
 
           expect(response).to have_http_status(200)
-          expect(response).to include_pagination_headers
           expect(json_response).to be_an Array
           expect(json_response.size).to eq(3)
           expect(json_response.map { |l| l['key'] }).to include('apache-2.0')
@@ -96,10 +86,10 @@ describe API::V3::V3::Templates do
     end
   end
 
-  context 'GET templates/licenses/:name' do
+  shared_examples_for 'GET licenses/:name' do |path|
     context 'with :project and :fullname given' do
       before do
-        get v3_api("/templates/licenses/#{license_type}?project=My+Awesome+Project&fullname=Anton+#{license_type.upcase}")
+        get v3_api("#{path}/#{license_type}?project=My+Awesome+Project&fullname=Anton+#{license_type.upcase}")
       end
 
       context 'for the mit license' do
@@ -185,5 +175,27 @@ describe API::V3::V3::Templates do
         end
       end
     end
+  end
+
+  describe 'with /templates namespace' do
+    it_behaves_like 'the Template Entity', '/templates/gitignores/Ruby'
+    it_behaves_like 'the TemplateList Entity', '/templates/gitignores'
+    it_behaves_like 'requesting gitignores', '/templates/gitignores'
+    it_behaves_like 'requesting gitlab-ci-ymls', '/templates/gitlab_ci_ymls'
+    it_behaves_like 'requesting gitlab-ci-yml for Ruby', '/templates/gitlab_ci_ymls/Ruby'
+    it_behaves_like 'the License Template Entity', '/templates/licenses/mit'
+    it_behaves_like 'GET licenses', '/templates/licenses'
+    it_behaves_like 'GET licenses/:name', '/templates/licenses'
+  end
+
+  describe 'without /templates namespace' do
+    it_behaves_like 'the Template Entity', '/gitignores/Ruby'
+    it_behaves_like 'the TemplateList Entity', '/gitignores'
+    it_behaves_like 'requesting gitignores', '/gitignores'
+    it_behaves_like 'requesting gitlab-ci-ymls', '/gitlab_ci_ymls'
+    it_behaves_like 'requesting gitlab-ci-yml for Ruby', '/gitlab_ci_ymls/Ruby'
+    it_behaves_like 'the License Template Entity', '/licenses/mit'
+    it_behaves_like 'GET licenses', '/licenses'
+    it_behaves_like 'GET licenses/:name', '/licenses'
   end
 end

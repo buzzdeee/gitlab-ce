@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'mime/types'
 
-describe API::V3::V3::Repositories do
+describe API::V3::Repositories do
   include RepoHelpers
   include WorkhorseHelpers
 

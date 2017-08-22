@@ -1,13 +1,11 @@
 require 'spec_helper'
 
-describe API::V3::V3::SystemHooks do
+describe API::V3::SystemHooks do
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
   let!(:hook) { create(:system_hook, url: "http://example.com") }
 
-  before do
-    stub_request(:post, hook.url)
-  end
+  before { stub_request(:post, hook.url) }
 
   describe "GET /hooks" do
     context "when no user" do
@@ -31,7 +29,6 @@ describe API::V3::V3::SystemHooks do
         get v3_api("/hooks", admin)
 
         expect(response).to have_http_status(200)
-        expect(response).to include_pagination_headers
         expect(json_response).to be_an Array
         expect(json_response.first['url']).to eq(hook.url)
         expect(json_response.first['push_events']).to be false
@@ -41,59 +38,12 @@ describe API::V3::V3::SystemHooks do
     end
   end
 
-  describe "POST /hooks" do
-    it "creates new hook" do
-      expect do
-        post v3_api("/hooks", admin), url: 'http://example.com'
-      end.to change { SystemHook.count }.by(1)
-    end
-
-    it "responds with 400 if url not given" do
-      post v3_api("/hooks", admin)
-
-      expect(response).to have_http_status(400)
-    end
-
-    it "responds with 400 if url is invalid" do
-      post v3_api("/hooks", admin), url: 'hp://mep.mep'
-
-      expect(response).to have_http_status(400)
-    end
-
-    it "does not create new hook without url" do
-      expect do
-        post v3_api("/hooks", admin)
-      end.not_to change { SystemHook.count }
-    end
-
-    it 'sets default values for events' do
-      post v3_api('/hooks', admin), url: 'http://mep.mep', enable_ssl_verification: true
-
-      expect(response).to have_http_status(201)
-      expect(json_response['enable_ssl_verification']).to be true
-      expect(json_response['tag_push_events']).to be false
-    end
-  end
-
-  describe "GET /hooks/:id" do
-    it "returns hook by id" do
-      get v3_api("/hooks/#{hook.id}", admin)
-      expect(response).to have_http_status(200)
-      expect(json_response['event_name']).to eq('project_create')
-    end
-
-    it "returns 404 on failure" do
-      get v3_api("/hooks/404", admin)
-      expect(response).to have_http_status(404)
-    end
-  end
-
   describe "DELETE /hooks/:id" do
     it "deletes a hook" do
       expect do
         delete v3_api("/hooks/#{hook.id}", admin)
 
-        expect(response).to have_http_status(204)
+        expect(response).to have_http_status(200)
       end.to change { SystemHook.count }.by(-1)
     end
 

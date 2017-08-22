@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::AwardEmoji do
+describe API::V3::AwardEmoji do
   let(:user)            { create(:user) }
   let!(:project)        { create(:project) }
   let(:issue)           { create(:issue, project: project) }

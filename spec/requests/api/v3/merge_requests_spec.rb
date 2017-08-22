@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe API::V3::MergeRequests do
+describe API::MergeRequests do
   let(:base_time)   { Time.now }
   let(:user)        { create(:user) }
   let(:admin)       { create(:user, :admin) }

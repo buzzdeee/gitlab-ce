@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe API::V3::V3::Deployments do
+describe API::V3::Deployments do
   let(:user)        { create(:user) }
   let(:non_member)  { create(:user) }
   let(:project)     { deployment.environment.project }
