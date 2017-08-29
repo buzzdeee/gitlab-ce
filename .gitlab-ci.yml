@@ -30,9 +30,11 @@ variables:
   FLAKY_RSPEC_SUITE_REPORT_PATH: rspec_flaky/${CI_PROJECT_NAME}/report-master.json
 
 before_script:
+  - date
   - bundle --version
   - source scripts/utils.sh
   - source scripts/prepare_build.sh
+  - date
 
 stages:
   - build
@@ -93,7 +95,13 @@ stages:
     - cp ${FLAKY_RSPEC_SUITE_REPORT_PATH} ${ALL_FLAKY_RSPEC_REPORT_PATH}
     - '[[ -f $NEW_FLAKY_RSPEC_REPORT_PATH ]] || echo "{}" > ${NEW_FLAKY_RSPEC_REPORT_PATH}'
     - scripts/gitaly-test-spawn
+    - 'echo "After knapsack: `date`"'
     - knapsack rspec "--color --format documentation"
+    - 'echo "After knapsack: `date`"'
+  before_script:
+    - 'echo "Before .rspec-metadata: `date`"'
+  after_script:
+    - 'echo "After .rspec-metadata: `date`"'
   artifacts:
     expire_in: 31d
     when: always

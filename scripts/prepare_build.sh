@@ -5,12 +5,12 @@ export USE_BUNDLE_INSTALL=${USE_BUNDLE_INSTALL:-true}
 export BUNDLE_INSTALL_FLAGS="--without production --jobs $(nproc) --path vendor --retry 3 --quiet"
 
 if [ "$USE_BUNDLE_INSTALL" != "false" ]; then
-    bundle install --clean $BUNDLE_INSTALL_FLAGS && bundle check
+    time bundle install --clean $BUNDLE_INSTALL_FLAGS && bundle check
 fi
 
 # Only install knapsack after bundle install! Otherwise oddly some native
 # gems could not be found under some circumstance. No idea why, hours wasted.
-retry gem install knapsack
+time retry gem install knapsack
 
 cp config/gitlab.yml.example config/gitlab.yml
 
@@ -47,9 +47,9 @@ cp config/redis.shared_state.yml.example config/redis.shared_state.yml
 sed -i 's/localhost/redis/g' config/redis.shared_state.yml
 
 if [ "$SETUP_DB" != "false" ]; then
-    bundle exec rake db:drop db:create db:schema:load db:migrate
+    time bundle exec rake db:drop db:create db:schema:load db:migrate
 
     if [ "$GITLAB_DATABASE" = "mysql" ]; then
-        bundle exec rake add_limits_mysql
+        time bundle exec rake add_limits_mysql
     fi
 fi
