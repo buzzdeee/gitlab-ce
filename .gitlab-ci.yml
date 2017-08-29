@@ -20,7 +20,6 @@ variables:
   MYSQL_ALLOW_EMPTY_PASSWORD: "1"
   RAILS_ENV: "test"
   NODE_ENV: "test"
-  SIMPLECOV: "true"
   GIT_DEPTH: "20"
   GIT_SUBMODULE_STRATEGY: "none"
   PHANTOMJS_VERSION: "2.1.1"
@@ -332,7 +331,6 @@ spinach-mysql 4 5: *spinach-metadata-mysql
 .ruby-static-analysis: &ruby-static-analysis
   <<: *pull-cache
   variables:
-    SIMPLECOV: "false"
     SETUP_DB: "false"
 
 .rake-exec: &rake-exec
@@ -557,6 +555,7 @@ coverage:
   <<: *dedicated-runner
   <<: *except-docs
   <<: *pull-cache
+  <<: *only-canonical-masters
   stage: post-test
   services: []
   variables:
