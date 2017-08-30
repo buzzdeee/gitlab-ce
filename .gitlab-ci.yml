@@ -98,8 +98,6 @@ stages:
     - date
     - knapsack rspec "--color --format documentation"
     - date
-  before_script:
-    - date
   after_script:
     - date
   artifacts:
