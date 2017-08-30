@@ -5,7 +5,7 @@ module SimpleCovEnv
   extend self
 
   def start!
-    return unless ENV['SIMPLECOV'] || ENV['CI_COMMIT_REF_NAME'] == 'master'
+    return unless ENV['SIMPLECOV']
 
     configure_profile
     configure_job
