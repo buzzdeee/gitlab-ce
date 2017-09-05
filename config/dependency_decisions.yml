@@ -503,3 +503,10 @@
     :versions:
     - 1.0.9
     :when: 2017-11-16 13:02:06.765282000 Z
+- - :license
+  - promise.rb
+  - Unlicense
+  - :who: 
+    :why: 
+    :versions: []
+    :when: 2017-09-05 13:10:22.752422892 Z
