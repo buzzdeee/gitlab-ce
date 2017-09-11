@@ -449,7 +449,7 @@ describe API::Helpers do
       exception = RuntimeError.new('test error')
       allow(exception).to receive(:backtrace).and_return(caller)
 
-      expect_any_instance_of(self.class).to receive(:sentry_context)
+      expect(Gitlab::Sentry).to receive(:context).with(nil).and_call_original
       expect(Raven).to receive(:capture_exception).with(exception)
 
       handle_api_exception(exception)
