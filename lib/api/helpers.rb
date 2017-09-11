@@ -32,8 +32,9 @@ module API
       end
     end
 
-    def current_user
+    def current_user(load_user = true)
       return @current_user if defined?(@current_user)
+      return unless load_user
 
       @current_user = initial_current_user
 
@@ -284,7 +285,9 @@ module API
     def handle_api_exception(exception)
       if sentry_enabled? && report_exception?(exception)
         define_params_for_grape_middleware
-        sentry_context
+        # Avoid loading the current_user because this may attempt to load
+        # methods that aren't available.
+        Gitlab::Sentry.context(current_user(false))
         Raven.capture_exception(exception)
       end
 

@@ -1,0 +1,5 @@
+---
+title: Avoid attempting to load a user in current_user in the API exception handler
+merge_request:
+author:
+type: fixed
