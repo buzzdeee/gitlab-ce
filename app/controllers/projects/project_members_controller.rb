@@ -26,11 +26,9 @@ class Projects::ProjectMembersController < Projects::ApplicationController
   end
 
   def update
-    @project_member = @project.project_members.find(params[:id])
+    result = Members::UpdateService.new(@project, current_user, member_params).execute
 
-    return render_403 unless can?(current_user, :update_project_member, @project_member)
-
-    @project_member.update_attributes(member_params)
+    @project_member = result[:member]
   end
 
   def resend_invite
@@ -68,7 +66,9 @@ class Projects::ProjectMembersController < Projects::ApplicationController
   protected
 
   def member_params
-    params.require(:project_member).permit(:user_id, :access_level, :expires_at)
+    params.slice(:id).merge(
+      params.require(:project_member).permit(:user_id, :access_level, :expires_at)
+    ).permit!
   end
 
   # MembershipActions concern

@@ -22,11 +22,9 @@ class Groups::GroupMembersController < Groups::ApplicationController
   end
 
   def update
-    @group_member = @group.group_members.find(params[:id])
+    result = Members::UpdateService.new(@group, current_user, member_params).execute
 
-    return render_403 unless can?(current_user, :update_group_member, @group_member)
-
-    @group_member.update_attributes(member_params)
+    @group_member = result[:member]
   end
 
   def resend_invite
@@ -46,7 +44,9 @@ class Groups::GroupMembersController < Groups::ApplicationController
   protected
 
   def member_params
-    params.require(:group_member).permit(:access_level, :user_id, :expires_at)
+    params.slice(:id).merge(
+      params.require(:group_member).permit(:user_id, :access_level, :expires_at)
+    ).permit!
   end
 
   # MembershipActions concern
