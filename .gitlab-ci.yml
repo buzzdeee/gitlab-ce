@@ -589,6 +589,14 @@ codequality:
     paths:
       - codeclimate.json
 
+gitlab_git_test:
+  <<: *no-db-job
+  before_script: []
+  cache: {}
+  script:
+    - date
+    - spec/support/prepare-gitlab-git-test-for-commit --check-for-changes
+
 coverage:
   <<: *no-db-job
   stage: post-test
@@ -654,11 +662,3 @@ cache gems:
   only:
     - master@gitlab-org/gitlab-ce
     - master@gitlab-org/gitlab-ee
-
-gitlab_git_test:
-  <<: *pull-cache
-  <<: *except-docs
-  variables:
-    SETUP_DB: "false"
-  script:
-    - spec/support/prepare-gitlab-git-test-for-commit --check-for-changes
