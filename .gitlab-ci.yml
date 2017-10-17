@@ -267,7 +267,7 @@ update-tests-metadata:
 
 flaky-examples-check:
   <<: *dedicated-runner
-  image: ruby:2.3-alpine
+  image: ruby:2.4-alpine
   services: []
   before_script: []
   variables:
@@ -380,27 +380,28 @@ spinach-mysql 2 5: *spinach-metadata-mysql
 spinach-mysql 3 5: *spinach-metadata-mysql
 spinach-mysql 4 5: *spinach-metadata-mysql
 
-# Static analysis jobs
-.ruby-static-analysis: &ruby-static-analysis
-  <<: *pull-cache
-  variables:
-    SIMPLECOV: "false"
-    SETUP_DB: "false"
-
-.rake-exec: &rake-exec
-  <<: *ruby-static-analysis
+# Jobs that only need to pull cache
+.dedicated-no-docs-pull-cache-job: &dedicated-no-docs-pull-cache-job
   <<: *dedicated-runner
   <<: *except-docs
   <<: *pull-cache
+  dependencies:
+    - setup-test-env
   stage: test
+
+# Jobs that do not need a DB
+.no-db-job: &no-db-job
+  <<: *dedicated-no-docs-pull-cache-job
+  variables:
+    SETUP_DB: "false"
+
+.rake-exec: &rake-exec
+  <<: *no-db-job
   script:
     - bundle exec rake $CI_JOB_NAME
 
 static-analysis:
-  <<: *ruby-static-analysis
-  <<: *dedicated-runner
-  <<: *except-docs
-  stage: test
+  <<: *no-db-job
   script:
     - scripts/static-analysis
 
@@ -455,10 +456,7 @@ ee_compat_check:
 
 # DB migration, rollback, and seed jobs
 .db-migrate-reset: &db-migrate-reset
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
-  stage: test
+  <<: *dedicated-no-docs-pull-cache-job
   script:
     - bundle exec rake db:migrate:reset
 
@@ -471,12 +469,7 @@ db:migrate:reset-mysql:
   <<: *use-mysql
 
 .migration-paths: &migration-paths
-  <<: *dedicated-runner
-  <<: *pull-cache
-  <<: *except-docs
-  stage: test
-  variables:
-    SETUP_DB: "false"
+  <<: *no-db-job
   script:
     - date
     - git fetch origin v8.14.10
@@ -503,10 +496,7 @@ migration:path-mysql:
   <<: *use-mysql
 
 .db-rollback: &db-rollback
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
-  stage: test
+  <<: *dedicated-no-docs-pull-cache-job
   script:
     - bundle exec rake db:rollback STEP=120
     - bundle exec rake db:migrate
@@ -519,50 +509,35 @@ db:rollback-mysql:
   <<: *db-rollback
   <<: *use-mysql
 
-.db-seed_fu: &db-seed_fu
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
-  stage: test
-  variables:
-    SIZE: "1"
-    SETUP_DB: "false"
+db:seed_fu-pg:
+  <<: *no-db-job
+  <<: *use-pg
   script:
+    # Manually clone gitlab-test and only seed this project in
+    # db/fixtures/development/04_project.rb thanks to SIZE=1 below
     - git clone https://gitlab.com/gitlab-org/gitlab-test.git
        /home/git/repositories/gitlab-org/gitlab-test.git
-    - bundle exec rake db:setup db:seed_fu
+    - scripts/gitaly-test-spawn
+    - RAILS_ENV=development SIZE=1 bundle exec rake db:setup db:seed_fu
   artifacts:
     when: on_failure
     expire_in: 1d
     paths:
       - log/development.log
 
-db:seed_fu-pg:
-  <<: *db-seed_fu
-  <<: *use-pg
-
-db:seed_fu-mysql:
-  <<: *db-seed_fu
-  <<: *use-mysql
-
 db:check-schema-pg:
-  <<: *db-migrate-reset
+  <<: *dedicated-no-docs-pull-cache-job
   <<: *use-pg
   script:
     - source scripts/schema_changed.sh
 
 # Frontend-related jobs
 gitlab:assets:compile:
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
-  stage: test
-  dependencies: []
+  <<: *no-db-job
   variables:
     NODE_ENV: "production"
     RAILS_ENV: "production"
     SETUP_DB: "false"
-    USE_DB: "false"
     SKIP_STORAGE_VALIDATION: "true"
     WEBPACK_REPORT: "true"
     NO_COMPRESSION: "true"
@@ -578,20 +553,14 @@ gitlab:assets:compile:
       - webpack-report/
 
 karma:
+  <<: *dedicated-no-docs-pull-cache-job
   <<: *use-pg
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
   image: "dev.gitlab.org:5005/gitlab/gitlab-build-images:ruby-2.3.3-golang-1.8-git-2.13-chrome-61.0-node-8.x-yarn-1.0-postgresql-9.6"
-  stage: test
-  variables:
-    BABEL_ENV: "coverage"
-    CHROME_LOG_FILE: "chrome_debug.log"
   script:
+    - export BABEL_ENV=coverage
+    - export CHROME_LOG_FILE=chrome_debug.log
     - date
     - scripts/gitaly-test-spawn
-    - date
-    - bundle exec rake gettext:po_to_json
     - date
     - bundle exec rake karma
   coverage: '/^Statements *: (\d+\.\d+%)/'
@@ -600,38 +569,29 @@ karma:
     expire_in: 31d
     when: always
     paths:
-    - chrome_debug.log
-    - coverage-javascript/
+      - chrome_debug.log
+      - coverage-javascript/
 
 codequality:
-  <<: *except-docs
-  <<: *pull-cache
+  <<: *no-db-job
   before_script: []
   image: docker:latest
-  stage: test
-  variables:
-    SETUP_DB: "false"
-    DOCKER_DRIVER: overlay
   services:
     - docker:dind
   script:
+    - export DOCKER_DRIVER=overlay
     - cp .rubocop.yml .rubocop.yml.bak
     - grep -v "rubocop-gitlab-security" .rubocop.yml.bak > .rubocop.yml
     - docker run --env CODECLIMATE_CODE="$PWD" --volume "$PWD":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f json > raw_codeclimate.json
     - cat raw_codeclimate.json | docker run -i stedolan/jq -c 'map({check_name,fingerprint,location})' > codeclimate.json
     - mv .rubocop.yml.bak .rubocop.yml
   artifacts:
-    paths: [codeclimate.json]
+    paths:
+      - codeclimate.json
 
 coverage:
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
+  <<: *no-db-job
   stage: post-test
-  services: []
-  variables:
-    SETUP_DB: "false"
-    USE_BUNDLE_INSTALL: "true"
   script:
     - bundle exec scripts/merge-simplecov
   coverage: '/LOC \((\d+\.\d+%)\) covered.$/'
@@ -643,12 +603,8 @@ coverage:
     - coverage/assets/
 
 lint:javascript:report:
-  <<: *dedicated-runner
-  <<: *except-docs
-  <<: *pull-cache
+  <<: *no-db-job
   stage: post-test
-  dependencies:
-    - setup-test-env
   before_script: []
   script:
     - date
@@ -659,11 +615,10 @@ lint:javascript:report:
     name: eslint-report
     expire_in: 31d
     paths:
-    - eslint-report.html
+      - eslint-report.html
 
 pages:
-  <<: *dedicated-runner
-  <<: *pull-cache
+  <<: *no-db-job
   before_script: []
   stage: pages
   dependencies:
@@ -688,12 +643,9 @@ pages:
 # Insurance in case a gem needed by one of our releases gets yanked from
 # rubygems.org in the future.
 cache gems:
-  <<: *dedicated-runner
-  <<: *pull-cache
+  <<: *no-db-job
   only:
     - tags
-  variables:
-    SETUP_DB: "false"
   script:
     - bundle package --all --all-platforms
   artifacts:
