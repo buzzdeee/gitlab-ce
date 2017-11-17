@@ -65,21 +65,7 @@ describe Banzai::Filter::SanitizationFilter do
       expect(filter(act).to_html).to eq %q{<span>def</span>}
     end
 
-    it 'allows `text-align` property in `style` attribute on table elements' do
-      html = <<~HTML
-      <table>
-        <tr><th style="text-align: center">Head</th></tr>
-        <tr><td style="text-align: right">Body</th></tr>
-      </table>
-      HTML
-
-      doc = filter(html)
-
-      expect(doc.at_css('th')['style']).to eq 'text-align: center'
-      expect(doc.at_css('td')['style']).to eq 'text-align: right'
-    end
-
-    it 'disallows other properties in `style` attribute on table elements' do
+    it 'disallows the `style` attribute on table elements' do
       html = <<~HTML
         <table>
           <tr><th style="text-align: foo">Head</th></tr>
@@ -89,8 +75,45 @@ describe Banzai::Filter::SanitizationFilter do
 
       doc = filter(html)
 
-      expect(doc.at_css('th')['style']).to be_nil
-      expect(doc.at_css('td')['style']).to eq 'text-align: center'
+      %w(td th).each { |element| expect(doc.at_css(element)).not_to have_attribute('style') }
+    end
+
+    it 'allows the `center`, `left`, and `right` values in the `align` attribute on table elements' do
+      html = <<~HTML
+      <table>
+        <thead>
+          <tr>
+            <th align="center">#</th>
+            <th align="left">First Name</th>
+            <th align="right">Last Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="center">1</t>
+            <td align="left">John</t>
+            <td align="right">Smith</t>
+          </tr>
+        </tbody>
+      </table>
+      HTML
+
+      doc = filter(html)
+
+      %w(td th).each { |element| expect(doc.at_css(element)).to have_attribute('align') }
+    end
+
+    it 'disallows other values in `align` attribute on table elements' do
+      html = <<~HTML
+        <table>
+          <tr><th style="align: russian-hacker">Head</th></tr>
+          <tr><td style="position: fixed; height: 50px; width: 50px; background: red; z-index: 999; font-size: 36px; align: all-down">Body</td></tr>
+        </table>
+      HTML
+
+      doc = filter(html)
+
+      %w(td th).each { |element| expect(doc.at_css(element)).not_to have_attribute('align') }
     end
 
     it 'allows `span` elements' do

@@ -13,7 +13,7 @@ require 'erb'
 #
 #   Raw Markdown
 #   -> `markdown` helper
-#     -> Redcarpet::Render::GitlabHTML converts Markdown to HTML
+#     -> CommonMarker::HtmlRenderer converts Markdown to HTML
 #       -> Post-process HTML
 #         -> `gfm` helper
 #           -> HTML::Pipeline
@@ -44,7 +44,7 @@ describe 'GitLab Markdown' do
 
   # Shared behavior that all pipelines should exhibit
   shared_examples 'all pipelines' do
-    describe 'Redcarpet extensions' do
+    describe 'cmark-gfm extensions' do
       it 'does not parse emphasis inside of words' do
         expect(doc.to_html).not_to match('foo<em>bar</em>baz')
       end
@@ -125,17 +125,17 @@ describe 'GitLab Markdown' do
 
       it 'permits style attribute in th elements' do
         aggregate_failures do
-          expect(doc.at_css('th:contains("Header")')['style']).to eq 'text-align: center'
-          expect(doc.at_css('th:contains("Row")')['style']).to eq 'text-align: right'
-          expect(doc.at_css('th:contains("Example")')['style']).to eq 'text-align: left'
+          expect(doc.at_css('th:contains("Header")')['align']).to eq('center')
+          expect(doc.at_css('th:contains("Row")')['align']).to eq('right')
+          expect(doc.at_css('th:contains("Example")')['align']).to eq('left')
         end
       end
 
       it 'permits style attribute in td elements' do
         aggregate_failures do
-          expect(doc.at_css('td:contains("Foo")')['style']).to eq 'text-align: center'
-          expect(doc.at_css('td:contains("Bar")')['style']).to eq 'text-align: right'
-          expect(doc.at_css('td:contains("Baz")')['style']).to eq 'text-align: left'
+          expect(doc.at_css('td:contains("Foo")')['align']).to eq('center')
+          expect(doc.at_css('td:contains("Bar")')['align']).to eq('right')
+          expect(doc.at_css('td:contains("Baz")')['align']).to eq('left')
         end
       end
 

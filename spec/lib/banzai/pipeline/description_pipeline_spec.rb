@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe Banzai::Pipeline::DescriptionPipeline do
   def parse(html)
-    # When we pass HTML to Redcarpet, it gets wrapped in `p` tags...
+    # When we pass HTML to CommonMarker, it gets wrapped in `p` tags...
     # ...except when we pass it pre-wrapped text. Rabble rabble.
     unwrap = !html.start_with?('<p ')
 

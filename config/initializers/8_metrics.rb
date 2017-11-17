@@ -5,6 +5,8 @@
 #
 # rubocop:disable Metrics/AbcSize
 def instrument_classes(instrumentation)
+  require 'rouge/plugins/commonmarker'
+
   instrumentation.instrument_instance_methods(Gitlab::Shell)
 
   instrumentation.instrument_methods(Gitlab::Git)
@@ -94,7 +96,7 @@ def instrument_classes(instrumentation)
 
   instrumentation.instrument_instance_methods(RepositoryCheck::SingleRepositoryWorker)
 
-  instrumentation.instrument_instance_methods(Rouge::Plugins::Redcarpet)
+  instrumentation.instrument_instance_methods(Rouge::Plugins::CommonMarker)
   instrumentation.instrument_instance_methods(Rouge::Formatters::HTMLGitlab)
 
   [:XML, :HTML].each do |namespace|

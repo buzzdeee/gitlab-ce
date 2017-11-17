@@ -1,4 +1,4 @@
-require 'rouge/plugins/redcarpet'
+require 'rouge/plugins/commonmarker'
 
 module Banzai
   module Filter

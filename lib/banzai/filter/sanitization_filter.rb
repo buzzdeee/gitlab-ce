@@ -5,7 +5,6 @@ module Banzai
     # Extends HTML::Pipeline::SanitizationFilter with a custom whitelist.
     class SanitizationFilter < HTML::Pipeline::SanitizationFilter
       UNSAFE_PROTOCOLS = %w(data javascript vbscript).freeze
-      TABLE_ALIGNMENT_PATTERN = /text-align: (?<alignment>center|left|right)/
 
       def whitelist
         whitelist = super
@@ -25,10 +24,10 @@ module Banzai
         # Only push these customizations once
         return if customized?(whitelist[:transformers])
 
-        # Allow table alignment; we whitelist specific style properties in a
+        # Allow table alignment; we whitelist specific align values in a
         # transformer below
-        whitelist[:attributes]['th'] = %w(style)
-        whitelist[:attributes]['td'] = %w(style)
+        whitelist[:attributes]['th'] = %w(align)
+        whitelist[:attributes]['td'] = %w(align)
 
         # Allow span elements
         whitelist[:elements].push('span')
@@ -57,9 +56,6 @@ module Banzai
 
         # Remove `rel` attribute from `a` elements
         whitelist[:transformers].push(self.class.remove_rel)
-
-        # Remove any `style` properties not required for table alignment
-        whitelist[:transformers].push(self.class.remove_unsafe_table_style)
 
         whitelist
       end
@@ -98,21 +94,6 @@ module Banzai
           lambda do |env|
             if env[:node_name] == 'a'
               env[:node].remove_attribute('rel')
-            end
-          end
-        end
-
-        def remove_unsafe_table_style
-          lambda do |env|
-            node = env[:node]
-
-            return unless node.name == 'th' || node.name == 'td'
-            return unless node.has_attribute?('style')
-
-            if node['style'] =~ TABLE_ALIGNMENT_PATTERN
-              node['style'] = "text-align: #{$~[:alignment]}"
-            else
-              node.remove_attribute('style')
             end
           end
         end

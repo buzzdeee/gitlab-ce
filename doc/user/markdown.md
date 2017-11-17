@@ -9,7 +9,7 @@ this document currently work on our documentation website.
 For the best result, we encourage you to check this document out as rendered
 by GitLab: [markdown.md]
 
-_GitLab uses the [Redcarpet Ruby library][redcarpet] for Markdown processing._
+_GitLab uses the [commonmarker (a wrapper for cmark-gfm) Ruby library][commonmarker] for Markdown processing._
 
 GitLab uses "GitLab Flavored Markdown" (GFM). It extends the standard Markdown in a few significant ways to add some useful functionality. It was inspired by [GitHub Flavored Markdown](https://help.github.com/articles/basic-writing-and-formatting-syntax/).
 
@@ -149,9 +149,8 @@ Example:
     ```
 
     ```ruby
-    require 'redcarpet'
-    markdown = Redcarpet.new("Hello World!")
-    puts markdown.to_html
+    require 'commonmarker'
+    CommonMarker.render_html('Hello *World!*', :DEFAULT)
     ```
 
     ```
@@ -175,9 +174,8 @@ def function():
 ```
 
 ```ruby
-require 'redcarpet'
-markdown = Redcarpet.new("Hello World!")
-puts markdown.to_html
+require 'commonmarker'
+CommonMarker.render_html('Hello *World!*', :DEFAULT)
 ```
 
 ```
@@ -815,7 +813,7 @@ A link starting with a `/` is relative to the wiki root.
 
 [markdown.md]: https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/user/markdown.md
 [rouge]: http://rouge.jneen.net/ "Rouge website"
-[redcarpet]: https://github.com/vmg/redcarpet "Redcarpet website"
+[commonmarker]: https://github.com/gjtorikian/commonmarker "commonmarker website"
 [katex]: https://github.com/Khan/KaTeX "KaTeX website"
 [katex-subset]: https://github.com/Khan/KaTeX/wiki/Function-Support-in-KaTeX "Macros supported by KaTeX"
 [asciidoctor-manual]: http://asciidoctor.org/docs/user-manual/#activating-stem-support "Asciidoctor user manual"

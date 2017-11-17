@@ -1,0 +1,5 @@
+---
+title: Speed up Markdown processing by replacing `redcarpet` with `commonmarker`
+merge_request: 14835
+author: Vitaliy @blackst0ne Klachkov
+type: performance

@@ -160,7 +160,7 @@ feature 'Task Lists' do
 
         page.find('li.task-list-item', text: 'Task b').find('input').click
         page.find('li.task-list-item ul li.task-list-item', text: 'Task a.2').find('input').click
-        page.find('li.task-list-item ol li.task-list-item', text: 'Task 1.1').find('input').click
+        page.find('ol li.task-list-item', text: 'Task 1.1').find('input').click
 
         expect(page).to have_content("5 of 7 tasks completed")
 
