@@ -34,7 +34,7 @@ module Banzai
       # This custom filter has been added to save the back compatibility with the `redcarpet`.
       # More details are available at https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/14835
       def parse_strikethroughs(text)
-        text.gsub(/(~~.*?~~)/) { |strikethrough| "<del>#{strikethrough[2..-3]}</del>" }
+        text.gsub(/~~(.*?)~~/, '<del>\1</del>')
       end
 
       # Replace `some^text` with `some<sup>text</sup>`.

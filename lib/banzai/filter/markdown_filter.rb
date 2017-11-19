@@ -22,7 +22,7 @@ module Banzai
           proc do |content|
             # In case we no longer need any overridden methods in lib/banzai/renderer/html.rb
             # the rendering calls below could be refactored as just one line:
-            # `CommonMarker.render_html(content, :DEFAULT, COMMONMARK_OPTIONS)`
+            # `CommonMarker.render_html(content, :FOOTNOTES, COMMONMARK_OPTIONS)`
 
             doc = CommonMarker.render_doc(content, :FOOTNOTES, COMMONMARK_OPTIONS)
             Banzai::Renderer::HTML.new.render(doc)
