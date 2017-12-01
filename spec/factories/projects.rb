@@ -81,8 +81,13 @@ FactoryBot.define do
       archived true
     end
 
+    storage_version Project::LATEST_STORAGE_VERSION
+    # No-op. FIXME: remove this.
     trait :hashed do
-      storage_version Project::LATEST_STORAGE_VERSION
+    end
+
+    trait :legacy_storage do
+      storage_version nil
     end
 
     trait :access_requestable do
