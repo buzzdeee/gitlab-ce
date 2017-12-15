@@ -1,5 +1,3 @@
-require "pry-byebug"
-
 module QA
   module Scenario
     module Gitlab

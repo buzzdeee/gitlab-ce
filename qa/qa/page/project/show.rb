@@ -18,6 +18,11 @@ module QA
           find('.project-title').text
         end
 
+        def go_to_merge_requests
+          find('.shortcuts-merge_requests').click
+          find('#new_merge_request_link').click
+        end
+
         def wait_for_push
           sleep 5
         end

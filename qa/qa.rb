@@ -47,6 +47,10 @@ module QA
         autoload :Create, 'qa/scenario/gitlab/project/create'
       end
 
+      module MergeRequest
+        autoload :Create, 'qa/scenario/gitlab/merge_request/create'
+      end
+
       module Repository
         autoload :Push, 'qa/scenario/gitlab/repository/push'
       end
@@ -88,6 +92,10 @@ module QA
     module Project
       autoload :New, 'qa/page/project/new'
       autoload :Show, 'qa/page/project/show'
+    end
+
+    module MergeRequest
+      autoload :New, 'qa/page/merge_request/new'
     end
 
     module Admin
