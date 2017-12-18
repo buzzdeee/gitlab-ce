@@ -48,7 +48,6 @@ import initLogoAnimation from './logo';
 import './milestone_select';
 import './preview_markdown';
 import './projects_dropdown';
-import './render_gfm';
 import initBreadcrumbs from './breadcrumb';
 
 import './dispatcher';
