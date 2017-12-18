@@ -1,7 +1,7 @@
 import 'autosize';
 import '~/gl_form';
 import '~/lib/utils/text_utility';
-import '~/render_gfm';
+import '~/commons/render_gfm';
 import '~/render_math';
 import Notes from '~/notes';
 

@@ -3,7 +3,7 @@ import * as urlUtils from '~/lib/utils/url_utility';
 import 'autosize';
 import '~/gl_form';
 import '~/lib/utils/text_utility';
-import '~/render_gfm';
+import '~/commons/render_gfm';
 import Notes from '~/notes';
 
 (function() {

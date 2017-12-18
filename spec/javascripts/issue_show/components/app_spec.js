@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import '~/render_math';
-import '~/render_gfm';
+import '~/commons/render_gfm';
 import * as urlUtils from '~/lib/utils/url_utility';
 import issuableApp from '~/issue_show/components/app.vue';
 import eventHub from '~/issue_show/event_hub';
