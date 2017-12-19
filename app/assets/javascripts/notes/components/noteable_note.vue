@@ -8,16 +8,19 @@
   import noteBody from './note_body.vue';
   import eventHub from '../event_hub';
   import noteable from '../mixins/noteable';
+  import resolvable from '../mixins/resolvable';
 
   export default {
     mixins: [
       noteable,
+      resolvable,
     ],
     data() {
       return {
         isEditing: false,
         isDeleting: false,
         isRequesting: false,
+        isResolving: false,
       };
     },
     components: {
@@ -53,6 +56,7 @@
       ...mapActions([
         'deleteNote',
         'updateNote',
+        'toggleResolveNote',
         'scrollToNoteIfNeeded',
       ]),
       editHandler() {
@@ -121,9 +125,7 @@
         // we need to do this to prevent noteForm inconsistent content warning
         // this is something we intentionally do so we need to recover the content
         this.note.note = noteText;
-        if (this.$refs.noteBody) {
-          this.$refs.noteBody.$refs.noteForm.note = noteText; // TODO: This could be better
-        }
+        this.$refs.noteBody.$refs.noteForm.note = noteText;
       },
     },
     created() {
@@ -168,8 +170,13 @@
             :can-delete="note.current_user.can_edit"
             :can-report-as-abuse="canReportAsAbuse"
             :report-abuse-path="note.report_abuse_path"
+            :resolvable="note.resolvable"
+            :is-resolved="note.resolved"
+            :is-resolving="isResolving"
+            :resolved-by="note.resolved_by"
             @handleEdit="editHandler"
             @handleDelete="deleteHandler"
+            @handleResolve="resolveHandler"
             />
         </div>
         <note-body

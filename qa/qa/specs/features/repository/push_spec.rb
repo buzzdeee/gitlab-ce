@@ -2,15 +2,15 @@ module QA
   feature 'push code to repository', :core do
     context 'with regular account over http' do
       scenario 'user pushes code to the repository'  do
-        Page::Main::Entry.act { visit_login_page }
+        Runtime::Browser.visit(:gitlab, Page::Main::Login)
         Page::Main::Login.act { sign_in_using_credentials }
 
-        Scenario::Gitlab::Project::Create.perform do |scenario|
+        Factory::Resource::Project.fabricate! do |scenario|
           scenario.name = 'project_with_code'
           scenario.description = 'project with repository'
         end
 
-        Scenario::Gitlab::Repository::Push.perform do |scenario|
+        Factory::Repository::Push.fabricate! do |scenario|
           scenario.file_name = 'README.md'
           scenario.file_content = '# This is test project'
           scenario.commit_message = 'Add README.md'
