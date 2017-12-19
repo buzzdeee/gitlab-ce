@@ -269,6 +269,92 @@ export const discussionMock = {
     path: '/gitlab-org/gitlab-ce/notes/1437',
   }],
   individual_note: false,
+};
+
+export const systemNoteMock = {
+
+};
+
+export const replacedImageDiffHtml = `
+<div class="image js-replaced-image" data="">
+<div class="two-up view">
+<div class="wrap">
+<div class="frame deleted">
+<img alt="art/google-play-badge.png" src="/Commit451/lab-coat/raw/dae8af3b6c107853c34d8d7b275a052d48c9f2a6/art/google-play-badge.png">
+</div>
+<p class="image-info">
+<span class="meta-filesize">6.15 KB</span>
+|
+<strong>W:</strong>
+<span class="meta-width">214px</span>
+|
+<strong>H:</strong>
+<span class="meta-height">83px</span>
+</p>
+</div>
+<div class="wrap">
+<div class="added frame js-image-frame" data-note-type="DiffNote" data-position="{&quot;base_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;start_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;head_sha&quot;:&quot;9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7&quot;,&quot;old_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;new_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;position_type&quot;:&quot;image&quot;,&quot;width&quot;:512,&quot;height&quot;:512,&quot;x&quot;:132,&quot;y&quot;:294}">
+<img alt="art/google-play-badge.png" draggable="false" src="/Commit451/lab-coat/raw/9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7/art/google-play-badge.png" style="width: 452px;">
+</div>
+
+<p class="image-info">
+<span class="meta-filesize">109 KB</span>
+|
+<strong>W:</strong>
+<span class="meta-width">512px</span>
+|
+<strong>H:</strong>
+<span class="meta-height">512px</span>
+</p>
+</div>
+</div>
+<div class="swipe view hide">
+<div class="swipe-frame">
+<div class="frame deleted">
+<img alt="art/google-play-badge.png" src="/Commit451/lab-coat/raw/dae8af3b6c107853c34d8d7b275a052d48c9f2a6/art/google-play-badge.png">
+</div>
+<div class="swipe-wrap">
+<div class="added frame js-image-frame" data-note-type="DiffNote" data-position="{&quot;base_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;start_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;head_sha&quot;:&quot;9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7&quot;,&quot;old_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;new_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;position_type&quot;:&quot;image&quot;,&quot;width&quot;:512,&quot;height&quot;:512,&quot;x&quot;:132,&quot;y&quot;:294}">
+<img alt="art/google-play-badge.png" draggable="false" src="/Commit451/lab-coat/raw/9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7/art/google-play-badge.png">
+</div>
+
+</div>
+<span class="swipe-bar">
+<span class="top-handle"></span>
+<span class="bottom-handle"></span>
+</span>
+</div>
+</div>
+<div class="onion-skin view hide">
+<div class="onion-skin-frame">
+<div class="frame deleted">
+<img alt="art/google-play-badge.png" src="/Commit451/lab-coat/raw/dae8af3b6c107853c34d8d7b275a052d48c9f2a6/art/google-play-badge.png">
+</div>
+<div class="added frame js-image-frame" data-note-type="DiffNote" data-position="{&quot;base_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;start_sha&quot;:&quot;dae8af3b6c107853c34d8d7b275a052d48c9f2a6&quot;,&quot;head_sha&quot;:&quot;9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7&quot;,&quot;old_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;new_path&quot;:&quot;art/google-play-badge.png&quot;,&quot;position_type&quot;:&quot;image&quot;,&quot;width&quot;:512,&quot;height&quot;:512,&quot;x&quot;:132,&quot;y&quot;:294}">
+<img alt="art/google-play-badge.png" draggable="false" src="/Commit451/lab-coat/raw/9a74eca5e3ff13de09d25f9d3daa3fd6c77acfb7/art/google-play-badge.png">
+</div>
+
+<div class="controls">
+<div class="transparent"></div>
+<div class="drag-track">
+<div class="dragger" style="left: 0px;"></div>
+</div>
+<div class="opaque"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="view-modes">
+<ul class="view-modes-menu">
+<li class="two-up" data-mode="two-up">2-up</li>
+<li class="swipe" data-mode="swipe">Swipe</li>
+<li class="onion-skin" data-mode="onion-skin">Onion skin</li>
+</ul>
+</div>
+`;
+
+export const diffDiscussionMock = {
+  ...discussionMock,
   truncated_diff_lines: `<tr class="line_holder" id=""> <td class="diff-line-num old_line" data-linenumber="327"> 327 </td><td class="diff-line-num new_line" data-linenumber="327"> 327 </td><td class="line_content noteable_line"> <span id="LC327" class="line" lang="kotlin"> <span class="n">isConfidential</span> <span class="p">))</span> </span> </td></tr><tr class="line_holder" id=""> <td class="diff-line-num old_line" data-linenumber="328"> 328 </td><td class="diff-line-num new_line" data-linenumber="328"> 328 </td><td class="line_content noteable_line"> <span id="LC328" class="line" lang="kotlin"> <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> </span> </td></tr><tr class="line_holder" id=""> <td class="diff-line-num old_line" data-linenumber="329"> 329 </td><td class="diff-line-num new_line" data-linenumber="329"> 329 </td><td class="line_content noteable_line"> <span id="LC329" class="line" lang="kotlin"> <span class="n">observeUpdate</span> <span class="p">(</span> <span class="n">App</span> <span class="p">.</span> <span class="k">get</span> <span class="p">().</span> <span class="n">gitLab</span> <span class="p">.</span> <span class="n">updateIssue</span> <span class="p">(</span> <span class="n">project</span> <span class="p">.</span> <span class="n">id</span> <span class="p">,</span> </span> </td></tr><tr class="line_holder old" id=""> <td class="diff-line-num old old_line" data-linenumber="330"> 330 </td><td class="diff-line-num new_line old" data-linenumber="330"> </td><td class="line_content noteable_line old"> <span id="LC330" class="line" lang="kotlin"> <span class="n">issue</span> <span class="o">!!</span> <span class="p">.</span> <span class="n">id</span> <span class="p">,</span> </span> </td></tr>`,
   diff_file: {
     submodule: false,
@@ -284,8 +370,29 @@ export const discussionMock = {
     newPath: '',
     fileTypeIcon: 'fa-file-image-o', // file_type_icon_class('file', diff_file.b_mode, diff_file.file_path)
     text: true,
-  }
-};
+  },
+}
+
+export const imageDiffDiscussionMock = {
+  ...discussionMock,
+  diff_discussion: true,
+  diff_file: {
+    submodule: false,
+    submoduleLink: '<a href="/bha">Submodule</a>', // submodule_link(blob, diff_file.content_sha, diff_file.repository)
+    discussionPath: '/something',
+    renamedFile: false,
+    deletedFile: false,
+    modeChanged: false,
+    aMode: '100755',
+    bMode: '100644',
+    filePath: 'some/file/path.rb',
+    oldPath: '',
+    newPath: '',
+    fileTypeIcon: 'fa-file-image-o', // file_type_icon_class('file', diff_file.b_mode, diff_file.file_path)
+    text: false,
+  },
+  replaced_image_diff_html: replacedImageDiffHtml,
+}
 
 export const loggedOutnoteableData = {
   "id": 98,
