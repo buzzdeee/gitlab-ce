@@ -78,6 +78,21 @@
 
         return null;
       },
+      isDiffDiscussion() {
+        return (this.diff_discussion && this.diff_file);
+      },
+      wrapperComponent() {
+        if (this.isDiffDiscussion) {
+          return diffWithNote;
+        }
+        return 'div';
+      },
+      wrapperClass() {
+        if (this.isDiffDiscussion) {
+          return '';
+        }
+        return 'panel panel-default';
+      },
     },
     methods: {
       ...mapActions([
@@ -235,7 +250,7 @@
                         class="btn-group"
                         role="group">
                         <button
-                          @click="resolveHandler()"
+                          @click="resolveHandler"
                           type="button"
                           class="btn btn-default">
                             <i
