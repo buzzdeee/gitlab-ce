@@ -114,6 +114,7 @@ import Activities from './activities';
       path = page.split(':');
       pathDir = path.join('/');
       import(
+        /* webpackMode:"eager" */
         `./pages/${pathDir}`)
       .then((f) => {
         f.default();
