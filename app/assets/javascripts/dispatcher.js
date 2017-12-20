@@ -255,6 +255,10 @@ import Activities from './activities';
           new MilestoneSelect();
           new IssuableTemplateSelectors();
           break;
+        case 'projects:tags:index':
+        case 'projects:tags:show':
+          import('./pages/projects/tags').then(callDefault).catch(fail);
+          break;
         case 'projects:tags:new':
           import('./pages/projects/tags/new')
             .then(callDefault)

@@ -324,7 +324,7 @@ if (IS_PRODUCTION) {
 }
 
 if (IS_DEV_SERVER) {
-  config.devtool = 'cheap-module-eval-source-map';
+  config.devtool = 'cheap-module-source-map';
   config.devServer = {
     host: DEV_SERVER_HOST,
     port: DEV_SERVER_PORT,
