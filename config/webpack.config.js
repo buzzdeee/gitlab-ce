@@ -174,7 +174,8 @@ var config = {
       if (chunk.name) {
         return chunk.name;
       }
-      console.log('thismapthing', chunk.mapModules((m) => {
+
+      return chunk.mapModules((m) => {
         var chunkPath = m.request.split('!').pop();
         var splitPath = m.context.split('/pages');
         if(splitPath.length) {
@@ -182,10 +183,6 @@ var config = {
         } else {
           return path.relative(m.context, chunkPath);
         }
-      }).join('_'))
-      return chunk.mapModules((m) => {
-        var chunkPath = m.request.split('!').pop();
-        return path.relative(m.context, chunkPath);
       }).join('_');
     }),
 
