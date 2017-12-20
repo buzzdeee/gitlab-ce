@@ -23,10 +23,10 @@
         return text ? 'text-file' : 'js-image-file';
       },
       diffRows() {
-        return $(this.discussion.notes[0].truncated_diff_lines);
+        return $(this.discussion.truncated_diff_lines);
       },
       diffFile() {
-        return this.discussion.notes[0].diff_file || {};
+        return this.discussion.diff_file || {};
       },
       replacedImageDiffHtml() {
         return this.discussion.notes[0].replaced_image_diff_html;
@@ -64,7 +64,7 @@
     >
       <table>
         <component
-          :is="html.className ? 'tr' : 'template'"
+          :is="html.outerHTML ? 'tr' : 'template'"
           :class="html.className"
           v-for="html in diffRows"
           v-html="html.outerHTML"

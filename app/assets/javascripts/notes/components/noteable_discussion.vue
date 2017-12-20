@@ -78,33 +78,6 @@
 
         return null;
       },
-      isResolvable() {
-        return true; // FIXME
-      },
-      isResolved() {
-        return false; // FIXME
-      },
-      resolveButtonTitle() {
-        return 'Resolve discussion'; // FIXME
-      },
-      resolveWithIssuePath() {
-        return '#'; // FIXME
-      },
-      isDiffDiscussion() {
-        return (this.diff_discussion && this.diff_file);
-      },
-      wrapperComponent() {
-        if (this.isDiffDiscussion) {
-          return diffWithNote;
-        }
-        return 'div';
-      },
-      wrapperClass() {
-        if (this.isDiffDiscussion) {
-          return '';
-        }
-        return 'panel panel-default';
-      },
     },
     methods: {
       ...mapActions([

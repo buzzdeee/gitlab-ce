@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import DiffWithNote from '~/notes/components/diff_with_note.vue';
 import mountComponent from '../../helpers/vue_mount_component_helper';
-import { diffDiscussionMock } from '../mock_data';
+import { diffDiscussionMock, imageDiffDiscussionMock } from '../mock_data';
 
 describe('diff_with_note', () => {
   let vm;
@@ -17,10 +17,10 @@ describe('diff_with_note', () => {
       return this.container.querySelector('.diff-content table');
     },
     get diffRows() {
-      return this.container.querySelectorAll('.diff-content .line-holder');
+      return this.container.querySelectorAll('.diff-content .line_holder');
     },
     get noteRow() {
-      return this.container.querySelector('.diff-content .notes-holder');
+      return this.container.querySelector('.diff-content .notes_holder');
     },
   };
 
@@ -44,8 +44,11 @@ describe('diff_with_note', () => {
   });
 
   describe('image diff', () => {
+    beforeEach(() => {
+      props.discussion = imageDiffDiscussionMock;
+    });
+
     it('shows image diff', () => {
-      props.discussion.notes[0].diff_file.text = false;
       vm = mountComponent(Component, props);
 
       expect(selectors.container).toHaveClass('js-image-file');
