@@ -1,6 +1,6 @@
-import Activities from '../activities';
+import Activities from '~/activities';
 import ActivityCalendar from './activity_calendar';
-import { localTimeAgo } from '../lib/utils/datetime_utility';
+import { localTimeAgo } from '~/lib/utils/datetime_utility';
 
 /**
  * UserTabs

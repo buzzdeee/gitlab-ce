@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import d3 from 'd3';
-import { getDayName, getDayDifference } from '../lib/utils/datetime_utility';
+import { getDayName, getDayDifference } from '~/lib/utils/datetime_utility';
 
 const LOADING_HTML = `
   <div class="text-center">

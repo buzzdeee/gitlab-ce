@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import UserTabs from './user_tabs';
+import UserCallout from '~/user_callout';
 
 function initUserProfile(action) {
   // place profile avatars to top
@@ -18,8 +19,8 @@ function initUserProfile(action) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const page = $('body').attr('data-page');
-  const action = page.split(':')[1];
-  initUserProfile(action);
-});
+
+const page = $('body').attr('data-page');
+const action = page.split(':')[1];
+initUserProfile(action);
+new UserCallout();

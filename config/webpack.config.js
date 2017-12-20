@@ -84,7 +84,6 @@ var config = {
     vue_merge_request_widget: './vue_merge_request_widget/index.js',
     test:                 './test.js',
     two_factor_auth:      './two_factor_auth.js',
-    users:                './users/index.js',
     performance_bar:      './performance_bar.js',
     webpack_runtime:      './webpack.js',
   },
@@ -175,6 +174,15 @@ var config = {
       if (chunk.name) {
         return chunk.name;
       }
+      console.log('thismapthing', chunk.mapModules((m) => {
+        var chunkPath = m.request.split('!').pop();
+        var splitPath = m.context.split('/pages');
+        if(splitPath.length) {
+          return path.relative(splitPath[0], chunkPath);
+        } else {
+          return path.relative(m.context, chunkPath);
+        }
+      }).join('_'))
       return chunk.mapModules((m) => {
         var chunkPath = m.request.split('!').pop();
         return path.relative(m.context, chunkPath);

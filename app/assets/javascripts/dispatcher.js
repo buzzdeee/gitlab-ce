@@ -105,13 +105,21 @@ import Activities from './activities';
     }
 
     Dispatcher.prototype.initPageScripts = function() {
-      var path, shortcut_handler, fileBlobPermalinkUrlElement, fileBlobPermalinkUrl;
+      var path, pathDir, shortcut_handler, fileBlobPermalinkUrlElement, fileBlobPermalinkUrl;
       const page = $('body').attr('data-page');
       if (!page) {
         return false;
       }
 
       path = page.split(':');
+      pathDir = path.join('/');
+      import(
+        `./pages/${pathDir}`)
+      .then((f) => {
+        f.default();
+      })
+      .catch(() => {});
+
       shortcut_handler = null;
 
       $('.js-gfm-input:not(.js-vue-textarea)').each((i, el) => {
@@ -155,7 +163,6 @@ import Activities from './activities';
       }
 
       const filteredSearchEnabled = gl.FilteredSearchManager && document.querySelector('.filtered-search');
-
       switch (page) {
         case 'profiles:preferences:show':
           initExperimentalFlags();
@@ -545,7 +552,6 @@ import Activities from './activities';
           new CILintEditor();
           break;
         case 'users:show':
-          new UserCallout();
           break;
         case 'admin:conversational_development_index:show':
           new UserCallout();
