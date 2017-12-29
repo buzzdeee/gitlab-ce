@@ -85,6 +85,18 @@
       hasUnresolvedDiscussion() {
         return this.unresolvedDiscussions.length > 0;
       },
+      wrapperComponent() {
+        if (this.discussion.diff_discussion && this.discussion.diff_note) {
+          return diffWithNote;
+        }
+        return 'div';
+      },
+      wrapperClass() {
+        if (this.isDiffDiscussion) {
+          return '';
+        }
+        return 'panel panel-default';
+      },
     },
     methods: {
       ...mapActions([
