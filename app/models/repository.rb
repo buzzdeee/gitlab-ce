@@ -19,7 +19,6 @@ class Repository
   attr_accessor :full_path, :disk_path, :project, :is_wiki
 
   delegate :ref_name_for_sha, to: :raw_repository
-  delegate :write_ref, to: :raw_repository
 
   CreateTreeError = Class.new(StandardError)
 
@@ -116,6 +115,18 @@ class Repository
     return @commit_cache[oid] if @commit_cache.key?(oid)
 
     @commit_cache[oid] = find_commit(oid)
+  end
+
+  def commits_by(oids:)
+    return [] unless oids.present?
+
+    commits = Gitlab::Git::Commit.batch_by_oid(raw_repository, oids)
+
+    if commits.present?
+      Commit.decorate(commits, @project)
+    else
+      []
+    end
   end
 
   def commits(ref, path: nil, limit: nil, offset: nil, skip_merges: false, after: nil, before: nil)
@@ -244,10 +255,11 @@ class Repository
 
     # This will still fail if the file is corrupted (e.g. 0 bytes)
     begin
-      write_ref(keep_around_ref_name(sha), sha, force: true)
-    rescue Gitlab::Git::Repository::GitError => ex
-      # Necessary because https://gitlab.com/gitlab-org/gitlab-ce/issues/20156
-      return true if ex.message =~ /Failed to create locked file/ && ex.message =~ /File exists/
+      write_ref(keep_around_ref_name(sha), sha)
+    rescue Rugged::ReferenceError => ex
+      Rails.logger.error "Unable to create #{REF_KEEP_AROUND} reference for repository #{path}: #{ex}"
+    rescue Rugged::OSError => ex
+      raise unless ex.message =~ /Failed to create locked file/ && ex.message =~ /File exists/
 
       Rails.logger.error "Unable to create #{REF_KEEP_AROUND} reference for repository #{path}: #{ex}"
     end
@@ -255,6 +267,10 @@ class Repository
 
   def kept_around?(sha)
     ref_exists?(keep_around_ref_name(sha))
+  end
+
+  def write_ref(ref_path, sha)
+    rugged.references.create(ref_path, sha, force: true)
   end
 
   def diverging_commit_counts(branch)
@@ -994,16 +1010,12 @@ class Repository
     raw_repository.fetch_source_branch!(source_repository.raw_repository, source_branch, local_ref)
   end
 
-  def remote_exists?(name)
-    raw_repository.remote_exists?(name)
-  end
-
   def compare_source_branch(target_branch_name, source_repository, source_branch_name, straight:)
     raw_repository.compare_source_branch(target_branch_name, source_repository.raw_repository, source_branch_name, straight: straight)
   end
 
   def create_ref(ref, ref_path)
-    write_ref(ref_path, ref)
+    raw_repository.write_ref(ref_path, ref)
   end
 
   def ls_files(ref)

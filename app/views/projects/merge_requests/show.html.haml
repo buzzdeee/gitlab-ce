@@ -8,10 +8,10 @@
 - page_card_attributes @merge_request.card_attributes
 - content_for :page_specific_javascripts do
   = webpack_bundle_tag('common_vue')
+  = webpack_bundle_tag('diff_notes')
+
   - if has_vue_discussions_cookie
     = webpack_bundle_tag('mr_notes')
-  - else
-    = webpack_bundle_tag('diff_notes')
 
 .merge-request{ data: { mr_action: j(params[:tab].presence || 'show'), url: merge_request_path(@merge_request, format: :json), project_path: project_path(@merge_request.project) } }
   = render "projects/merge_requests/mr_title"
@@ -60,27 +60,33 @@
                 = tab_link_for @merge_request, :diffs do
                   Changes
                   %span.badge= @merge_request.diff_size
-        #resolve-count-app.line-resolve-all-container.prepend-top-10{ "v-cloak" => true }
-          %resolve-count{ "inline-template" => true, ":logged-out" => "#{current_user.nil?}" }
-            %div
-              .line-resolve-all{ "v-show" => "discussionCount > 0",
-                ":class" => "{ 'has-next-btn': !loggedOut && resolvedDiscussionCount !== discussionCount }" }
-                %span.line-resolve-btn.is-disabled{ type: "button",
-                    ":class" => "{ 'is-active': resolvedDiscussionCount === discussionCount }" }
-                  %template{ 'v-if' => 'resolvedDiscussionCount === discussionCount' }
-                    = render 'shared/icons/icon_status_success_solid.svg'
-                  %template{ 'v-else' => '' }
-                    = render 'shared/icons/icon_resolve_discussion.svg'
-                %span.line-resolve-text
-                  {{ resolvedDiscussionCount }}/{{ discussionCount }} {{ resolvedCountText }} resolved
-              = render "discussions/new_issue_for_all_discussions", merge_request: @merge_request
-              = render "discussions/jump_to_next"
+
+        - if has_vue_discussions_cookie
+          #js-vue-discussion-counter
+        - else
+          #resolve-count-app.line-resolve-all-container.prepend-top-10{ "v-cloak" => true }
+            %resolve-count{ "inline-template" => true, ":logged-out" => "#{current_user.nil?}" }
+              %div
+                .line-resolve-all{ "v-show" => "discussionCount > 0",
+                  ":class" => "{ 'has-next-btn': !loggedOut && resolvedDiscussionCount !== discussionCount }" }
+                  %span.line-resolve-btn.is-disabled{ type: "button",
+                      ":class" => "{ 'is-active': resolvedDiscussionCount === discussionCount }" }
+                    %template{ 'v-if' => 'resolvedDiscussionCount === discussionCount' }
+                      = render 'shared/icons/icon_status_success_solid.svg'
+                    %template{ 'v-else' => '' }
+                      = render 'shared/icons/icon_resolve_discussion.svg'
+                  %span.line-resolve-text
+                    {{ resolvedDiscussionCount }}/{{ discussionCount }} {{ resolvedCountText }} resolved
+                = render "discussions/new_issue_for_all_discussions", merge_request: @merge_request
+                = render "discussions/jump_to_next"
 
     .tab-content#diff-notes-app
       #notes.notes.tab-pane.voting_notes
         .row
           %section.col-md-12
+            %script.js-notes-data{ type: "application/json" }= initial_notes_data(true).to_json.html_safe
             .issuable-discussion.js-vue-notes-event
+              = render "projects/merge_requests/discussion"
               - if has_vue_discussions_cookie
                 #js-vue-mr-discussions{ data: { discussions_path: discussions_project_merge_request_path(@project, @merge_request, format: :json),
                 register_path: new_session_path(:user, redirect_to_referer: 'yes', anchor: 'register-pane'),
@@ -91,9 +97,6 @@
                 last_fetched_at: Time.now.to_i,
                 issue_data: serialize_issuable(@merge_request),
                 current_user_data: UserSerializer.new.represent(current_user).to_json} }
-
-              - else
-                = render "projects/merge_requests/discussion"
 
       #commits.commits.tab-pane
         -# This tab is always loaded via AJAX

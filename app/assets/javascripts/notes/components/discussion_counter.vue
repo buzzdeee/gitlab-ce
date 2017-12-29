@@ -2,13 +2,18 @@
   import { mapGetters } from 'vuex';
   import resolveSvg from 'icons/_icon_resolve_discussion.svg';
   import resolvedSvg from 'icons/_icon_status_success_solid.svg';
+  import mrIssueSvg from 'icons/_icon_mr_issue.svg';
+  import nextDiscussionSvg from 'icons/_next_discussion.svg';
   import { pluralize } from '../../lib/utils/text_utility';
+  import tooltip from '../../vue_shared/directives/tooltip';
 
   export default {
     computed: {
       ...mapGetters([
         'getUserData',
+        'getNoteableData',
         'discussionCount',
+        'unresolvedDiscussions',
         'resolvedDiscussionCount',
       ]),
       isLoggedIn() {
@@ -23,22 +28,50 @@
       allResolved() {
         return this.resolvedDiscussionCount === this.discussionCount;
       },
+      resolveAllDiscussionsIssuePath() {
+        return this.getNoteableData.create_issue_to_resolve_discussions_path;
+      },
+      firstUnresolvedDiscussionId() {
+        const item = this.unresolvedDiscussions[0];
+
+        return item ? item.id : null;
+      },
+    },
+    methods: {
+      jumpToFirstDiscussion() {
+        const el = document.querySelector(`[data-discussion-id="${this.firstUnresolvedDiscussionId}"]`);
+        const activeTab = window.mrTabs.currentAction;
+
+        if (activeTab === 'commits' || activeTab === 'pipelines') {
+          window.mrTabs.activateTab('show');
+        }
+
+        if (el) {
+          $.scrollTo(el, {
+            offset: -125, // navbar and MR tabs height
+          });
+        }
+      },
     },
     created() {
       this.resolveSvg = resolveSvg;
       this.resolvedSvg = resolvedSvg;
+      this.mrIssueSvg = mrIssueSvg;
+      this.nextDiscussionSvg = nextDiscussionSvg;
     },
-  }
+    directives: {
+      tooltip,
+    },
+  };
 </script>
 
 <template>
-  <div class="line-resolve-all-container">
+  <div class="line-resolve-all-container prepend-top-10">
     <div>
       <div
         v-if="discussionCount > 0"
         :class="{ 'has-next-btn': hasNextButton }"
-        class="line-resolve-all"
-      >
+        class="line-resolve-all">
         <span
           :class="{ 'is-active': allResolved }"
           class="line-resolve-btn is-disabled"
@@ -55,6 +88,32 @@
         <span class=".line-resolve-text">
           {{resolvedDiscussionCount}}/{{discussionCount}} {{countText}} resolved
         </span>
+      </div>
+      <div
+        v-if="resolveAllDiscussionsIssuePath && !allResolved"
+        class="btn-group"
+        role="group">
+        <a
+          :href="resolveAllDiscussionsIssuePath"
+          v-tooltip
+          title="Resolve all discussions in new issue"
+          data-container="body"
+          class="new-issue-for-discussion btn btn-default discussion-create-issue-btn">
+          <span v-html="mrIssueSvg"></span>
+        </a>
+      </div>
+      <div
+        v-if="isLoggedIn && !allResolved"
+        class="btn-group"
+        role="group">
+        <button
+          @click="jumpToFirstDiscussion"
+          v-tooltip
+          title="Jump to first unresolved discussion"
+          data-container="body"
+          class="btn btn-default discussion-next-btn">
+          <span v-html="nextDiscussionSvg"></span>
+        </button>
       </div>
     </div>
   </div>

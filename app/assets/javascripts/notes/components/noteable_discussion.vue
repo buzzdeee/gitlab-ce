@@ -1,6 +1,7 @@
 <script>
   import { mapActions, mapGetters } from 'vuex';
   import resolveDiscussionsSvg from 'icons/_icon_mr_issue.svg';
+  import nextDiscussionsSvg from 'icons/_next_discussion.svg';
   import Flash from '../../flash';
   import { SYSTEM_NOTE } from '../constants';
   import userAvatarLink from '../../vue_shared/components/user_avatar/user_avatar_link.vue';
@@ -47,6 +48,9 @@
     computed: {
       ...mapGetters([
         'getNoteableData',
+        'discussionCount',
+        'resolvedDiscussionCount',
+        'unresolvedDiscussions',
       ]),
       discussion() {
         return this.note.notes[0];
@@ -77,6 +81,9 @@
         }
 
         return null;
+      },
+      hasUnresolvedDiscussion() {
+        return this.unresolvedDiscussions.length > 0;
       },
     },
     methods: {
@@ -145,9 +152,25 @@
             });
           });
       },
+      jumpToDiscussion() {
+        const unresolvedIds = this.unresolvedDiscussions.map(d => d.id);
+        const index = unresolvedIds.indexOf(this.note.id);
+
+        if (index >= 0 && index !== unresolvedIds.length) {
+          const nextId = unresolvedIds[index + 1];
+          const el = document.querySelector(`[data-discussion-id="${nextId}"]`);
+
+          if (el) {
+            $.scrollTo(el, {
+              offset: -125, // navbar and MR tabs height
+            });
+          }
+        }
+      },
     },
     created() {
       this.resolveDiscussionsSvg = resolveDiscussionsSvg;
+      this.nextDiscussionsSvg = nextDiscussionsSvg;
     },
     mounted() {
       if (this.isReplying) {
@@ -167,7 +190,9 @@
 </script>
 
 <template>
-  <li class="note note-discussion timeline-entry">
+  <li
+    :data-discussion-id="note.id"
+    class="note note-discussion timeline-entry">
     <div class="timeline-entry-inner">
       <div class="timeline-icon">
         <user-avatar-link
@@ -246,9 +271,10 @@
                         </button>
                       </div>
                       <div
-                        v-if="note.resolvable && !note.resolved"
-                        class="btn-group discussion-actions">
+                        class="btn-group discussion-actions"
+                        role="group">
                         <div
+                          v-if="note.resolvable && !discussionResolved"
                           class="btn-group"
                           role="group">
                           <a
@@ -259,6 +285,19 @@
                             data-container="body">
                               <span v-html="resolveDiscussionsSvg"></span>
                             </a>
+                        </div>
+                        <div
+                          v-if="hasUnresolvedDiscussion"
+                          class="btn-group"
+                          role="group">
+                          <button
+                            @click="jumpToDiscussion"
+                            v-tooltip
+                            class="btn btn-default discussion-next-btn"
+                            title="Jump to next unresolved discussion"
+                            data-container="body">
+                              <span v-html="nextDiscussionsSvg"></span>
+                            </button>
                         </div>
                       </div>
                     </div>
