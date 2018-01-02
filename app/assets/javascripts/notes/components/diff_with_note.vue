@@ -3,6 +3,7 @@
   import DiffFileHeader from './diff_file_header.vue';
   import initDiscussionTab from '~/image_diff/init_discussion_tab';
   import imageDiffHelper from '~/image_diff/helpers/index';
+  import { camelizeKeys } from '~/lib/utils/text_utility';
 
   export default {
     props: {
@@ -23,13 +24,13 @@
         return text ? 'text-file' : 'js-image-file';
       },
       diffRows() {
-        return $(this.discussion.truncated_diff_lines);
+        return $(this.discussion.truncatedDiffLines);
       },
       diffFile() {
-        return this.discussion.diff_file || {};
+        return camelizeKeys(this.discussion.diffFile || {});
       },
-      replacedImageDiffHtml() {
-        return this.discussion.notes[0].replaced_image_diff_html;
+      imageDiffHtml() {
+        return this.discussion.imageDiffHtml;
       },
     },
     mounted() {
@@ -83,7 +84,7 @@
     <div
       v-else
     >
-      <div v-html="replacedImageDiffHtml"></div>
+      <div v-html="imageDiffHtml"></div>
       <slot></slot>
     </div>
   </div>

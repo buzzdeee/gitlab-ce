@@ -64,3 +64,17 @@ export const truncate = (string, maxLength) => `${string.substr(0, (maxLength - 
 export function capitalizeFirstCharacter(text) {
   return `${text[0].toUpperCase()}${text.slice(1)}`;
 }
+
+export function camelize(str) {
+  return str.replace(/_([a-z])/gi, ($1, $2) => $2.toUpperCase());
+}
+
+export function camelizeKeys(obj) {
+  return Object.keys(obj).reduce((acc, key) => {
+    const camelKey = camelize(key);
+    return {
+      ...acc,
+      [camelKey]: obj[key],
+    };
+  }, {});
+}

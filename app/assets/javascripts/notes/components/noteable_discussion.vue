@@ -53,7 +53,12 @@
         'unresolvedDiscussions',
       ]),
       discussion() {
-        return this.note.notes[0];
+        return {
+          ...this.note.notes[0],
+          truncatedDiffLines: this.note.truncated_diff_lines,
+          diffFile: this.note.diff_file,
+          diffDiscussion: this.note.diff_discussion,
+        };
       },
       author() {
         return this.discussion.author;
@@ -86,7 +91,7 @@
         return this.unresolvedDiscussions.length > 0;
       },
       wrapperComponent() {
-        if (this.discussion.diff_discussion && this.discussion.diff_note) {
+        if (this.discussion.diffDiscussion && this.discussion.diffFile) {
           return diffWithNote;
         }
         return 'div';
@@ -116,7 +121,7 @@
         return noteableNote;
       },
       componentData(note) {
-        return note.isPlaceholderNote ? note.notes[0] : note;
+        return note.isPlaceholderNote ? this.notes[0] : note;
       },
       toggleDiscussionHandler() {
         this.toggleDiscussion({ discussionId: this.note.id });
