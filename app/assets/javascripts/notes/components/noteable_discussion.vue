@@ -58,6 +58,7 @@
           truncatedDiffLines: this.note.truncated_diff_lines,
           diffFile: this.note.diff_file,
           diffDiscussion: this.note.diff_discussion,
+          imageDiffHtml: this.note.image_diff_html,
         };
       },
       author() {
