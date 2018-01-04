@@ -27,10 +27,13 @@
         return $(this.discussion.truncatedDiffLines);
       },
       diffFile() {
-        return camelizeKeys(this.discussion.diffFile || {});
+        return camelizeKeys(this.discussion.diffFile);
       },
       imageDiffHtml() {
         return this.discussion.imageDiffHtml;
+      },
+      rowTag() {
+        return html.outerHTML ? 'tr' : 'template';
       },
     },
     mounted() {
@@ -65,7 +68,7 @@
     >
       <table>
         <component
-          :is="html.outerHTML ? 'tr' : 'template'"
+          :is="rowTag"
           :class="html.className"
           v-for="html in diffRows"
           v-html="html.outerHTML"

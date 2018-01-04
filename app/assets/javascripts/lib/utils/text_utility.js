@@ -69,7 +69,7 @@ export function camelize(str) {
   return str.replace(/_([a-z])/gi, ($1, $2) => $2.toUpperCase());
 }
 
-export function camelizeKeys(obj) {
+export function camelizeKeys(obj = {}) {
   return Object.keys(obj).reduce((acc, key) => {
     const camelKey = camelize(key);
     return {

@@ -15,10 +15,7 @@
     },
     computed: {
       titleTag() {
-        if (!this.diffFile.discussionPath) {
-          return 'span';
-        }
-        return 'a';
+        return this.diffFile.discussionPath ? 'a' : 'span';
       },
       titleHref() {
         return this.diffFile.discussionPath;
@@ -33,7 +30,7 @@
       v-if="diffFile.submodule"
     >
       <span>
-        <Icon name="archive" />
+        <icon name="archive" />
         <strong
           v-html="diffFile.submoduleLink"
           class="file-title-name"
