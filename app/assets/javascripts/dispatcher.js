@@ -1,6 +1,5 @@
 /* eslint-disable func-names, space-before-function-paren, no-var, prefer-arrow-callback, wrap-iife, no-shadow, consistent-return, one-var, one-var-declaration-per-line, camelcase, default-case, no-new, quotes, no-duplicate-case, no-case-declarations, no-fallthrough, max-len */
 import projectSelect from './project_select';
-import Milestone from './milestone';
 import IssuableForm from './issuable_form';
 import LabelsSelect from './labels_select';
 import MilestoneSelect from './milestone_select';
@@ -16,7 +15,6 @@ import Compare from './compare';
 import ProjectNew from './project_new';
 import Labels from './labels';
 import LabelManager from './label_manager';
-import Sidebar from './right_sidebar';
 import IssuableTemplateSelectors from './templates/issuable_template_selectors';
 import Flash from './flash';
 import BindInOut from './behaviors/bind_in_out';
@@ -127,10 +125,20 @@ import Activities from './activities';
             .then(callDefault)
             .catch(fail);
           break;
+        case 'projects:milestones:index':
+          import('./pages/projects/milestones/index')
+            .then(callDefault)
+            .catch(fail);
+          break;
         case 'projects:milestones:show':
+          import('./pages/projects/milestones/show')
+            .then(callDefault)
+            .catch(fail);
+          break;
         case 'groups:milestones:show':
-          new Milestone();
-          new Sidebar();
+          import('./pages/groups/milestones/show')
+            .then(callDefault)
+            .catch(fail);
           break;
         case 'dashboard:milestones:show':
           import('./pages/dashboard/milestones/show')
