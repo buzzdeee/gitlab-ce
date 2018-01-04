@@ -92,16 +92,10 @@
         return this.unresolvedDiscussions.length > 0;
       },
       wrapperComponent() {
-        if (this.discussion.diffDiscussion && this.discussion.diffFile) {
-          return diffWithNote;
-        }
-        return 'div';
+        return (this.discussion.diffDiscussion && this.discussion.diffFile) ? diffWithNote : 'div';
       },
       wrapperClass() {
-        if (this.isDiffDiscussion) {
-          return '';
-        }
-        return 'panel panel-default';
+        return this.isDiffDiscussion ? '' : 'panel panel-default';
       },
     },
     methods: {
