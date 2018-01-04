@@ -3,7 +3,7 @@
   import DiffFileHeader from './diff_file_header.vue';
   import initDiscussionTab from '~/image_diff/init_discussion_tab';
   import imageDiffHelper from '~/image_diff/helpers/index';
-  import { camelizeKeys } from '~/lib/utils/text_utility';
+  import { camelCaseKeys } from '~/lib/utils/text_utility';
 
   export default {
     props: {
@@ -27,7 +27,7 @@
         return $(this.discussion.truncatedDiffLines);
       },
       diffFile() {
-        return camelizeKeys(this.discussion.diffFile);
+        return camelCaseKeys(this.discussion.diffFile);
       },
       imageDiffHtml() {
         return this.discussion.imageDiffHtml;
