@@ -1,12 +1,16 @@
 import Vue from 'vue';
 import DiffFileHeader from '~/notes/components/diff_file_header.vue';
-import { diffDiscussionMock } from '../mock_data';
+import { camelCase } from '~/lib/utils/text_utility';
 import mountComponent from '../../helpers/vue_mount_component_helper';
 
-describe('diff_file_header', () => {
+const discussionFixture = 'merge_requests/discussions.json';
+
+fdescribe('diff_file_header', () => {
   let vm;
+  const diffDiscussionMock = getJSONFixture(discussionFixture)[0];
+  const diffFile = camelCase(diffDiscussionMock.diff_file);
   const props = {
-    diffFile: diffDiscussionMock.diff_file,
+    diffFile,
   };
   const Component = Vue.extend(DiffFileHeader);
   const selectors = {

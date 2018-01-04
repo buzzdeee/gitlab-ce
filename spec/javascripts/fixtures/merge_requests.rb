@@ -70,6 +70,17 @@ describe Projects::MergeRequestsController, '(JavaScript fixtures)', type: :cont
     render_merge_request(example.description, merge_request)
   end
 
+  it 'merge_requests/discussions.json' do |example|
+    create(:diff_note_on_merge_request, project: project, author: admin, position: position, noteable: merge_request)
+    get :discussions,
+      namespace_id: project.namespace.to_param,
+      project_id: project,
+      id: merge_request.to_param,
+      format: :json
+
+    store_frontend_fixture(response, example.description)
+  end
+
   private
 
   def render_merge_request(fixture_file_name, merge_request)
