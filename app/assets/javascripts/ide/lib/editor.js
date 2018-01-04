@@ -17,6 +17,7 @@ export default class Editor {
     this.instance = null;
     this.dirtyDiffController = null;
     this.disposable = new Disposable();
+    this.viewMode = 'editor';
 
     this.disposable.add(
       this.modelManager = new ModelManager(this.monaco),
@@ -33,6 +34,17 @@ export default class Editor {
     if (!this.instance) {
       this.disposable.add(
         this.instance = this.monaco.editor.create(domElement, {
+          visible: false,
+          model: null,
+          readOnly: false,
+          contextmenu: true,
+          scrollBeyondLastLine: false,
+          minimap: {
+            enabled: false,
+          },
+        }),
+        this.diffInstance = this.monaco.editor.createDiffEditor(domElement, {
+          visible: false,
           model: null,
           readOnly: false,
           contextmenu: true,
@@ -53,7 +65,14 @@ export default class Editor {
   }
 
   attachModel(model) {
+    if (model.getTargetModel()) {
+      this.diffInstance.setModel({
+        modified: model.getModel(),
+        original: model.getTargetModel(),
+      });
+    }
     this.instance.setModel(model.getModel());
+
     this.dirtyDiffController.attachModel(model);
 
     this.currentModel = model;

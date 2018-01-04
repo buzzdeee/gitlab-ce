@@ -39,6 +39,9 @@ export const dataStructure = () => ({
   editorColumn: 1,
   fileLanguage: '',
   eol: '',
+  viewMode: 'edit',
+  previewable: false,
+  mrDiff: '',
 });
 
 export const decorateData = (entity) => {
