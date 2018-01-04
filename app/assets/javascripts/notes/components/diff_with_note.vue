@@ -32,9 +32,6 @@
       imageDiffHtml() {
         return this.discussion.imageDiffHtml;
       },
-      rowTag() {
-        return html.outerHTML ? 'tr' : 'template';
-      },
     },
     mounted() {
       if (this.isImageDiff) {
@@ -47,6 +44,11 @@
           syntaxHighlight(fileHolder);
         });
       }
+    },
+    methods: {
+      rowTag(html) {
+        return html.outerHTML ? 'tr' : 'template';
+      },
     },
   };
 </script>
@@ -68,7 +70,7 @@
     >
       <table>
         <component
-          :is="rowTag"
+          :is="rowTag(html)"
           :class="html.className"
           v-for="html in diffRows"
           v-html="html.outerHTML"
