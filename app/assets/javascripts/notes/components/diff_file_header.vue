@@ -17,9 +17,6 @@
       titleTag() {
         return this.diffFile.discussionPath ? 'a' : 'span';
       },
-      titleHref() {
-        return this.diffFile.discussionPath;
-      },
     },
   };
 </script>
@@ -45,7 +42,7 @@
       <component
         ref="titleWrapper"
         :is="titleTag"
-        :href="titleHref"
+        :href="diffFile.discussionPath"
       >
         <i class="fa fw" :class="diffFile.fileTypeIcon" />
         <span v-if="diffFile.renamedFile">
