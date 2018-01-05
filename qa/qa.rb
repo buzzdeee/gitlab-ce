@@ -138,6 +138,10 @@ module QA
   module Specs
     autoload :Config, 'qa/specs/config'
     autoload :Runner, 'qa/specs/runner'
+
+    module Support
+      autoload :CapybaraConfig, 'qa/specs/support/capybara_config'
+    end
   end
 end
 
