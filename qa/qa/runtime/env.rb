@@ -4,7 +4,7 @@ module QA
       extend self
 
       def chrome_headless?
-        (ENV['CHROME_HEADLESS'] =~ /^(false|no|0)$/i) != 0
+        ENV['CHROME_HEADLESS'] =~ /^(false|no|0)$/i
       end
 
       def running_in_ci?
