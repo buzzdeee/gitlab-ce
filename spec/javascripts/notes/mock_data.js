@@ -270,11 +270,6 @@ export const discussionMock = {
   }],
   individual_note: false,
 };
-
-export const systemNoteMock = {
-
-};
-
 export const replacedImageDiffHtml = `
 <div class="image js-replaced-image" data="">
 <div class="two-up view">

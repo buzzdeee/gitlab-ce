@@ -26,6 +26,20 @@ describe Projects::MergeRequestsController, '(JavaScript fixtures)', type: :cont
       diff_refs: merge_request.diff_refs
     )
   end
+  let(:image_merge_request) { create(:merge_request_with_diffs, :with_image_diffs, source_project: project, author: admin) }
+  let(:image_path)          { "files/images/ee_repo_logo.png" }
+  let(:image_position) do
+    Gitlab::Diff::Position.new(
+      old_path: path,
+      new_path: path,
+      width: 100,
+      height: 100,
+      x: 1,
+      y: 1,
+      position_type: "image",
+      diff_refs: image_merge_request.diff_refs
+    )
+  end
 
   render_views
 
@@ -72,16 +86,31 @@ describe Projects::MergeRequestsController, '(JavaScript fixtures)', type: :cont
 
   it 'merge_requests/discussions.json' do |example|
     create(:diff_note_on_merge_request, project: project, author: admin, position: position, noteable: merge_request)
+    render_discussions_json(merge_request, example.description)
+  end
+
+  it 'merge_requests/diff_discussion.json' do |example|
+    create(:diff_note_on_merge_request, project: project, author: admin, position: position, noteable: merge_request)
+    render_discussions_json(merge_request, example.description)
+  end
+
+  it 'merge_requests/image_diff_discussion.json' do |example|
+    create(:diff_note_on_merge_request, project: project, noteable: image_merge_request, position: image_position)
+
+    render_discussions_json(merge_request, example.description)
+  end
+
+  private
+
+  def render_discussions_json(merge_request, fixture_file_name)
     get :discussions,
       namespace_id: project.namespace.to_param,
       project_id: project,
       id: merge_request.to_param,
       format: :json
 
-    store_frontend_fixture(response, example.description)
+    store_frontend_fixture(response, fixture_file_name)
   end
-
-  private
 
   def render_merge_request(fixture_file_name, merge_request)
     get :show,
