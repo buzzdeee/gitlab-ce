@@ -1,4 +1,8 @@
 describe QA::Runtime::Env do
+  before do
+    allow(ENV).to receive(:[]).and_call_original
+  end
+
   describe '.chrome_headless?' do
     context 'when there is an env variable set' do
       it 'returns false when falsey values specified' do
@@ -55,7 +59,6 @@ describe QA::Runtime::Env do
   end
 
   def stub_env(name, value)
-    allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with(name).and_return(value)
   end
 end
