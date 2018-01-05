@@ -5,9 +5,6 @@ module QA
         def configure_capybara
           return if Capybara.drivers.include?(:chrome)
 
-          # Give CI some extra time
-          timeout = (ENV['CI'] || ENV['CI_SERVER']) ? 60 : 10
-
           Capybara.register_driver :chrome do |app|
             capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
               # This enables access to logs with `page.driver.manage.get_log(:browser)`
