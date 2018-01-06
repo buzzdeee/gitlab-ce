@@ -40,7 +40,13 @@ module QA
 
         def sign_out
           within_user_menu do
-            click_link('Sign out')
+            click_link 'Sign out'
+          end
+        end
+
+        def go_to_profile_settings
+          within_user_menu do
+            click_link 'Settings'
           end
         end
 

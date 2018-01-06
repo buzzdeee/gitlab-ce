@@ -4,6 +4,7 @@ module QA
   module Factory
     class Product
       include Capybara::DSL
+      attr_reader :factory
 
       Attribute = Struct.new(:name, :block)
 

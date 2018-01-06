@@ -11,6 +11,7 @@ module QA
     autoload :Scenario, 'qa/runtime/scenario'
     autoload :Browser, 'qa/runtime/browser'
     autoload :Env, 'qa/runtime/env'
+    autoload :API, 'qa/runtime/api'
   end
 
   ##
@@ -26,6 +27,7 @@ module QA
       autoload :Group, 'qa/factory/resource/group'
       autoload :Project, 'qa/factory/resource/project'
       autoload :DeployKey, 'qa/factory/resource/deploy_key'
+      autoload :PersonalAccessToken, 'qa/factory/resource/personal_access_token'
     end
 
     module Repository
@@ -85,6 +87,7 @@ module QA
       autoload :Main, 'qa/page/menu/main'
       autoload :Side, 'qa/page/menu/side'
       autoload :Admin, 'qa/page/menu/admin'
+      autoload :UserSettings, 'qa/page/menu/user_settings'
     end
 
     module Dashboard
@@ -105,6 +108,12 @@ module QA
         autoload :Common, 'qa/page/project/settings/common'
         autoload :Repository, 'qa/page/project/settings/repository'
         autoload :DeployKeys, 'qa/page/project/settings/deploy_keys'
+      end
+    end
+
+    module User
+      module Settings
+        autoload :AccessTokens, 'qa/page/user/settings/access_tokens'
       end
     end
 
@@ -138,6 +147,17 @@ module QA
   module Specs
     autoload :Config, 'qa/specs/config'
     autoload :Runner, 'qa/specs/runner'
+  end
+
+  ##
+  # Classes that provide support methods
+  #
+  module Support
+    autoload :ApiHelpers, 'qa/support/api_helpers'
+
+    # module Matchers
+    #   autoload :ApiHelpers, 'qa/support/matchers/have_gitlab_http_status'
+    # end
   end
 end
 
