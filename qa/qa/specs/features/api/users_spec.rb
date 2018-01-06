@@ -9,7 +9,7 @@ module QA
 
     context "when authenticated" do
       scenario 'get list of users' do
-        response, json = Runtime::API.get(:gitlab, api('/users', personal_access_token: @access_token))
+        response, _json = Runtime::API.get(:gitlab, api('/users', personal_access_token: @access_token))
         expect(response).to have_gitlab_api_status(200)
       end
 
@@ -24,7 +24,7 @@ module QA
     end
 
     scenario "returns authorization error when token is invalid" do
-      response, json = Runtime::API.get(:gitlab, api('/users', personal_access_token: 'invalid'))
+      response, _json = Runtime::API.get(:gitlab, api('/users', personal_access_token: 'invalid'))
 
       expect(response).to have_gitlab_api_status(401)
     end

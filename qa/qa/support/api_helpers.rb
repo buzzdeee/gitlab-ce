@@ -19,7 +19,7 @@ module QA
       #   => "/api/v2/issues?foo=bar&private_token=..."
       #
       # Returns the relative path to the requested API resource
-      def api(path, version: QA::Runtime::API.version, personal_access_token: nil, oauth_access_token: nil)
+      def api(path, version: Runtime::API::VERSION, personal_access_token: nil, oauth_access_token: nil)
         full_path = "/api/#{version}#{path}"
 
         if oauth_access_token

@@ -3,6 +3,8 @@ require 'faraday'
 module QA
   module Runtime
     class API
+      VERSION = 'v4'
+
       ##
       # GET an endpoint that belongs to a GitLab instance under a given address
       #
@@ -18,11 +20,7 @@ module QA
         page = self.add_query_values(page, args)
         response = Faraday.get(API::Session.new(address, page).address)
         json = response.status == 200 ? JSON.parse(response.body) : nil
-        return response, json
-      end
-
-      def self.version
-        'v4'
+        [response, json]
       end
 
       def self.add_query_values(path, args)
@@ -38,6 +36,8 @@ module QA
       end
 
       class Session
+        attr_reader :address
+
         def initialize(instance, page = nil)
           @instance = instance
           @address = host + (page.is_a?(String) ? page : page&.path)
@@ -45,10 +45,6 @@ module QA
 
         def host
           @instance.is_a?(Symbol) ? Runtime::Scenario.send("#{@instance}_address") : @instance.to_s
-        end
-
-        def address
-          @address
         end
       end
     end
