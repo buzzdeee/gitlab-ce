@@ -3,7 +3,7 @@ require 'faraday'
 module QA
   module Runtime
     class API
-      VERSION = 'v4'
+      VERSION = 'v4'.freeze
 
       ##
       # GET an endpoint that belongs to a GitLab instance under a given address

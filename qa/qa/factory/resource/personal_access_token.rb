@@ -7,11 +7,11 @@ module QA
       class PersonalAccessToken < Factory::Base
         attr_accessor :name, :access_token
 
-        def fabricate!(sign_in = true)
+        def fabricate!(sign_in_address = :gitlab)
           @access_token = Runtime::Env.personal_access_token
           unless @access_token
-            if sign_in
-              Runtime::Browser.visit(:gitlab, Page::Main::Login)
+            if sign_in_address
+              Runtime::Browser.visit(sign_in_address, Page::Main::Login)
               Page::Main::Login.act { sign_in_using_credentials }
             end
 
@@ -25,7 +25,7 @@ module QA
               @access_token = page.created_access_token
             end
 
-            if sign_in
+            if sign_in_address
               Page::Menu::Main.act { sign_out }
             end
           end
