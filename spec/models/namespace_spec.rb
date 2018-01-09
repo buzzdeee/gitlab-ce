@@ -169,7 +169,6 @@ describe Namespace do
   end
 
   describe '#move_dir', :request_store do
-
     shared_examples "namespace restrictions" do
       context "when any project has container images" do
         let(:container_repository) { create(:container_repository) }
