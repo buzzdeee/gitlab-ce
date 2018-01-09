@@ -26,8 +26,8 @@ class DiscussionEntity < Grape::Entity
       collection: discussion.truncated_diff_lines,
       as: :line,
       locals: { diff_file: discussion.diff_file,
-        discussion_expanded: true,
-        plain: true },
+                discussion_expanded: true,
+                plain: true },
       layout: false,
       formats: [:html]
     )
@@ -35,12 +35,12 @@ class DiscussionEntity < Grape::Entity
 
   expose :image_diff_html, if: -> (d, _) { defined? d.diff_file } do |discussion|
     diff_file = discussion.diff_file
-    partial = (diff_file.new_file? || diff_file.deleted_file?) ? 'single_image_diff' : 'replaced_image_diff'
+    partial = diff_file.new_file? || diff_file.deleted_file? ? 'single_image_diff' : 'replaced_image_diff'
     options[:context].render_to_string(
       partial: "projects/diffs/#{partial}",
       locals: { diff_file: diff_file,
-        position: discussion.position.to_json,
-        click_to_comment: false },
+                position: discussion.position.to_json,
+                click_to_comment: false },
       layout: false,
       formats: [:html]
     )
