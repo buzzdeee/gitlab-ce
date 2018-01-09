@@ -435,7 +435,7 @@ describe API::Projects do
 
       expect(response).to have_gitlab_http_status(201)
 
-      excluded_attributes = %i[has_external_issue_tracker issues_enabled merge_requests_enabled wiki_enabled storage_version]
+      excluded_attributes = %i[id has_external_issue_tracker issues_enabled merge_requests_enabled wiki_enabled storage_version]
       project.each_pair do |k, v|
         next if excluded_attributes.include?(k)
 
@@ -599,12 +599,10 @@ describe API::Projects do
   end
 
   describe 'POST /projects/user/:id' do
-    before do
-      expect(project).to be_persisted
-    end
-
     it 'creates new project without path but with name and return 201' do
-      expect { post api("/projects/user/#{user.id}", admin), name: 'Foo Project' }.to change {Project.count}.by(1)
+      expect {
+        post api("/projects/user/#{user.id}", admin), name: 'Foo Project'
+      }.to change { Project.count }.by(1)
       expect(response).to have_gitlab_http_status(201)
 
       project = Project.last
@@ -644,7 +642,7 @@ describe API::Projects do
 
       expect(response).to have_gitlab_http_status(201)
 
-      excluded_attributes = %i[has_external_issue_tracker path storage_version]
+      excluded_attributes = %i[id has_external_issue_tracker path storage_version]
       project.each_pair do |k, v|
         next if excluded_attributes.include?(k)
 
