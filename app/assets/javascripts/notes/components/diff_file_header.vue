@@ -44,7 +44,7 @@
         :is="titleTag"
         :href="diffFile.discussionPath"
       >
-        <i class="fa fw" :class="diffFile.fileTypeIcon" />
+        <div v-html="diffFile.blobIcon"></div>
         <span v-if="diffFile.renamedFile">
           <strong
             class="file-title-name has-tooltip"

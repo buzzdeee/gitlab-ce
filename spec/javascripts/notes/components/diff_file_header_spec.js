@@ -49,10 +49,10 @@ describe('diff_file_header', () => {
       props.diffFile.discussionPath = 'some/discussion/id';
     });
 
-    xit('shows file type icon', () => {
+    it('shows file type icon', () => {
       vm = mountComponent(Component, props);
 
-      expect(vm.$el.innerHTML).toContain('fa-file-image-o');
+      expect(vm.$el.innerHTML).toContain('fa-file-text-o');
     });
 
     it('links to discussion path', () => {
