@@ -435,10 +435,11 @@ describe API::Projects do
 
       expect(response).to have_gitlab_http_status(201)
 
+      excluded_attributes = %i[has_external_issue_tracker issues_enabled merge_requests_enabled wiki_enabled storage_version]
       project.each_pair do |k, v|
-        next if %i[has_external_issue_tracker issues_enabled merge_requests_enabled wiki_enabled].include?(k)
+        next if excluded_attributes.include?(k)
 
-        expect(json_response[k.to_s]).to eq(v)
+        expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
       end
 
       # Check feature permissions attributes
@@ -642,10 +643,12 @@ describe API::Projects do
       post api("/projects/user/#{user.id}", admin), project
 
       expect(response).to have_gitlab_http_status(201)
-      project.each_pair do |k, v|
-        next if %i[has_external_issue_tracker path].include?(k)
 
-        expect(json_response[k.to_s]).to eq(v)
+      excluded_attributes = %i[has_external_issue_tracker path storage_version]
+      project.each_pair do |k, v|
+        next if excluded_attributes.include?(k)
+
+        expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
       end
     end
 
@@ -1381,7 +1384,7 @@ describe API::Projects do
         expect(response).to have_gitlab_http_status(200)
 
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
 
@@ -1393,7 +1396,7 @@ describe API::Projects do
         expect(response).to have_gitlab_http_status(200)
 
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
 
@@ -1406,7 +1409,7 @@ describe API::Projects do
         expect(response).to have_gitlab_http_status(200)
 
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
 
         expect(json_response['visibility']).to eq('private')
@@ -1438,7 +1441,7 @@ describe API::Projects do
         expect(response).to have_gitlab_http_status(200)
 
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
 
@@ -1450,7 +1453,7 @@ describe API::Projects do
         expect(response).to have_gitlab_http_status(200)
 
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
     end
@@ -1461,7 +1464,7 @@ describe API::Projects do
         put api("/projects/#{project3.id}", user4), project_param
         expect(response).to have_gitlab_http_status(200)
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
 
@@ -1475,7 +1478,7 @@ describe API::Projects do
         put api("/projects/#{project3.id}", user4), project_param
         expect(response).to have_gitlab_http_status(200)
         project_param.each_pair do |k, v|
-          expect(json_response[k.to_s]).to eq(v)
+          expect(json_response[k.to_s]).to eq(v), "expects #{k} to be #{v.inspect}, got #{json_response[k].inspect}"
         end
       end
 

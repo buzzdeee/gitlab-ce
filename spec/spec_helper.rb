@@ -98,8 +98,6 @@ RSpec.configure do |config|
   end
 
   config.before(:example) do
-    TestEnv.clean_test_path
-
     # Skip pre-receive hook check so we can use the web editor and merge.
     allow_any_instance_of(Gitlab::Git::Hook).to receive(:trigger).and_return([true, nil])
     # Enable all features by default for testing

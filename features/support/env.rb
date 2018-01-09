@@ -31,6 +31,10 @@ Spinach.hooks.before_run do
   include GitlabRoutingHelper
 end
 
+Spinach.hooks.before_scenario do
+  TestEnv.clean_repos_path
+end
+
 Spinach.hooks.after_scenario do |scenario_data, step_definitions|
   if scenario_data.tags.include?('javascript')
     include WaitForRequests

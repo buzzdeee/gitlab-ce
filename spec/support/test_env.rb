@@ -120,6 +120,13 @@ module TestEnv
     FileUtils.mkdir_p(artifacts_path)
   end
 
+  def clean_repos_path
+    return unless Dir.exist?(repos_path)
+
+    FileUtils.rm_rf(repos_path)
+    FileUtils.mkdir_p(repos_path)
+  end
+
   def clean_gitlab_test_path
     Dir[TMP_TEST_PATH].each do |entry|
       if File.basename(entry) =~ /\A(gitlab-(test|test_bare|test-fork|test-fork_bare))\z/

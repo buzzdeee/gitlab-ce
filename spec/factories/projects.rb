@@ -6,6 +6,7 @@ FactoryBot.define do
   # Project does not have bare repository.
   # Use this factory if you don't need repository in tests
   factory :project, class: 'Project' do
+    sequence(:id) # need this because we use truncation in a lot of places
     sequence(:name) { |n| "project#{n}" }
     path { name.downcase.gsub(/\s/, '_') }
     # Behaves differently to nil due to cache_has_external_issue_tracker
