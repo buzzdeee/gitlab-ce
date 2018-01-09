@@ -341,7 +341,7 @@ describe Namespace do
       it 'has no repositories base directories to remove' do
         allow(GitlabShellWorker).to receive(:perform_in)
 
-        expect(File.exist?(path_in_dir))
+        expect(File.exist?(path_in_dir)).to be(false)
 
         namespace.destroy
 
