@@ -11,7 +11,7 @@ feature 'Import/Export - Namespace export file cleanup', :js do
   end
 
   after do
-   FileUtils.rm_rf(export_path, secure: true)
+    FileUtils.rm_rf(export_path, secure: true)
   end
 
   context 'admin user' do

@@ -600,9 +600,7 @@ describe API::Projects do
 
   describe 'POST /projects/user/:id' do
     it 'creates new project without path but with name and return 201' do
-      expect {
-        post api("/projects/user/#{user.id}", admin), name: 'Foo Project'
-      }.to change { Project.count }.by(1)
+      expect { post api("/projects/user/#{user.id}", admin), name: 'Foo Project' }.to change { Project.count }.by(1)
       expect(response).to have_gitlab_http_status(201)
 
       project = Project.last
