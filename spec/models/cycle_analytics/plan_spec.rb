@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'CycleAnalytics#plan' do
+describe 'CycleAnalytics#plan', :skip_gitaly_mock do
   extend CycleAnalyticsHelpers::TestGeneration
 
   let(:project) { create(:project, :repository) }

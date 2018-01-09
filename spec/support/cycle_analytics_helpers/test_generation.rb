@@ -18,7 +18,9 @@ module CycleAnalyticsHelpers
     #                         Each `condition_fn` is expected to implement a case which consitutes the end of the given cycle analytics phase.
     #          before_end_fn: This function is run before calling the end time conditions. Used for setup that needs to be run between the start and end conditions.
     #                post_fn: Code that needs to be run after running the end time conditions.
-
+    #
+    # Note: Specs that rely on this method will NOT work with Gitaly enabled,
+    # since Timecop freezes don't get applied to Gitaly.
     def generate_cycle_analytics_spec(phase:, data_fn:, start_time_conditions:, end_time_conditions:, before_end_fn: nil, post_fn: nil)
       combinations_of_start_time_conditions = (1..start_time_conditions.size).flat_map { |size| start_time_conditions.combination(size).to_a }
       combinations_of_end_time_conditions = (1..end_time_conditions.size).flat_map { |size| end_time_conditions.combination(size).to_a }
