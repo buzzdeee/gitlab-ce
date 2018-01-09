@@ -3,7 +3,7 @@ import DiffFileHeader from '~/notes/components/diff_file_header.vue';
 import { camelCaseKeys } from '~/lib/utils/text_utility';
 import mountComponent from '../../helpers/vue_mount_component_helper';
 
-const discussionFixture = 'merge_requests/discussions.json';
+const discussionFixture = 'merge_requests/diff_discussion.json';
 
 describe('diff_file_header', () => {
   let vm;

@@ -26,20 +26,6 @@ describe Projects::MergeRequestsController, '(JavaScript fixtures)', type: :cont
       diff_refs: merge_request.diff_refs
     )
   end
-  let(:image_merge_request) { create(:merge_request_with_diffs, :with_image_diffs, source_project: project, author: admin) }
-  let(:image_path)          { "files/images/ee_repo_logo.png" }
-  let(:image_position) do
-    Gitlab::Diff::Position.new(
-      old_path: path,
-      new_path: path,
-      width: 100,
-      height: 100,
-      x: 1,
-      y: 1,
-      position_type: "image",
-      diff_refs: image_merge_request.diff_refs
-    )
-  end
 
   render_views
 
@@ -94,10 +80,26 @@ describe Projects::MergeRequestsController, '(JavaScript fixtures)', type: :cont
     render_discussions_json(merge_request, example.description)
   end
 
-  it 'merge_requests/image_diff_discussion.json' do |example|
-    create(:diff_note_on_merge_request, project: project, noteable: image_merge_request, position: image_position)
+  context 'with image diff' do
+    let(:merge_request2) { create(:merge_request_with_diffs, :with_image_diffs, source_project: project, title: "Added images") }
+    let(:image_path) { "files/images/ee_repo_logo.png" }
+    let(:image_position) do
+      Gitlab::Diff::Position.new(
+        old_path: image_path,
+        new_path: image_path,
+        width: 100,
+        height: 100,
+        x: 1,
+        y: 1,
+        position_type: "image",
+        diff_refs: merge_request2.diff_refs
+      )
+    end
 
-    render_discussions_json(merge_request, example.description)
+    it 'merge_requests/image_diff_discussion.json' do |example|
+      create(:diff_note_on_merge_request, project: project, noteable: merge_request2, position: image_position)
+      render_discussions_json(merge_request2, example.description)
+    end
   end
 
   private

@@ -1,13 +1,18 @@
 import Vue from 'vue';
 import DiffWithNote from '~/notes/components/diff_with_note.vue';
+import { camelCaseKeys } from '~/lib/utils/text_utility';
 import mountComponent from '../../helpers/vue_mount_component_helper';
-import { diffDiscussionMock, imageDiffDiscussionMock } from '../mock_data';
+
+const discussionFixture = 'merge_requests/diff_discussion.json';
+const imageDiscussionFixture = 'merge_requests/image_diff_discussion.json';
 
 describe('diff_with_note', () => {
   let vm;
+  const diffDiscussionMock = getJSONFixture(discussionFixture)[0];
+  const diffDiscussion = camelCaseKeys(diffDiscussionMock);
   const Component = Vue.extend(DiffWithNote);
   const props = {
-    discussion: diffDiscussionMock,
+    discussion: diffDiscussion,
   };
   const selectors = {
     get container() {
@@ -35,7 +40,7 @@ describe('diff_with_note', () => {
     });
 
     it('shows diff lines', () => {
-      expect(selectors.diffRows.length).toBe(4);
+      expect(selectors.diffRows.length).toBe(12);
     });
 
     it('shows notes row', () => {
@@ -45,7 +50,8 @@ describe('diff_with_note', () => {
 
   describe('image diff', () => {
     beforeEach(() => {
-      props.discussion = imageDiffDiscussionMock;
+      const imageDiffDiscussionMock = getJSONFixture(imageDiscussionFixture)[0];
+      props.discussion = camelCaseKeys(imageDiffDiscussionMock);
     });
 
     it('shows image diff', () => {
