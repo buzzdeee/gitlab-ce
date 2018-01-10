@@ -1,9 +1,8 @@
 <script>
   import syntaxHighlight from '~/syntax_highlight';
-  import DiffFileHeader from './diff_file_header.vue';
-  import initDiscussionTab from '~/image_diff/init_discussion_tab';
   import imageDiffHelper from '~/image_diff/helpers/index';
   import { camelCaseKeys } from '~/lib/utils/text_utility';
+  import DiffFileHeader from './diff_file_header.vue';
 
   export default {
     props: {
