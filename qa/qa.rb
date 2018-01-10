@@ -87,7 +87,7 @@ module QA
       autoload :Main, 'qa/page/menu/main'
       autoload :Side, 'qa/page/menu/side'
       autoload :Admin, 'qa/page/menu/admin'
-      autoload :UserSettings, 'qa/page/menu/user_settings'
+      autoload :Profile, 'qa/page/menu/profile'
     end
 
     module Dashboard
@@ -111,10 +111,8 @@ module QA
       end
     end
 
-    module User
-      module Settings
-        autoload :AccessTokens, 'qa/page/user/settings/access_tokens'
-      end
+    module Profile
+      autoload :PersonalAccessTokens, 'qa/page/profile/personal_access_tokens'
     end
 
     module Admin
