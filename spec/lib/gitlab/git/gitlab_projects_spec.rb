@@ -219,6 +219,9 @@ describe Gitlab::Git::GitlabProjects do
 
     before do
       FileUtils.mkdir_p(dest_repos_path)
+
+      # Undo spec_helper stub that deletes hooks
+      allow_any_instance_of(described_class).to receive(:fork_repository).and_call_original
     end
 
     after do
@@ -247,6 +250,7 @@ describe Gitlab::Git::GitlabProjects do
     end
 
     context 'when Gitaly fork_repository feature is disabled', :disable_gitaly do
+
       it_behaves_like 'forking a repository'
 
       # We seem to be stuck to having only one working Gitaly storage in tests, changing
