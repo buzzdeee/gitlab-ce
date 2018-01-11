@@ -1,8 +1,7 @@
 $: << File.expand_path(File.dirname(__FILE__))
 
 require 'rspec/core'
-require 'faraday'
-require_relative 'qa/support/matchers/have_gitlab_api_status'
+require 'airborne'
 
 module QA
   ##
@@ -15,7 +14,6 @@ module QA
     autoload :Scenario, 'qa/runtime/scenario'
     autoload :Browser, 'qa/runtime/browser'
     autoload :Env, 'qa/runtime/env'
-    autoload :API, 'qa/runtime/api'
     autoload :Session, 'qa/runtime/session'
   end
 

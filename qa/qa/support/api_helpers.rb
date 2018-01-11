@@ -1,6 +1,8 @@
 module QA
   module Support
     module ApiHelpers
+      API_VERSION = 'v4'.freeze
+
       # Public: Prepend a request path with the path to the API
       #
       # path - Path to append
@@ -19,7 +21,7 @@ module QA
       #   => "/api/v2/issues?foo=bar&private_token=..."
       #
       # Returns the relative path to the requested API resource
-      def api(path, version: Runtime::API::VERSION, personal_access_token: nil, oauth_access_token: nil)
+      def api(path, version: API_VERSION, personal_access_token: nil, oauth_access_token: nil)
         full_path = "/api/#{version}#{path}"
 
         if oauth_access_token

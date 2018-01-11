@@ -8,25 +8,26 @@ module QA
     end
 
     context "when authenticated" do
+      let(:session) { Runtime::Session.new(:gitlab, api('/users', personal_access_token: @access_token)) }
+
       scenario 'get list of users' do
-        response = Runtime::API::Client.get(:gitlab, api('/users', personal_access_token: @access_token))
-        expect(response.response).to have_gitlab_api_status(200)
+        get session.address
+        expect_status(200)
       end
 
       scenario 'returns an empty response when an invalid `username` parameter is passed' do
-        response = Runtime::API::Client.get(:gitlab, api('/users', personal_access_token: @access_token),
-                                            username: 'invalid')
-
-        expect(response.response).to have_gitlab_api_status(200)
-        expect(response.json).to be_an Array
-        expect(response.json.size).to eq(0)
+        get session.address, { params: {username: 'invalid'} }
+        expect_status(200)
+        expect(json_body).to be_an Array
+        expect(json_body.size).to eq(0)
       end
     end
 
     scenario "returns authorization error when token is invalid" do
-      response = Runtime::API::Client.get(:gitlab, api('/users', personal_access_token: 'invalid'))
+      session = Runtime::Session.new(:gitlab, api('/users', personal_access_token: 'invalid'))
+      get session.address
 
-      expect(response.response).to have_gitlab_api_status(401)
+      expect_status(401)
     end
   end
 end
