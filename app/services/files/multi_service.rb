@@ -19,6 +19,8 @@ module Files
 
     private
 
+    #TODO: transform LFS files
+
     def validate!
       super
 

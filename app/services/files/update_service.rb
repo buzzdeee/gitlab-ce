@@ -1,6 +1,7 @@
 module Files
   class UpdateService < Files::BaseService
     def create_commit!
+      #TODO: transform LFS files
       repository.update_file(current_user, @file_path, @file_content,
                              message: @commit_message,
                              branch_name: @branch_name,
