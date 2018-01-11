@@ -90,21 +90,8 @@ module QA
         end
       end
 
-      class Session
+      class Session < QA::Runtime::Session
         include Capybara::DSL
-
-        def initialize(instance, page = nil)
-          @instance = instance
-          @address = host + page&.path
-        end
-
-        def host
-          if @instance.is_a?(Symbol)
-            Runtime::Scenario.send("#{@instance}_address")
-          else
-            @instance.to_s
-          end
-        end
 
         def perform(&block)
           visit(@address)

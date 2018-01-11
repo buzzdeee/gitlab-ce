@@ -16,6 +16,7 @@ module QA
     autoload :Browser, 'qa/runtime/browser'
     autoload :Env, 'qa/runtime/env'
     autoload :API, 'qa/runtime/api'
+    autoload :Session, 'qa/runtime/session'
   end
 
   ##

@@ -16,33 +16,10 @@ module QA
         # In case of an address that is a symbol we will try to guess address
         # based on `Runtime::Scenario#something_address`.
         def self.get(address, page, *args)
-          page = self.add_query_values(page, args)
-          API::Response.new(Faraday.get(API::Client::Session.new(address, page).address))
-        end
-
-        def self.add_query_values(path, args)
-          if args.any?
-            query_string = Hash(*args).map { |key, value| "#{key}=#{value}" }.join('&')
-
-            if query_string
-              path << (path.index('?') ? '&' : '?')
-              path << query_string
-            end
+          session = Session.new(address, page).tap do |s|
+            s.add_query_values(args)
           end
-          path
-        end
-
-        class Session
-          attr_reader :address
-
-          def initialize(instance, page = nil)
-            @instance = instance
-            @address = host + (page.is_a?(String) ? page : page&.path)
-          end
-
-          def host
-            @instance.is_a?(Symbol) ? Runtime::Scenario.send("#{@instance}_address") : @instance.to_s
-          end
+          API::Response.new(Faraday.get(session.address))
         end
       end
 
