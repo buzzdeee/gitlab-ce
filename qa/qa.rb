@@ -1,5 +1,9 @@
 $: << File.expand_path(File.dirname(__FILE__))
 
+require 'rspec/core'
+require 'faraday'
+require_relative 'qa/support/matchers/have_gitlab_api_status'
+
 module QA
   ##
   # GitLab QA runtime classes, mostly singletons.
@@ -152,10 +156,6 @@ module QA
   #
   module Support
     autoload :ApiHelpers, 'qa/support/api_helpers'
-
-    # module Matchers
-    #   autoload :ApiHelpers, 'qa/support/matchers/have_gitlab_http_status'
-    # end
   end
 end
 

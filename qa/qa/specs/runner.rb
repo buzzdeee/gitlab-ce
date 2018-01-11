@@ -1,6 +1,3 @@
-require 'rspec/core'
-require_relative '../support/matchers/have_gitlab_api_status'
-
 module QA
   module Specs
     class Runner < Scenario::Template
