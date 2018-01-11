@@ -5,7 +5,7 @@ import mountComponent from '../../helpers/vue_mount_component_helper';
 
 const discussionFixture = 'merge_requests/diff_discussion.json';
 
-describe('diff_file_header', () => {
+fdescribe('diff_file_header', () => {
   let vm;
   const diffDiscussionMock = getJSONFixture(discussionFixture)[0];
   const diffFile = camelCaseKeys(diffDiscussionMock.diff_file);

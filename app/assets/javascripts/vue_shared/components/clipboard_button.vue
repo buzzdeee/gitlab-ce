@@ -4,7 +4,6 @@
    */
   import tooltip from '../directives/tooltip';
 
-
   export default {
     name: 'clipboardButton',
     directives: {
