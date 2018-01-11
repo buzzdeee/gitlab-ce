@@ -3,8 +3,7 @@ module QA
     include Support::ApiHelpers
 
     before(:context) do
-      product = Factory::Resource::PersonalAccessToken.fabricate!
-      @access_token = product.factory.access_token
+      @access_token = Factory::Resource::PersonalAccessToken.fabricate!.access_token
     end
 
     context "when authenticated" do
