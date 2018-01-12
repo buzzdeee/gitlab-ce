@@ -5,15 +5,15 @@ module QA
   module Factory
     module Resource
       class PersonalAccessToken < Factory::Base
-        attr_accessor :name, :access_token
+        attr_accessor :name
 
         product :access_token do
-          self.factory.access_token
+          Page::Profile::PersonalAccessTokens.act { created_access_token }
         end
 
         def fabricate!(sign_in_address = :gitlab)
-          @access_token = Runtime::Env.personal_access_token
-          return if @access_token
+          access_token = Runtime::Env.personal_access_token
+          return if access_token
 
           if sign_in_address
             Runtime::Browser.visit(sign_in_address, Page::Main::Login)
@@ -27,11 +27,6 @@ module QA
             page.fill_token_name(name || 'api-test-token')
             page.check_api
             page.create_token
-            @access_token = page.created_access_token
-          end
-
-          if sign_in_address
-            Page::Menu::Main.act { sign_out }
           end
         end
       end
