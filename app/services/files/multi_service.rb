@@ -3,11 +3,37 @@ module Files
     UPDATE_FILE_ACTIONS = %w(update move delete).freeze
 
     def create_commit!
+      handler = Lfs::FileModificationHandler.new(project, @branch_name)
+
+      actions = actions_after_lfs_transformation(handler, params[:actions])
+
+      success = commit_actions!(actions)
+
+      handler.on_success if success
+
+      success
+    end
+
+    private
+
+    def actions_after_lfs_transformation(handler, actions)
+      actions.map do |action|
+        if action[:action] == 'create'
+          content = handler.new_file(action[:file_path], action[:content])
+          action[:content] = content
+          action
+        else
+          action
+        end
+      end
+    end
+
+    def commit_actions!(actions)
       repository.multi_action(
         current_user,
         message: @commit_message,
         branch_name: @branch_name,
-        actions: params[:actions],
+        actions: actions,
         author_email: @author_email,
         author_name: @author_name,
         start_project: @start_project,
@@ -17,11 +43,7 @@ module Files
       raise_error(e)
     end
 
-    private
-
-    #TODO: transform LFS files
-
-    def validate!
+    def validate!#TODO: Do we need to transform the actions earlier so we can validate transformed content?
       super
 
       params[:actions].each { |action| validate_file_status!(action) }
