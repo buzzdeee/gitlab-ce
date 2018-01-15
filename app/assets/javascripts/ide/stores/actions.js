@@ -105,10 +105,13 @@ export const commitChanges = (
         },
       };
 
+      let commitMsg = `Your changes have been committed. Commit ${data.short_id}`;
+      if (data.stats) {
+        commitMsg += `with ${data.stats.additions} additions, ${data.stats.deletions} deletions.`
+      }
+
       flash(
-        `Your changes have been committed. Commit ${data.short_id} with ${
-          data.stats.additions
-        } additions, ${data.stats.deletions} deletions.`,
+        commitMsg,
         'notice',
       );
       window.dispatchEvent(new Event('resize'));
