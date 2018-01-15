@@ -107,7 +107,7 @@ export const commitChanges = (
 
       let commitMsg = `Your changes have been committed. Commit ${data.short_id}`;
       if (data.stats) {
-        commitMsg += `with ${data.stats.additions} additions, ${data.stats.deletions} deletions.`;
+        commitMsg += ` with ${data.stats.additions} additions, ${data.stats.deletions} deletions.`;
       }
 
       flash(
@@ -116,9 +116,8 @@ export const commitChanges = (
       );
       window.dispatchEvent(new Event('resize'));
 
-      dispatch('discardAllChanges');
-
       if (newMr) {
+        dispatch('discardAllChanges');
         dispatch(
           'redirectToUrl',
           `${selectedProject.web_url}/merge_requests/new?merge_request%5Bsource_branch%5D=${branch}`,
@@ -136,6 +135,8 @@ export const commitChanges = (
             lastCommit,
           });
         });
+
+        dispatch('discardAllChanges');
 
         window.scrollTo(0, 0);
       }
