@@ -34,6 +34,9 @@ export default {
     commitButtonDisabled() {
       return this.commitMessage === '' || this.submitCommitsLoading || !this.changedFiles.length;
     },
+    disabledBtnClass() {
+      return `btn btn-default btn-sm append-right-10 prepend-left-10 ${this.submitCommitsLoading ? ' disabled':''}`;
+    },
     commitMessageCount() {
       return this.commitMessage.length;
     },
@@ -152,7 +155,7 @@ you started editing. Would you like to create a new branch?`)"
         <button
           type="submit"
           :disabled="commitButtonDisabled"
-          class="btn btn-default btn-sm append-right-10 prepend-left-10"
+          :class="disabledBtnClass"
         >
           <i
             v-if="submitCommitsLoading"

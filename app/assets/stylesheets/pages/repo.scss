@@ -496,18 +496,42 @@ table.table tr td.multi-file-table-name {
   }
 }
 
-.ide-flash-container.flash-container {
-  margin-top: $header-height;
-  margin-bottom: 0;
+.ide.nav-only {
+  .flash-container {
+    margin-top: $header-height;
+    margin-bottom: 0;
+  }
+
+  .alert-wrapper .flash-container .flash-alert:last-child {
+    margin-bottom: 0;
+  }
+
+  .content {
+    margin-top: $header-height;
+  }
 }
 
-.with-performance-bar {
-  .ide-flash-container.flash-container {
-    margin-top: $header-height + $performance-bar-height;
+.with-performance-bar .ide.nav-only {
+  .flash-container {
+    margin-top: #{$header-height + $performance-bar-height};
+  }
+
+  .content {
+    margin-top: #{$header-height + $performance-bar-height};
   }
 
   .ide-view {
     height: calc(100vh - #{$header-height + $performance-bar-height});
+  }
+
+  &.flash-shown {
+    .content {
+      margin-top: 0;
+    }
+
+    .ide-view {
+      height: calc(100vh - #{$header-height + $performance-bar-height + 52});
+    }
   }
 }
 

@@ -111,6 +111,7 @@ export const commitChanges = (
         } additions, ${data.stats.deletions} deletions.`,
         'notice',
       );
+      window.dispatchEvent(new Event('resize'));
 
       if (newMr) {
         dispatch(
@@ -139,7 +140,10 @@ export const commitChanges = (
         window.scrollTo(0, 0);
       }
     })
-    .catch(() => flash('Error committing changes. Please try again.'));
+    .catch(() => {
+      flash('Error committing changes. Please try again.');
+      window.dispatchEvent(new Event('resize'));
+    });
 
 export const createTempEntry = (
   { state, dispatch },
