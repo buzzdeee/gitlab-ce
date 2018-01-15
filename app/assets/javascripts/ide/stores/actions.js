@@ -107,7 +107,7 @@ export const commitChanges = (
 
       let commitMsg = `Your changes have been committed. Commit ${data.short_id}`;
       if (data.stats) {
-        commitMsg += `with ${data.stats.additions} additions, ${data.stats.deletions} deletions.`
+        commitMsg += `with ${data.stats.additions} additions, ${data.stats.deletions} deletions.`;
       }
 
       flash(

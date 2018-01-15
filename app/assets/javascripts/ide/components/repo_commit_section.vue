@@ -35,7 +35,7 @@ export default {
       return this.commitMessage === '' || this.submitCommitsLoading || !this.changedFiles.length;
     },
     disabledBtnClass() {
-      return `btn btn-default btn-sm append-right-10 prepend-left-10 ${this.submitCommitsLoading ? ' disabled':''}`;
+      return `btn btn-default btn-sm append-right-10 prepend-left-10 ${this.submitCommitsLoading ? ' disabled' : ''}`;
     },
     commitMessageCount() {
       return this.commitMessage.length;
