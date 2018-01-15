@@ -119,9 +119,7 @@ export const commitChanges = (
       if (newMr) {
         dispatch(
           'redirectToUrl',
-          `${
-            selectedProject.web_url
-          }/merge_requests/new?merge_request%5Bsource_branch%5D=${branch}`,
+          `${selectedProject.web_url}/merge_requests/new?merge_request%5Bsource_branch%5D=${branch}`,
         );
       } else {
         commit(types.SET_BRANCH_WORKING_REFERENCE, {
@@ -138,7 +136,6 @@ export const commitChanges = (
         });
 
         dispatch('discardAllChanges');
-        dispatch('closeAllFiles');
 
         window.scrollTo(0, 0);
       }
