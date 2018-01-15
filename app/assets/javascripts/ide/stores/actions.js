@@ -116,6 +116,8 @@ export const commitChanges = (
       );
       window.dispatchEvent(new Event('resize'));
 
+      dispatch('discardAllChanges');
+
       if (newMr) {
         dispatch(
           'redirectToUrl',
@@ -134,8 +136,6 @@ export const commitChanges = (
             lastCommit,
           });
         });
-
-        dispatch('discardAllChanges');
 
         window.scrollTo(0, 0);
       }
