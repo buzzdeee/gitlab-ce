@@ -19,27 +19,52 @@ describe Gitlab::SearchResults do
       project.add_developer(user)
     end
 
-    describe '#projects_count' do
-      it 'returns the total amount of projects' do
-        expect(results.projects_count).to eq(1)
+    describe '#count' do
+      it "raises an exception for a not countalbe collection" do
+        expect { results.count(:foo) }.to raise_error(ArgumentError)
+      end
+
+      [:projects, :issues, :merge_requests, :milestones].each do |collection|
+        it "returns the total amount of #{collection}" do
+          expect(results.count(collection)).to eq(1)
+        end
+
+        it "returns the limited amount of #{collection} if the limit is set" do # FIXME
+          project2 = create(:project, name: 'foo2')
+          create(:issue, project: project2, title: 'foo2')
+          create(:merge_request, source_project: project2, title: 'foo2')
+          create(:milestone, project: project2, title: 'foo2')
+
+          expect(results.count(collection, limit: 1)).to eq(1)
+        end
       end
     end
 
-    describe '#issues_count' do
-      it 'returns the total amount of issues' do
-        expect(results.issues_count).to eq(1)
-      end
-    end
+    describe '#issues_limited_count' do
+      context 'when the number of public issues exceeds the limit' do
+        before do
+          create(:issue, project: project, title: 'foo2')
+        end
 
-    describe '#merge_requests_count' do
-      it 'returns the total amount of merge requests' do
-        expect(results.merge_requests_count).to eq(1)
-      end
-    end
+        it 'runs single SQL query to get the limited amount of issues' do
+          expect(results).to receive(:issues).with(public_only: true).and_call_original
+          expect(results).not_to receive(:issues).with(no_args).and_call_original
 
-    describe '#milestones_count' do
-      it 'returns the total amount of milestones' do
-        expect(results.milestones_count).to eq(1)
+          results.count(:issues, limit: 1)
+        end
+      end
+
+      context 'when the number of public issues is less than the limit' do
+        before do
+          create(:issue, :confidential, project: project, title: 'foo2')
+        end
+
+        it 'runs multiple queries to get the limited amount of issues' do
+          expect(results).to receive(:issues).with(public_only: true).and_call_original
+          expect(results).to receive(:issues).with(no_args).and_call_original
+
+          results.count(:issues, limit: 2)
+        end
       end
     end
 
@@ -121,7 +146,7 @@ describe Gitlab::SearchResults do
       expect(issues).not_to include security_issue_3
       expect(issues).not_to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 1
+      expect(results.count(:issues)).to eq 1
     end
 
     it 'does not list confidential issues for project members with guest role' do
@@ -137,7 +162,7 @@ describe Gitlab::SearchResults do
       expect(issues).not_to include security_issue_3
       expect(issues).not_to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 1
+      expect(results.count(:issues)).to eq 1
     end
 
     it 'lists confidential issues for author' do
@@ -150,7 +175,7 @@ describe Gitlab::SearchResults do
       expect(issues).to include security_issue_3
       expect(issues).not_to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 3
+      expect(results.count(:issues)).to eq 3
     end
 
     it 'lists confidential issues for assignee' do
@@ -163,7 +188,7 @@ describe Gitlab::SearchResults do
       expect(issues).not_to include security_issue_3
       expect(issues).to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 3
+      expect(results.count(:issues)).to eq 3
     end
 
     it 'lists confidential issues for project members' do
@@ -179,7 +204,7 @@ describe Gitlab::SearchResults do
       expect(issues).to include security_issue_3
       expect(issues).not_to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 4
+      expect(results.count(:issues)).to eq 4
     end
 
     it 'lists all issues for admin' do
@@ -192,7 +217,7 @@ describe Gitlab::SearchResults do
       expect(issues).to include security_issue_3
       expect(issues).to include security_issue_4
       expect(issues).not_to include security_issue_5
-      expect(results.issues_count).to eq 5
+      expect(results.count(:issues)).to eq 5
     end
   end
 

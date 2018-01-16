@@ -1,5 +1,7 @@
 module Gitlab
   class ProjectSearchResults < SearchResults
+    COUNTABLE_COLLECTIONS = [:blobs, :notes, :wiki_blobs, :commits].freeze
+
     attr_reader :project, :repository_ref
 
     def initialize(current_user, project, query, repository_ref = nil)
@@ -24,20 +26,8 @@ module Gitlab
       end
     end
 
-    def blobs_count
-      @blobs_count ||= blobs.count
-    end
-
-    def notes_count
-      @notes_count ||= notes.count
-    end
-
-    def wiki_blobs_count
-      @wiki_blobs_count ||= wiki_blobs.count
-    end
-
-    def commits_count
-      @commits_count ||= commits.count
+    def countable_collections
+      COUNTABLE_COLLECTIONS + super
     end
 
     def self.parse_search_result(result)
@@ -70,11 +60,11 @@ module Gitlab
     end
 
     def single_commit_result?
-      commits_count == 1 && total_result_count == 1
+      count(:commits) == 1 && total_result_count == 1
     end
 
     def total_result_count
-      issues_count + merge_requests_count + milestones_count + notes_count + blobs_count + wiki_blobs_count + commits_count
+      (countable_collections - [:projects]).sum { |collection| count(collection) }
     end
 
     private

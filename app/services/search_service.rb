@@ -43,7 +43,14 @@ class SearchService
   end
 
   def search_objects
-    @search_objects ||= search_results.objects(scope, params[:page])
+    return @search_objects if @search_objects
+
+    collection = search_results.objects(scope, params[:page])
+    @search_objects = if collection.respond_to?(:without_count)
+                        collection.without_count
+                      else
+                        collection
+                      end
   end
 
   private

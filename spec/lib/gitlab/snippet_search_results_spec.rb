@@ -7,13 +7,13 @@ describe Gitlab::SnippetSearchResults do
 
   describe '#snippet_titles_count' do
     it 'returns the amount of matched snippet titles' do
-      expect(results.snippet_titles_count).to eq(1)
+      expect(results.count(:snippet_titles)).to eq(1)
     end
   end
 
   describe '#snippet_blobs_count' do
     it 'returns the amount of matched snippet blobs' do
-      expect(results.snippet_blobs_count).to eq(1)
+      expect(results.count(:snippet_blobs)).to eq(1)
     end
   end
 end

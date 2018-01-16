@@ -1,6 +1,6 @@
 module PaginationHelper
-  def paginate_collection(collection, remote: nil)
-    if collection.is_a?(Kaminari::PaginatableWithoutCount)
+  def paginate_collection(collection, remote: nil, without_count: false)
+    if collection.is_a?(Kaminari::PaginatableWithoutCount) || without_count
       paginate_without_count(collection)
     elsif collection.respond_to?(:total_pages)
       paginate_with_count(collection, remote: remote)

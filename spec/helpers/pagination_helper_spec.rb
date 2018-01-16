@@ -14,6 +14,14 @@ describe PaginationHelper do
       helper.paginate_collection(without_count)
     end
 
+    it 'paginates a collection without using a COUNT if preferred' do
+      expect(helper).to receive(:paginate_without_count)
+        .with(collection.without_count)
+        .and_call_original
+
+      helper.paginate_collection(collection, without_count: true)
+    end
+
     it 'paginates a collection using a COUNT' do
       expect(helper).to receive(:paginate_with_count).and_call_original
 

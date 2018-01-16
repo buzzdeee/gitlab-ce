@@ -170,4 +170,9 @@ module SearchHelper
     # Truncato's filtered_tags and filtered_attributes are not quite the same
     sanitize(html, tags: %w(a p ol ul li pre code))
   end
+
+  def limited_count(search_result, collection, limit)
+    res = search_result.count(collection, limit: limit + 1)
+    res > limit ? "#{limit}+" : res
+  end
 end

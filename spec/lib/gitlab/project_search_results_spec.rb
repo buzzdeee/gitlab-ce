@@ -190,7 +190,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).not_to include security_issue_1
       expect(issues).not_to include security_issue_2
-      expect(results.issues_count).to eq 1
+      expect(results.count(:issues)).to eq 1
     end
 
     it 'does not list project confidential issues for project members with guest role' do
@@ -202,7 +202,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).not_to include security_issue_1
       expect(issues).not_to include security_issue_2
-      expect(results.issues_count).to eq 1
+      expect(results.count(:issues)).to eq 1
     end
 
     it 'lists project confidential issues for author' do
@@ -212,7 +212,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).to include security_issue_1
       expect(issues).not_to include security_issue_2
-      expect(results.issues_count).to eq 2
+      expect(results.count(:issues)).to eq 2
     end
 
     it 'lists project confidential issues for assignee' do
@@ -222,7 +222,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).not_to include security_issue_1
       expect(issues).to include security_issue_2
-      expect(results.issues_count).to eq 2
+      expect(results.count(:issues)).to eq 2
     end
 
     it 'lists project confidential issues for project members' do
@@ -234,7 +234,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).to include security_issue_1
       expect(issues).to include security_issue_2
-      expect(results.issues_count).to eq 3
+      expect(results.count(:issues)).to eq 3
     end
 
     it 'lists all project issues for admin' do
@@ -244,7 +244,7 @@ describe Gitlab::ProjectSearchResults do
       expect(issues).to include issue
       expect(issues).to include security_issue_1
       expect(issues).to include security_issue_2
-      expect(results.issues_count).to eq 3
+      expect(results.count(:issues)).to eq 3
     end
   end
 

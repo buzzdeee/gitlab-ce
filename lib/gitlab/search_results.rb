@@ -1,3 +1,5 @@
+# rubocop:disable GitlabSecurity/PublicSend
+
 module Gitlab
   class SearchResults
     class FoundBlob
@@ -20,6 +22,8 @@ module Gitlab
         false
       end
     end
+
+    COUNTABLE_COLLECTIONS = [:projects, :issues, :merge_requests, :milestones].freeze
 
     attr_reader :current_user, :query
 
@@ -55,20 +59,18 @@ module Gitlab
       end
     end
 
-    def projects_count
-      @projects_count ||= projects.count
+    def countable_collections
+      COUNTABLE_COLLECTIONS
     end
 
-    def issues_count
-      @issues_count ||= issues.count
-    end
+    def count(collection, limit: nil)
+      unless countable_collections.include?(collection)
+        raise ArgumentError, "unknown countable collection '#{collection}'"
+      end
 
-    def merge_requests_count
-      @merge_requests_count ||= merge_requests.count
-    end
-
-    def milestones_count
-      @milestones_count ||= milestones.count
+      key = limit || :all
+      @counts ||= countable_collections.map {|i| [i, {}]}.to_h
+      @counts[collection][key] ||= limit ? limited_count(collection, limit) : send(collection).count
     end
 
     def single_commit_result?
@@ -77,12 +79,30 @@ module Gitlab
 
     private
 
+    def limited_count(collection, limit)
+      if collection == :issues
+        issues_limited_count(limit)
+      else
+        send(collection).limit(limit).count
+      end
+    end
+
+    # By default getting limited count (e.g. 1000+) is fast on issuable
+    # collections except for issues, where filtering both not confidential
+    # and confidential issues user has access to, is too complex.
+    # It's faster to try fetch all public issues first, then only
+    # if necessary try to fetch all issues.
+    def issues_limited_count(limit)
+      sum = issues(public_only: true).limit(limit).count
+      sum < limit ? issues.limit(limit).count : sum
+    end
+
     def projects
       limit_projects.search(query)
     end
 
-    def issues
-      issues = IssuesFinder.new(current_user).execute
+    def issues(finder_params = {})
+      issues = IssuesFinder.new(current_user, finder_params).execute
       unless default_project_filter
         issues = issues.where(project_id: project_ids_relation)
       end
@@ -94,13 +114,13 @@ module Gitlab
           issues.full_search(query)
         end
 
-      issues.order('updated_at DESC')
+      issues.reorder('updated_at DESC')
     end
 
     def milestones
       milestones = Milestone.where(project_id: project_ids_relation)
       milestones = milestones.search(query)
-      milestones.order('updated_at DESC')
+      milestones.reorder('updated_at DESC')
     end
 
     def merge_requests
@@ -116,7 +136,7 @@ module Gitlab
           merge_requests.full_search(query)
         end
 
-      merge_requests.order('updated_at DESC')
+      merge_requests.reorder('updated_at DESC')
     end
 
     def default_scope

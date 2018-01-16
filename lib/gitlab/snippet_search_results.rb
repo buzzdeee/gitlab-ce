@@ -2,6 +2,8 @@ module Gitlab
   class SnippetSearchResults < SearchResults
     include SnippetsHelper
 
+    COUNTABLE_COLLECTIONS = [:snippet_titles, :snippet_blobs].freeze
+
     attr_reader :limit_snippets
 
     def initialize(limit_snippets, query)
@@ -20,12 +22,8 @@ module Gitlab
       end
     end
 
-    def snippet_titles_count
-      @snippet_titles_count ||= snippet_titles.count
-    end
-
-    def snippet_blobs_count
-      @snippet_blobs_count ||= snippet_blobs.count
+    def countable_collections
+      COUNTABLE_COLLECTIONS + super
     end
 
     private
