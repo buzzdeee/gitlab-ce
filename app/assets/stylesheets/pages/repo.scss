@@ -260,6 +260,11 @@ table.table tr td.multi-file-table-name {
   .projects-sidebar {
     display: flex;
     flex-direction: column;
+
+    .context-header {
+      width: auto;
+      margin-right: 0;
+    }
   }
 
   .multi-file-commit-panel-inner {
@@ -515,8 +520,8 @@ table.table tr td.multi-file-table-name {
     margin-top: $header-height;
   }
 
-  .multi-file-commit-panel-inner {
-    height: calc(100vh - #{$header-height + $performance-bar-height});
+  .multi-file-commit-panel .multi-file-commit-panel-inner-scroll {
+    max-height: calc(100vh - #{$header-height + $performance-bar-height});
   }
 }
 
@@ -529,9 +534,12 @@ table.table tr td.multi-file-table-name {
     margin-top: #{$header-height + $performance-bar-height};
   }
 
-  .ide-view,
-  .multi-file-commit-panel-inner {
+  .ide-view {
     height: calc(100vh - #{$header-height + $performance-bar-height});
+  }
+
+  .multi-file-commit-panel .multi-file-commit-panel-inner-scroll {
+    max-height: calc(100vh - #{$header-height + $performance-bar-height + 60});
   }
 
   &.flash-shown {
@@ -541,7 +549,7 @@ table.table tr td.multi-file-table-name {
 
     .ide-view,
     .multi-file-commit-panel-inner {
-      height: calc(100vh - #{$header-height + $performance-bar-height + 52});
+      height: calc(100vh - #{$header-height + $performance-bar-height + 112});
     }
   }
 }
