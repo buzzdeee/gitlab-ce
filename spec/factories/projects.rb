@@ -6,7 +6,22 @@ FactoryBot.define do
   # Project does not have bare repository.
   # Use this factory if you don't need repository in tests
   factory :project, class: 'Project' do
-    sequence(:id) # need this because we use truncation in a lot of places
+    # Prevent project IDs from being re-used between specs. This is important
+    # because files are stored on disc based on those IDs, and not cleaned up
+    # afterwards.
+    #
+    # PostgreSQL doesn't update the projects.id sequence when the id is
+    # explicitly given. Update the sequence manually to keep specs that create
+    # a project without going through this factory (API calls, etc) from
+    # re-using these IDs.
+    sequence(:id) do |id|
+      if Gitlab::Database.postgresql?
+        Project.connection.execute("SELECT setval('projects_id_seq', #{id + 1})")
+      end
+
+      id
+    end
+
     sequence(:name) { |n| "project#{n}" }
     path { name.downcase.gsub(/\s/, '_') }
     # Behaves differently to nil due to cache_has_external_issue_tracker
