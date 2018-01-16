@@ -141,8 +141,12 @@ export const commitChanges = (
         window.scrollTo(0, 0);
       }
     })
-    .catch(() => {
-      flash('Error committing changes. Please try again.');
+    .catch((err) => {
+      let errMsg = 'Error committing changes. Please try again.';
+      if (err.responseJSON && err.responseJSON.message) {
+        errMsg += ` (${err.responseJSON.message})`;
+      }
+      flash(errMsg);
       window.dispatchEvent(new Event('resize'));
     });
 

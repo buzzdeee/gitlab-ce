@@ -70,7 +70,11 @@ export default {
           this.editor.createInstance(this.$refs.editor);
         })
         .then(() => this.setupEditor())
-        .catch(() => flash('Error setting up monaco. Please try again.'));
+        .catch((err) => {
+          // Allowing this for now for easier debugging if we hit this more often
+          console.log('Error in Monaco : ', err); // eslint-disable-line no-console
+          flash('Error setting up monaco. Please try again.')
+        });
     },
     setupEditor() {
       if (!this.activeFile) return;
