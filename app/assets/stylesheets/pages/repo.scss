@@ -523,6 +523,17 @@ table.table tr td.multi-file-table-name {
   .multi-file-commit-panel .multi-file-commit-panel-inner-scroll {
     max-height: calc(100vh - #{$header-height + $performance-bar-height});
   }
+
+  &.flash-shown {
+    .content {
+      margin-top: 0;
+    }
+
+    .ide-view,
+    .multi-file-commit-panel-inner {
+      height: calc(100vh - #{$header-height + $performance-bar-height + 52});
+    }
+  }
 }
 
 .with-performance-bar .ide.nav-only {
@@ -547,9 +558,12 @@ table.table tr td.multi-file-table-name {
       margin-top: 0;
     }
 
-    .ide-view,
-    .multi-file-commit-panel-inner {
-      height: calc(100vh - #{$header-height + $performance-bar-height + 112});
+    .ide-view {
+      height: calc(100vh - #{$header-height + $performance-bar-height + 52});
+    }
+
+    .multi-file-commit-panel .multi-file-commit-panel-inner-scroll {
+      max-height: calc(100vh - #{$header-height + $performance-bar-height + 112});
     }
   }
 }

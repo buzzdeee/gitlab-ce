@@ -40,6 +40,7 @@
             marginLeft: `${this.file.level * 16}px`,
           };
         }
+        return {};
       },
       shortId() {
         return this.file.id.substr(0, 8);

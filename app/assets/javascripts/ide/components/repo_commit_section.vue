@@ -73,12 +73,6 @@ export default {
           this.submitCommitsLoading = false;
           this.commitMessage = '';
           this.startNewMR = false;
-          this.$store.dispatch('getTreeData', {
-            projectId: this.currentProjectId,
-            branch: this.currentBranchId,
-            endpoint: `/tree/${this.currentBranchId}`,
-            force: true,
-          });
         })
         .catch(() => {
           this.submitCommitsLoading = false;
