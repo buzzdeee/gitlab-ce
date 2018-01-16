@@ -15,7 +15,7 @@ module QA
       end
 
       scenario 'returns an empty response when an invalid `username` parameter is passed' do
-        get session.address, { params: {username: 'invalid'} }
+        get session.address, { params: { username: 'invalid' } }
         expect_status(200)
         expect(json_body).to be_an Array
         expect(json_body.size).to eq(0)

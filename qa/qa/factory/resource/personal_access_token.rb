@@ -1,19 +1,24 @@
-# Create a personal access token that can be used by the api
-# set the environment variable PERSONAL_ACCESS_TOKEN to use a
-# specific access token rather than create one from the UI
 module QA
   module Factory
     module Resource
+      ##
+      # Create a personal access token that can be used by the api
+      # set the environment variable PERSONAL_ACCESS_TOKEN to use a
+      # specific access token rather than create one from the UI
+      #
       class PersonalAccessToken < Factory::Base
         attr_accessor :name
 
         product :access_token do
-          Page::Profile::PersonalAccessTokens.act { created_access_token }
+          if Runtime::Env.personal_access_token
+            Runtime::Env.personal_access_token
+          else
+            Page::Profile::PersonalAccessTokens.act { created_access_token }
+          end
         end
 
         def fabricate!(sign_in_address = :gitlab)
-          access_token = Runtime::Env.personal_access_token
-          return if access_token
+          return if Runtime::Env.personal_access_token
 
           if sign_in_address
             Runtime::Browser.visit(sign_in_address, Page::Main::Login)

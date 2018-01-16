@@ -1,3 +1,5 @@
+require 'rspec/core'
+
 module QA
   module Specs
     class Runner < Scenario::Template

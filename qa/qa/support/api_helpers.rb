@@ -1,3 +1,5 @@
+require 'airborne'
+
 module QA
   module Support
     module ApiHelpers

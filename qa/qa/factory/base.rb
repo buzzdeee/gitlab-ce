@@ -22,7 +22,7 @@ module QA
 
           factory.fabricate!(*args)
 
-          return Factory::Product.populate!(factory)
+          return Factory::Product.populate!(self)
         end
       end
 

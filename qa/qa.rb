@@ -1,8 +1,5 @@
 $: << File.expand_path(File.dirname(__FILE__))
 
-require 'rspec/core'
-require 'airborne'
-
 module QA
   ##
   # GitLab QA runtime classes, mostly singletons.
