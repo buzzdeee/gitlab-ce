@@ -7,6 +7,29 @@ module Gitlab
       end
 
       def update(only_branches_matching: [], only_tags_matching: [])
+        @repository.gitaly_migrate(:remote_update_remote_mirror) do |is_enabled|
+          if is_enabled
+            gitaly_update(only_branches_matching, only_tags_matching)
+          else
+            rugged_update(only_branches_matching, only_tags_matching)
+          end
+        end
+      end
+
+      private
+
+      def gitaly_update(only_branches_matching, only_tags_matching)
+        # `only_tags_matching` is not actually used in any of the current
+        # calls of this method, so we skipped it for simplicity in Gitaly.
+        # If it ever becomes used, a Gitaly change is required.
+        if only_tags_matching.present?
+          raise NotImplementedError, "Gitaly doesn't support tag filtering for remote mirror updates"
+        end
+
+        @repository.gitaly_remote_client.update_remote_mirror(@ref_name, only_branches_matching)
+      end
+
+      def rugged_update(only_branches_matching, only_tags_matching)
         local_branches = refs_obj(@repository.local_branches, only_refs_matching: only_branches_matching)
         remote_branches = refs_obj(@repository.remote_branches(@ref_name), only_refs_matching: only_branches_matching)
 
@@ -23,8 +46,6 @@ module Gitlab
 
         delete_refs(local_tags, remote_tags)
       end
-
-      private
 
       def refs_obj(refs, only_refs_matching: [])
         refs.each_with_object({}) do |ref, refs|
