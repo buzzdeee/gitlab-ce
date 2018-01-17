@@ -3,6 +3,7 @@ import { visitUrl } from '../../lib/utils/url_utility';
 import flash from '../../flash';
 import service from '../services';
 import * as types from './mutation_types';
+import { stripeHtml } from '../../lib/utils/text_utility';
 
 export const redirectToUrl = (_, url) => visitUrl(url);
 
@@ -144,7 +145,7 @@ export const commitChanges = (
     .catch((err) => {
       let errMsg = 'Error committing changes. Please try again.';
       if (err.responseJSON && err.responseJSON.message) {
-        errMsg += ` (${err.responseJSON.message})`;
+        errMsg += ` (${stripeHtml(err.responseJSON.message)})`;
       }
       flash(errMsg);
       window.dispatchEvent(new Event('resize'));

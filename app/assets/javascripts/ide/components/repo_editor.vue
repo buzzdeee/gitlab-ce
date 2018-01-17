@@ -71,8 +71,7 @@ export default {
         })
         .then(() => this.setupEditor())
         .catch((err) => {
-          // Allowing this for now for easier debugging if we hit this more often
-          console.log('Error in Monaco : ', err); // eslint-disable-line no-console
+          throw err;
           flash('Error setting up monaco. Please try again.');
         });
     },
