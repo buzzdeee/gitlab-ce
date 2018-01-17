@@ -188,6 +188,10 @@ describe('Flash', () => {
         expect(
           document.querySelector('.flash-alert'),
         ).not.toBeNull();
+
+        expect(
+          document.body.className,
+        ).toContain('flash-shown');
       });
 
       it('adds flash into specified parent', () => {
@@ -227,6 +231,10 @@ describe('Flash', () => {
         expect(
           document.querySelector('.flash-alert'),
         ).toBeNull();
+
+        expect(
+          document.body.className,
+        ).not.toContain('flash-shown');
       });
 
       describe('with actionConfig', () => {
