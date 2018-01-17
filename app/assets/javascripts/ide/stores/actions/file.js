@@ -84,15 +84,21 @@ export const changeFileContent = ({ commit }, { file, content }) => {
 };
 
 export const setFileLanguage = ({ state, commit }, { fileLanguage }) => {
-  commit(types.SET_FILE_LANGUAGE, { file: state.selectedFile, fileLanguage });
+  if (state.selectedFile) {
+    commit(types.SET_FILE_LANGUAGE, { file: state.selectedFile, fileLanguage });
+  }
 };
 
 export const setFileEOL = ({ state, commit }, { eol }) => {
-  commit(types.SET_FILE_EOL, { file: state.selectedFile, eol });
+  if (state.selectedFile) {
+    commit(types.SET_FILE_EOL, { file: state.selectedFile, eol });
+  }
 };
 
 export const setEditorPosition = ({ state, commit }, { editorRow, editorColumn }) => {
-  commit(types.SET_FILE_POSITION, { file: state.selectedFile, editorRow, editorColumn });
+  if (state.selectedFile) {
+    commit(types.SET_FILE_POSITION, { file: state.selectedFile, editorRow, editorColumn });
+  }
 };
 
 export const createTempFile = ({ state, commit, dispatch }, { projectId, branchId, parent, name, content = '', base64 = '' }) => {
