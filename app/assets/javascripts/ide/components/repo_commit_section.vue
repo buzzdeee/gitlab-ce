@@ -149,7 +149,7 @@ you started editing. Would you like to create a new branch?`)"
           type="submit"
           :disabled="commitButtonDisabled"
           class="btn btn-default btn-sm append-right-10 prepend-left-10"
-          :class="{ disabled: this.submitCommitsLoading }"
+          :class="{ disabled: submitCommitsLoading }"
         >
           <i
             v-if="submitCommitsLoading"
