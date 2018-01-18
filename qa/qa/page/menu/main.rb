@@ -7,6 +7,7 @@ module QA
           element :user_avatar
           element :user_menu, '.dropdown-menu-nav'
           element :user_sign_out_link, 'link_to "Sign out"'
+          element :settings_link, 'link_to "Settings"'
         end
 
         view 'app/views/layouts/nav/_dashboard.html.haml' do
