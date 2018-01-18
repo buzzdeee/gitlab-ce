@@ -1,23 +1,19 @@
 module QA
   feature 'API users', :core do
-    include Support::ApiHelpers
-
     before(:context) do
-      Runtime::Browser.visit(:gitlab, Page::Main::Login)
-      Page::Main::Login.act { sign_in_using_credentials }
-      @access_token = Factory::Resource::PersonalAccessToken.fabricate!.access_token
+      @api_client = Runtime::API::Client.new(:gitlab)
     end
 
     context 'when authenticated' do
-      let(:session) { Runtime::Session.new(:gitlab, api('/users', personal_access_token: @access_token)) }
+      let(:request) { Runtime::API::Request.new(@api_client, '/users') }
 
       scenario 'get list of users' do
-        get session.address
+        get request.url
         expect_status(200)
       end
 
       scenario 'submit request with an invalid user name' do
-        get session.address, { params: { username: 'invalid' } }
+        get request.url, { params: { username: 'invalid' } }
         expect_status(200)
         expect(json_body).to be_an Array
         expect(json_body.size).to eq(0)
@@ -25,8 +21,8 @@ module QA
     end
 
     scenario 'submit request with an invalid token' do
-      session = Runtime::Session.new(:gitlab, api('/users', personal_access_token: 'invalid'))
-      get session.address
+      request = Runtime::API::Request.new(@api_client, '/users', personal_access_token: 'invalid')
+      get request.url
 
       expect_status(401)
     end

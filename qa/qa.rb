@@ -12,6 +12,7 @@ module QA
     autoload :Browser, 'qa/runtime/browser'
     autoload :Env, 'qa/runtime/env'
     autoload :Session, 'qa/runtime/session'
+    autoload :API, 'qa/runtime/api'
   end
 
   ##
@@ -145,13 +146,6 @@ module QA
   module Specs
     autoload :Config, 'qa/specs/config'
     autoload :Runner, 'qa/specs/runner'
-  end
-
-  ##
-  # Classes that provide support methods
-  #
-  module Support
-    autoload :ApiHelpers, 'qa/support/api_helpers'
   end
 end
 
