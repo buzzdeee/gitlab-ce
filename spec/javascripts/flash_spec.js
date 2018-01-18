@@ -224,7 +224,7 @@ describe('Flash', () => {
       });
 
       it('removes element after clicking', () => {
-        flash('test', 'alert', document, null, false);
+        flash('test', 'alert', document, null, false, true);
 
         document.querySelector('.flash-alert').click();
 
