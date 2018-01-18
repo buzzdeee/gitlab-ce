@@ -69,7 +69,7 @@ export const getFileData = ({ state, commit, dispatch }, file) => {
     })
     .catch(() => {
       commit(types.TOGGLE_LOADING, file);
-      flash('Error loading file data. Please try again.');
+      flash('Error loading file data. Please try again.', 'alert', document, null, false, true);
     });
 };
 
@@ -77,7 +77,7 @@ export const getRawFileData = ({ commit, dispatch }, file) => service.getRawFile
   .then((raw) => {
     commit(types.SET_FILE_RAW_DATA, { file, raw });
   })
-  .catch(() => flash('Error loading file content. Please try again.'));
+  .catch(() => flash('Error loading file content. Please try again.', 'alert', document, null, false, true));
 
 export const changeFileContent = ({ commit }, { file, content }) => {
   commit(types.UPDATE_FILE_CONTENT, { file, content });
@@ -118,7 +118,7 @@ export const createTempFile = ({ state, commit, dispatch }, { projectId, branchI
     url: newUrl,
   });
 
-  if (findEntry(parent.tree, 'blob', file.name)) return flash(`The name "${file.name}" is already taken in this directory.`);
+  if (findEntry(parent.tree, 'blob', file.name)) return flash(`The name "${file.name}" is already taken in this directory.`, 'alert', document, null, false, true);
 
   commit(types.CREATE_TMP_FILE, {
     parent,

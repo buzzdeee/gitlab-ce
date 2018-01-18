@@ -71,7 +71,7 @@ export default {
         })
         .then(() => this.setupEditor())
         .catch((err) => {
-          flash('Error setting up monaco. Please try again.');
+          flash('Error setting up monaco. Please try again.', 'alert', document, null, false, true);
           throw err;
         });
     },
