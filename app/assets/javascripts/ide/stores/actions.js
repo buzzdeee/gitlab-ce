@@ -93,7 +93,7 @@ export const commitChanges = (
     .then((data) => {
       const { branch } = payload;
       if (!data.short_id) {
-        flash(data.message);
+        flash(data.message, 'alert', document, null, false, true);
         return;
       }
 
@@ -114,7 +114,10 @@ export const commitChanges = (
       flash(
         commitMsg,
         'notice',
-      );
+        document,
+        null,
+        false,
+        true);
       window.dispatchEvent(new Event('resize'));
 
       if (newMr) {
@@ -147,7 +150,7 @@ export const commitChanges = (
       if (err.responseJSON && err.responseJSON.message) {
         errMsg += ` (${stripHtml(err.responseJSON.message)})`;
       }
-      flash(errMsg);
+      flash(errMsg, 'alert', document, null, false, true);
       window.dispatchEvent(new Event('resize'));
     });
 
