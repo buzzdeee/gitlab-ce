@@ -8,12 +8,15 @@ module QA
       let(:request) { Runtime::API::Request.new(@api_client, '/users') }
 
       scenario 'get list of users' do
-        get request.url
+        get request.url, { params: { per_page: 100 } }
+
         expect_status(200)
+        expect(json_body.detect { |item| item[:username] == Runtime::User.name }).not_to be_nil
       end
 
       scenario 'submit request with an invalid user name' do
         get request.url, { params: { username: 'invalid' } }
+
         expect_status(200)
         expect(json_body).to be_an Array
         expect(json_body.size).to eq(0)
