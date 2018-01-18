@@ -183,7 +183,7 @@ describe('Flash', () => {
       });
 
       it('adds flash element into container', () => {
-        flash('test');
+        flash('test', 'alert', document, null, false, true);
 
         expect(
           document.querySelector('.flash-alert'),
