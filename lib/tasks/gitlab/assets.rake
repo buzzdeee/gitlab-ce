@@ -1,13 +1,27 @@
 namespace :gitlab do
   namespace :assets do
     desc 'GitLab | Assets | Compile all frontend assets'
-    task compile: [
-      'yarn:check',
-      'gettext:po_to_json',
-      'rake:assets:precompile',
-      'webpack:compile',
-      'fix_urls'
-    ]
+    task :compile do
+      start = Time.now
+      Rake::Task['yarn:check'].invoke
+      puts "yarn:check done in #{Time.now - start} seconds"
+
+      start = Time.now
+      Rake::Task['gettext:po_to_json'].invoke
+      puts "gettext:po_to_json done in #{Time.now - start} seconds"
+
+      start = Time.now
+      Rake::Task['rake:assets:precompile'].invoke
+      puts "rake:assets:precompile done in #{Time.now - start} seconds"
+
+      start = Time.now
+      Rake::Task['webpack:compile'].invoke
+      puts "webpack:compile done in #{Time.now - start} seconds"
+
+      start = Time.now
+      Rake::Task['gitlab:assets:fix_urls'].invoke
+      puts "fix_urls done in #{Time.now - start} seconds"
+    end
 
     desc 'GitLab | Assets | Clean up old compiled frontend assets'
     task clean: ['rake:assets:clean']

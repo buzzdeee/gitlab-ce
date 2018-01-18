@@ -34,9 +34,13 @@ variables:
   FLAKY_RSPEC_SUITE_REPORT_PATH: rspec_flaky/report-suite.json
 
 before_script:
+  - date -R
   - bundle --version
+  - date -R
   - source scripts/utils.sh
+  - date -R
   - source scripts/prepare_build.sh
+  - date -R
 
 stages:
   - build
@@ -298,11 +302,19 @@ setup-test-env:
   cache:
     <<: *default-cache
   script:
+    - date -R
     - node --version
+    - date -R
     - yarn install --frozen-lockfile --cache-folder .yarn-cache
+    - date -R
     - bundle exec rake gitlab:assets:compile
+    - date -R
     - bundle exec ruby -Ispec -e 'require "spec_helper" ; TestEnv.init'
+    - date -R
     - scripts/gitaly-test-build # Do not use 'bundle exec' here
+    - date -R
+  after_script:
+    - date -R
   artifacts:
     expire_in: 7d
     paths:
