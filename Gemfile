@@ -406,7 +406,8 @@ group :ed25519 do
 end
 
 # Gitaly GRPC client
-gem 'gitaly-proto', '~> 0.73.0', require: 'gitaly'
+# gem 'gitaly-proto', '~> 0.73.0', require: 'gitaly'
+gem 'gitaly-proto', require: 'gitaly', git: 'https://gitlab.com/gitlab-org/gitaly-proto.git', ref: 'add-export-bundle-rpc'
 
 gem 'toml-rb', '~> 0.3.15', require: false
 

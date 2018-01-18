@@ -1057,6 +1057,10 @@ class Repository
     @project.repository_storage_path
   end
 
+  def bundle_to_disk(save_path)
+    raw.bundle_to_disk(save_path)
+  end
+
   def rebase(user, merge_request)
     raw.rebase(user, merge_request.id, branch: merge_request.source_branch,
                                        branch_sha: merge_request.source_branch_sha,
