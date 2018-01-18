@@ -98,7 +98,8 @@ export default {
         v-if="shouldRenderFolderContent(model)"
       >
         <div
-          v-if="model.isLoadingFolderContent">
+          v-if="model.isLoadingFolderContent"
+          :key="'loading-item-' + i">
           <loading-icon size="2" />
         </div>
 
@@ -109,7 +110,7 @@ export default {
             :model="children"
             :can-create-deployment="canCreateDeployment"
             :can-read-environment="canReadEnvironment"
-            :key="'env-item-' + index"
+            :key="'env-item-' + i + '-' + index"
           />
 
           <div :key="'sub-div-' + i">
