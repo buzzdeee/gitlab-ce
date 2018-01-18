@@ -147,6 +147,14 @@ module QA
     autoload :Config, 'qa/specs/config'
     autoload :Runner, 'qa/specs/runner'
   end
+
+
+  ##
+  # Classes that provide support methods
+  #
+  module Support
+    autoload :StubENV, 'qa/support/stub_env'
+  end
 end
 
 QA::Runtime::Release.extend_autoloads!
