@@ -5,8 +5,9 @@ module Gitlab
     Technologies = [
       Technology.new(:rsa, OpenSSL::PKey::RSA, [1024, 2048, 3072, 4096]),
       Technology.new(:dsa, OpenSSL::PKey::DSA, [1024, 2048, 3072]),
-      Technology.new(:ecdsa, OpenSSL::PKey::EC, [256, 384, 521]),
-      Technology.new(:ed25519, Net::SSH::Authentication::ED25519::PubKey, [256])
+      Technology.new(:ecdsa, OpenSSL::PKey::EC, [256, 384, 521])
+      #Technology.new(:ecdsa, OpenSSL::PKey::EC, [256, 384, 521]),
+      #Technology.new(:ed25519, Net::SSH::Authentication::ED25519::PubKey, [256])
     ].freeze
 
     def self.technology(name)
