@@ -3,6 +3,17 @@ import * as commonUtils from '~/lib/utils/common_utils';
 import MockAdapter from 'axios-mock-adapter';
 import { faviconDataUrl, overlayDataUrl, faviconWithOverlayDataUrl } from './mock_data';
 
+const PIXEL_TOLERANCE = 5;
+
+const toImageData = url =>
+  new Promise(resolve => {
+    const img = new Image();
+    img.onload = function() {
+      resolve(img);
+    };
+    img.src = url;
+  });
+
 describe('common_utils', () => {
   describe('parseUrl', () => {
     it('returns an anchor tag with url', () => {
@@ -484,8 +495,9 @@ describe('common_utils', () => {
     it('should return the favicon with the overlay', done => {
       commonUtils
         .createOverlayIcon(faviconDataUrl, overlayDataUrl)
-        .then(url => {
-          expect(url).toEqual(faviconWithOverlayDataUrl);
+        .then(url => Promise.all([toImageData(url), toImageData(faviconWithOverlayDataUrl)]))
+        .then(([actual, expected]) => {
+          expect(actual).toImageDiffEqual(expected, PIXEL_TOLERANCE);
           done();
         })
         .catch(done.fail);
@@ -507,10 +519,10 @@ describe('common_utils', () => {
     it('should set page favicon to provided favicon overlay', done => {
       commonUtils
         .setFaviconOverlay(overlayDataUrl)
-        .then(() => {
-          expect(document.getElementById('favicon').getAttribute('href')).toEqual(
-            faviconWithOverlayDataUrl,
-          );
+        .then(() => document.getElementById('favicon').getAttribute('href'))
+        .then(url => Promise.all([toImageData(url), toImageData(faviconWithOverlayDataUrl)]))
+        .then(([actual, expected]) => {
+          expect(actual).toImageDiffEqual(expected, PIXEL_TOLERANCE);
           done();
         })
         .catch(done.fail);
@@ -553,10 +565,10 @@ describe('common_utils', () => {
 
       commonUtils
         .setCiStatusFavicon(BUILD_URL)
-        .then(() => {
-          const favicon = document.getElementById('favicon');
-
-          expect(favicon.getAttribute('href')).toEqual(faviconWithOverlayDataUrl);
+        .then(() => document.getElementById('favicon').getAttribute('href'))
+        .then(url => Promise.all([toImageData(url), toImageData(faviconWithOverlayDataUrl)]))
+        .then(([actual, expected]) => {
+          expect(actual).toImageDiffEqual(expected, PIXEL_TOLERANCE);
           done();
         })
         .catch(done.fail);
