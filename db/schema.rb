@@ -1487,7 +1487,6 @@ ActiveRecord::Schema.define(version: 20181126153547) do
 
   create_table "personal_access_tokens", force: :cascade do |t|
     t.integer "user_id", null: false
-    t.string "token"
     t.string "name", null: false
     t.boolean "revoked", default: false
     t.date "expires_at"
