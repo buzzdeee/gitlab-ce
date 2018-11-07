@@ -2,7 +2,8 @@
 
 class Import::GithubController < Import::BaseController
   before_action :verify_import_enabled
-  before_action :provider_auth, only: [:status, :jobs, :create]
+  before_action :provider_auth, only: [:status, :realtime_changes, :create]
+  before_action :expire_etag_cache, only: [:status, :create]
 
   rescue_from Octokit::Unauthorized, with: :provider_unauthorized
 
@@ -24,17 +25,22 @@ class Import::GithubController < Import::BaseController
     redirect_to status_import_url
   end
 
-  # rubocop: disable CodeReuse/ActiveRecord
   def status
-    @repos = client.repos
-    @already_added_projects = find_already_added_projects(provider)
-    already_added_projects_names = @already_added_projects.pluck(:import_source)
+    client.repos
 
-    @repos.reject! { |repo| already_added_projects_names.include? repo.full_name }
+    respond_to do |format|
+      format.json do
+        render json: { imported_projects: serialize_imported_projects,
+                       provider_repos: serialized_provider_repos,
+                       namespaces: serialized_namespaces }
+      end
+      format.html
+    end
   end
-  # rubocop: enable CodeReuse/ActiveRecord
 
-  def jobs
+  def realtime_changes
+    Gitlab::PollingInterval.set_header(response, interval: 3_000)
+
     render json: find_jobs(provider)
   end
 
@@ -50,7 +56,7 @@ class Import::GithubController < Import::BaseController
                   .execute(extra_project_attrs)
 
       if project.persisted?
-        render json: ProjectSerializer.new.represent(project)
+        render json: serialize_imported_projects(project)
       else
         render json: { errors: project_save_error(project) }, status: :unprocessable_entity
       end
@@ -60,6 +66,36 @@ class Import::GithubController < Import::BaseController
   end
 
   private
+
+  def serialize_imported_projects(projects = already_added_projects)
+    ProjectSerializer.new.represent(projects, serializer: :import, provider: provider, host_url: host_url)
+  end
+
+  def serialized_provider_repos
+    repos = client.repos.reject { |repo| already_added_projects.pluck(:import_source).include? repo.full_name } # rubocop:disable CodeReuse/ActiveRecord
+    ProviderRepoSerializer.new(current_user: current_user).represent(repos, provider: provider, host_url: host_url)
+  end
+
+  def serialized_namespaces
+    NamespaceSerializer.new.represent(namespaces)
+  end
+
+  def already_added_projects
+    @already_added_projects ||= find_already_added_projects(provider)
+  end
+
+  def namespaces
+    current_user.manageable_groups.eager_load(:route).order('routes.path') # rubocop:disable CodeReuse/ActiveRecord
+  end
+
+  def expire_etag_cache
+    return if request.format.json?
+
+    # this forces to reload json content
+    Gitlab::EtagCaching::Store.new.tap do |store|
+      store.touch(realtime_changes_path)
+    end
+  end
 
   def client
     @client ||= Gitlab::LegacyGithubImport::Client.new(session[access_token_key], client_options)
@@ -75,6 +111,10 @@ class Import::GithubController < Import::BaseController
 
   def import_enabled?
     __send__("#{provider}_import_enabled?") # rubocop:disable GitlabSecurity/PublicSend
+  end
+
+  def realtime_changes_path
+    public_send("realtime_changes_import_#{provider}_path", format: :json) # rubocop:disable GitlabSecurity/PublicSend
   end
 
   def new_import_url
@@ -103,7 +143,11 @@ class Import::GithubController < Import::BaseController
     { github_access_token: session[access_token_key] }
   end
 
-  # The following methods are overridden in subclasses
+  # The following methods are overriden in subclasses
+  def host_url
+    nil
+  end
+
   def provider
     :github
   end

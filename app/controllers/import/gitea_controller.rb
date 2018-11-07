@@ -2,7 +2,7 @@
 
 class Import::GiteaController < Import::GithubController
   def new
-    if session[access_token_key].present? && session[host_key].present?
+    if session[access_token_key].present? && host_url.present?
       redirect_to status_import_url
     end
   end
@@ -13,7 +13,6 @@ class Import::GiteaController < Import::GithubController
   end
 
   def status
-    @gitea_host_url = session[host_key]
     super
   end
 
@@ -24,6 +23,10 @@ class Import::GiteaController < Import::GithubController
   end
 
   # Overridden methods
+  def host_url
+    session[host_key]
+  end
+
   def provider
     :gitea
   end
@@ -35,13 +38,13 @@ class Import::GiteaController < Import::GithubController
   end
 
   def provider_auth
-    if session[access_token_key].blank? || session[host_key].blank?
+    if session[access_token_key].blank? || host_url.blank?
       redirect_to new_import_gitea_url,
         alert: 'You need to specify both an Access Token and a Host URL.'
     end
   end
 
   def client_options
-    { host: session[host_key], api_version: 'v1' }
+    { host: host_url, api_version: 'v1' }
   end
 end
