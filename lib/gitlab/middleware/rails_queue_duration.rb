@@ -29,7 +29,7 @@ module Gitlab
       def metric_rails_queue_duration_seconds
         @metric_rails_queue_duration_seconds ||= Gitlab::Metrics.histogram(
           :gitlab_rails_queue_duration_seconds,
-          Gitlab::Metrics::Transaction::BASE_LABELS
+          ::Gitlab::Metrics::Transaction::BASE_LABELS
         )
       end
     end
