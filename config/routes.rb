@@ -89,6 +89,9 @@ Rails.application.routes.draw do
       get '/chaos/sleep' => 'chaos#sleep'
       get '/chaos/kill' => 'chaos#kill'
     end
+
+    # offline page
+    get 'offline' => 'pwa#offline'
   end
 
   concern :clusterable do
@@ -146,9 +149,8 @@ Rails.application.routes.draw do
 
   root to: "root#index"
 
-  # PWA
-  get 'offline' => 'pwa#offline'
-  get 'serviceWorker(.format)', to: 'pwa#service_worker'
+  # Service Worker
+  get 'serviceWorker.js', to: 'pwa#service_worker'
 
   get '*unmatched_route', to: 'application#route_not_found'
 end

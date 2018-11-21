@@ -276,40 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Register a service worker if our browser allows it
 if (navigator.serviceWorker) {
-  console.log('registering service worker')
-  navigator.serviceWorker.register(
-    '/serviceWorker.js', {
-      scope: '/',
-    },
-  );
+  navigator.serviceWorker.register('/serviceWorker.js', {
+    scope: '/',
+  });
 }
-
-
-const CURRENT_CACHE = '<%= Gitlab::VERSION %>_<%= Gitlab.revision %>';
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CURRENT_CACHE)
-      .then(cache => cache.addAll([
-        '/offline',
-      ])),
-  );
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys()
-      .then(cacheNames => Promise.all(
-          cacheNames.map(cache => cache !== CURRENT_CACHE ? caches.delete(cache) : Promise.resolve())
-        ))
-  )
-})
-
-self.addEventListener('fetch', event => {
-  const { request } = event;
-
-  event.respondWith(
-    fetch(request)
-      .catch(() => (request.mode === 'navigate' ? caches.match('/offline') : null))
-  );
-});
