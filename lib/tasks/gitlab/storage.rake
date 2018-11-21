@@ -5,11 +5,17 @@ namespace :gitlab do
       storage_migrator = Gitlab::HashedStorage::Migrator.new
       helper = Gitlab::HashedStorage::RakeHelper
 
+      if Gitlab::Database.read_only?
+        warn 'This task requires database write access. Exiting.'
+
+        next
+      end
+
       if helper.range_single_item?
         project = Project.with_unmigrated_storage.find_by(id: helper.range_from)
 
         unless project
-          puts "There are no projects requiring storage migration with ID=#{helper.range_from}"
+          warn "There are no projects requiring storage migration with ID=#{helper.range_from}"
 
           next
         end
@@ -23,7 +29,7 @@ namespace :gitlab do
       legacy_projects_count = Project.with_unmigrated_storage.count
 
       if legacy_projects_count == 0
-        puts 'There are no projects requiring storage migration. Nothing to do!'
+        warn 'There are no projects requiring storage migration. Nothing to do!'
 
         next
       end
