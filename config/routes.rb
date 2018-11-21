@@ -148,6 +148,7 @@ Rails.application.routes.draw do
 
   # PWA
   get 'offline' => 'pwa#offline'
+  get 'serviceWorker(.format)', to: 'pwa#service_worker'
 
   get '*unmatched_route', to: 'application#route_not_found'
 end
