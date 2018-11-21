@@ -146,5 +146,8 @@ Rails.application.routes.draw do
 
   root to: "root#index"
 
+  # PWA
+  get 'offline' => 'pwa#offline'
+
   get '*unmatched_route', to: 'application#route_not_found'
 end
