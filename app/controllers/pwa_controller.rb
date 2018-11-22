@@ -9,6 +9,5 @@ class PwaController < ApplicationController
   end
 
   def service_worker
-
   end
 end

@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Register a service worker if our browser allows it
 if (navigator.serviceWorker) {
-  navigator.serviceWorker.register('/service_worker.js', {
+  navigator.serviceWorker.register('/@service_worker.js', {
     scope: '/',
   });
 }
