@@ -66,7 +66,11 @@ export default {
       </a>
       <time-ago-tooltip :time="lastReply.created_at" tooltip-placement="bottom" />
     </template>
-    <span v-else class="collapse-replies-btn js-collapse-replies qa-collapse-replies" @click="toggle">
+    <span
+      v-else
+      class="collapse-replies-btn js-collapse-replies qa-collapse-replies"
+      @click="toggle"
+    >
       <icon name="chevron-down" /> {{ s__('Notes|Collapse replies') }}
     </span>
   </li>

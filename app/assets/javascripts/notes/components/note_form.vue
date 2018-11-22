@@ -190,7 +190,8 @@ js-autosize markdown-area js-vue-issue-note-form js-vue-textarea qa-reply-input"
           :disabled="isDisabled"
           type="button"
           class="js-vue-issue-save btn btn-success js-comment-button qa-reply-comment-button"
-          @click="handleUpdate()">
+          @click="handleUpdate();"
+        >
           {{ saveButtonTitle }}
         </button>
         <button
