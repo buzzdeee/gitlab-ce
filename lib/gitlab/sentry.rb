@@ -39,7 +39,7 @@ module Gitlab
     # need to resolve them.
     #
     # Provide an issue URL for follow up.
-    def self.track_exception(exception, issue_url: nil, extra: {})
+    def self.handle_exception(exception, issue_url: nil, extra: {})
       report_exception(exception, issue_url: issue_url, extra: extra)
 
       raise exception if should_raise_for_dev?
@@ -48,7 +48,7 @@ module Gitlab
     # This should be used when you do not want to raise an exception in
     # development and test. If you need development and test to behave
     # just the same as production you can use this instead of
-    # track_exception.
+    # handle_exception.
     def self.report_exception(exception, issue_url: nil, extra: {})
       if configured?
         extra[:issue_url] = issue_url if issue_url

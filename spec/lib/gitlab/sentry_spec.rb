@@ -11,7 +11,7 @@ describe Gitlab::Sentry do
     end
   end
 
-  describe '.track_exception' do
+  describe '.handle_exception' do
     let(:exception) { RuntimeError.new('boom') }
 
     before do
@@ -20,7 +20,7 @@ describe Gitlab::Sentry do
 
     it 'raises the exception if it should' do
       expect(described_class).to receive(:should_raise_for_dev?).and_return(true)
-      expect { described_class.track_exception(exception) }
+      expect { described_class.handle_exception(exception) }
         .to raise_error(RuntimeError)
     end
 
@@ -38,7 +38,7 @@ describe Gitlab::Sentry do
         expect(Raven).to receive(:capture_exception)
                            .with(exception, extra: a_hash_including(expected_extras))
 
-        described_class.track_exception(
+        described_class.handle_exception(
           exception,
           issue_url: 'http://gitlab.com/gitlab-org/gitlab-ce/issues/1',
           extra: { some_other_info: 'info' }
@@ -48,7 +48,7 @@ describe Gitlab::Sentry do
       it 'sets the context' do
         expect(described_class).to receive(:context)
 
-        described_class.track_exception(exception)
+        described_class.handle_exception(exception)
       end
     end
   end
