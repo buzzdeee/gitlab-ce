@@ -2,7 +2,7 @@
 
 module Gitlab
   module Sentry
-    def self.configure!(dsn:)
+    def self.configure!(dsn:, program:)
       @configured = true
 
       Raven.configure do |config|
@@ -13,12 +13,12 @@ module Gitlab
         config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
         # Sanitize authentication headers
         config.sanitize_http_headers = %w[Authorization Private-Token]
-        config.tags = { program: Gitlab::Sentry.program_context }
+        config.tags = { program: program }
       end
     end
 
     def self.context(current_user = nil)
-      return unless enabled?
+      return unless configured?
 
       Raven.tags_context(locale: I18n.locale)
 
@@ -50,7 +50,7 @@ module Gitlab
     # just the same as production you can use this instead of
     # track_exception.
     def self.track_acceptable_exception(exception, issue_url: nil, extra: {})
-      if enabled?
+      if configured?
         extra[:issue_url] = issue_url if issue_url
         context # Make sure we've set everything we know in the context
 
@@ -58,22 +58,14 @@ module Gitlab
       end
     end
 
+    private
+
     def self.should_raise_for_dev?
       Rails.env.development? || Rails.env.test?
     end
 
-    private
-
-    def self.program_context
-      if Sidekiq.server?
-        'sidekiq'
-      else
-        'rails'
-      end
-    end
-
     def self.enabled?
-      @enabled
+      @configured
     end
   end
 end

@@ -11,8 +11,16 @@ def configure_sentry
   end
 
   if sentry_enabled
+    program_context = 
+      if Sidekiq.server?
+        'sidekiq'
+      else
+        'rails'
+      end
+
     Gitlab::Sentry.configure!(
-      dsn: Gitlab::CurrentSettings.current_application_settings.sentry_dsn)
+      dsn: Gitlab::CurrentSettings.current_application_settings.sentry_dsn,
+      program: program_context)
   end
 end
 
