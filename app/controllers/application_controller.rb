@@ -8,7 +8,6 @@ class ApplicationController < ActionController::Base
   include GitlabRoutingHelper
   include PageLayoutHelper
   include SafeParamsHelper
-  include SentryHelper
   include WorkhorseHelper
   include EnforcesTwoFactorAuthentication
   include WithPerformanceBar
@@ -161,7 +160,7 @@ class ApplicationController < ActionController::Base
   end
 
   def log_exception(exception)
-    Raven.capture_exception(exception) if sentry_enabled?
+    Gitlab::Sentry.track_acceptable_exception(exception)
 
     backtrace_cleaner = Gitlab.rails5? ? request.env["action_dispatch.backtrace_cleaner"] : env
     application_trace = ActionDispatch::ExceptionWrapper.new(backtrace_cleaner, exception).application_trace
@@ -482,5 +481,9 @@ class ApplicationController < ActionController::Base
     ApplicationSettings::UpdateService
       .new(settings, current_user, application_setting_params)
       .execute
+  end
+
+  def sentry_context
+    Gitlab::Sentry.context(current_user)
   end
 end
