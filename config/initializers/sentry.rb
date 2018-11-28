@@ -16,7 +16,11 @@ program_context =
     'rails'
   end
 
+sentry_dsn =
+  if sentry_enabled && Rails.env.production?
+    Gitlab::CurrentSettings.current_application_settings.sentry_dsn
+  end
+
 Gitlab::Sentry.configure!(
-  sentry_enabled: sentry_enabled && Rails.env.production?,
-  dsn: Gitlab::CurrentSettings.current_application_settings.sentry_dsn,
+  sentry_dsn: sentry_dsn,
   program: program_context)
