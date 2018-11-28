@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181126150622) do
+ActiveRecord::Schema.define(version: 20181126153547) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -698,6 +698,7 @@ ActiveRecord::Schema.define(version: 20181126150622) do
     t.string "version", null: false
     t.string "hostname"
     t.text "status_reason"
+    t.string "external_ip"
     t.index ["cluster_id"], name: "index_clusters_applications_knative_on_cluster_id", unique: true, using: :btree
   end
 
@@ -1392,7 +1393,6 @@ ActiveRecord::Schema.define(version: 20181126150622) do
     t.index ["noteable_id", "noteable_type"], name: "index_notes_on_noteable_id_and_noteable_type", using: :btree
     t.index ["noteable_type"], name: "index_notes_on_noteable_type", using: :btree
     t.index ["project_id", "noteable_type"], name: "index_notes_on_project_id_and_noteable_type", using: :btree
-    t.index ["updated_at"], name: "index_notes_on_updated_at", using: :btree
   end
 
   create_table "notification_settings", force: :cascade do |t|
@@ -1883,10 +1883,6 @@ ActiveRecord::Schema.define(version: 20181126150622) do
   create_table "shards", force: :cascade do |t|
     t.string "name", null: false
     t.index ["name"], name: "index_shards_on_name", unique: true, using: :btree
-  end
-
-  create_table "site_statistics", force: :cascade do |t|
-    t.integer "repositories_count", default: 0, null: false
   end
 
   create_table "snippets", force: :cascade do |t|
