@@ -2,8 +2,19 @@
 
 module Gitlab
   module Sentry
-    def self.enabled?
-      Rails.env.production? && Gitlab::CurrentSettings.sentry_enabled?
+    def self.configure!(dsn:)
+      @configured = true
+
+      Raven.configure do |config|
+        config.dsn = dsn
+        config.release = Gitlab.revision
+  
+        # Sanitize fields based on those sanitized from Rails.
+        config.sanitize_fields = Rails.application.config.filter_parameters.map(&:to_s)
+        # Sanitize authentication headers
+        config.sanitize_http_headers = %w[Authorization Private-Token]
+        config.tags = { program: Gitlab::Sentry.program_context }
+      end
     end
 
     def self.context(current_user = nil)
@@ -47,6 +58,12 @@ module Gitlab
       end
     end
 
+    def self.should_raise_for_dev?
+      Rails.env.development? || Rails.env.test?
+    end
+
+    private
+
     def self.program_context
       if Sidekiq.server?
         'sidekiq'
@@ -55,8 +72,8 @@ module Gitlab
       end
     end
 
-    def self.should_raise_for_dev?
-      Rails.env.development? || Rails.env.test?
+    def self.enabled?
+      @enabled
     end
   end
 end
