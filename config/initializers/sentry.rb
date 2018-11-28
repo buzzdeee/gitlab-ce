@@ -2,26 +2,21 @@
 
 require 'gitlab/current_settings'
 
-def configure_sentry
-  # allow it to fail: it may do so when create_from_defaults is executed before migrations are actually done
-  begin
-    sentry_enabled = Gitlab::CurrentSettings.current_application_settings.sentry_enabled
-  rescue
-    sentry_enabled = false
-  end
-
-  if sentry_enabled
-    program_context = 
-      if Sidekiq.server?
-        'sidekiq'
-      else
-        'rails'
-      end
-
-    Gitlab::Sentry.configure!(
-      dsn: Gitlab::CurrentSettings.current_application_settings.sentry_dsn,
-      program: program_context)
-  end
+# allow it to fail: it may do so when create_from_defaults is executed before migrations are actually done
+begin
+  sentry_enabled = Gitlab::CurrentSettings.current_application_settings.sentry_enabled
+rescue
+  sentry_enabled = false
 end
 
-configure_sentry if Rails.env.production?
+program_context = 
+  if Sidekiq.server?
+    'sidekiq'
+  else
+    'rails'
+  end
+
+Gitlab::Sentry.configure!(
+  sentry_enabled: sentry_enabled && Rails.env.production?,
+  dsn: Gitlab::CurrentSettings.current_application_settings.sentry_dsn,
+  program: program_context)

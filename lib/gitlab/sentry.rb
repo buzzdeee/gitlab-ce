@@ -2,8 +2,12 @@
 
 module Gitlab
   module Sentry
-    def self.configure!(dsn:, program:)
-      @configured = true
+    attr_reader :configured, :program
+    attr_accessor :user_context
+
+    def configure!(sentry_enabled:, dsn:, program:)
+      @sentry_enabled = sentry_enabled
+      @program = program
 
       Raven.configure do |config|
         config.dsn = dsn
@@ -14,20 +18,22 @@ module Gitlab
         # Sanitize authentication headers
         config.sanitize_http_headers = %w[Authorization Private-Token]
         config.tags = { program: program }
-      end
+      end if sentry_enabled
     end
 
-    def self.context(current_user = nil)
-      return unless configured?
+    def in_context(current_user = nil)
+      last_context = self.user_context
 
-      Raven.tags_context(locale: I18n.locale)
-
-      if current_user
-        Raven.user_context(
+      begin
+        self.user_context = {
           id: current_user.id,
           email: current_user.email,
           username: current_user.username
-        )
+        } if current_user
+
+        yield
+      ensure
+        self.user_context = last_context
       end
     end
 
@@ -39,7 +45,7 @@ module Gitlab
     # need to resolve them.
     #
     # Provide an issue URL for follow up.
-    def self.handle_exception(exception, issue_url: nil, extra: {})
+    def handle_exception(exception, issue_url: nil, extra: {})
       report_exception(exception, issue_url: issue_url, extra: extra)
 
       raise exception if should_raise_for_dev?
@@ -49,23 +55,29 @@ module Gitlab
     # development and test. If you need development and test to behave
     # just the same as production you can use this instead of
     # handle_exception.
-    def self.report_exception(exception, issue_url: nil, extra: {})
-      if configured?
-        extra[:issue_url] = issue_url if issue_url
-        context # Make sure we've set everything we know in the context
+    def report_exception(exception, issue_url: nil, extra: {})
+      extra[:issue_url] = issue_url if issue_url
 
-        Raven.capture_exception(exception, extra: extra)
+      if sentry_enabled
+        Raven.capture_exception(exception, extra)
+      else
+
       end
     end
 
     private
 
-    def self.should_raise_for_dev?
-      Rails.env.development? || Rails.env.test?
+    def user_context= (value)
+      super
+
+      if sentry_enabled
+        Raven.tags_context(locale: I18n.locale)
+        Raven.user_context(*value)
+      end
     end
 
-    def self.enabled?
-      @configured
+    def should_raise_for_dev?
+      Rails.env.development? || Rails.env.test?
     end
   end
 end

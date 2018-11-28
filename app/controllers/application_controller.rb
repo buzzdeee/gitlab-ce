@@ -21,7 +21,7 @@ class ApplicationController < ActionController::Base
   before_action :validate_user_service_ticket!
   before_action :check_password_expiration
   before_action :ldap_security_check
-  before_action :sentry_context
+  around_action :sentry_context
   before_action :default_headers
   before_action :add_gon_variables, unless: [:peek_request?, :json_request?]
   before_action :configure_permitted_parameters, if: :devise_controller?
@@ -483,7 +483,7 @@ class ApplicationController < ActionController::Base
       .execute
   end
 
-  def sentry_context
-    Gitlab::Sentry.context(current_user)
+  def sentry_context(&block)
+    Gitlab::Sentry.in_context(current_user, &block)
   end
 end
