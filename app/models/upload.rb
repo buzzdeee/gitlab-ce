@@ -52,7 +52,7 @@ class Upload < ActiveRecord::Base
     # Help sysadmins find missing upload files
     if persisted? && !exist
       exception = RuntimeError.new("Uploaded file does not exist")
-      Gitlab::Sentry.track_acceptable_exception(exception, extra: self.attributes)
+      Gitlab::Sentry.report_exception(exception, extra: self.attributes)
       Gitlab::Metrics.counter(:upload_file_does_not_exist_total, 'The number of times an upload record could not find its file').increment
     end
 

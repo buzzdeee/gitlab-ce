@@ -160,7 +160,7 @@ class ApplicationController < ActionController::Base
   end
 
   def log_exception(exception)
-    Gitlab::Sentry.track_acceptable_exception(exception)
+    Gitlab::Sentry.report_exception(exception)
 
     backtrace_cleaner = Gitlab.rails5? ? request.env["action_dispatch.backtrace_cleaner"] : env
     application_trace = ActionDispatch::ExceptionWrapper.new(backtrace_cleaner, exception).application_trace

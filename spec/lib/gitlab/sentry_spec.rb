@@ -53,7 +53,7 @@ describe Gitlab::Sentry do
     end
   end
 
-  context '.track_acceptable_exception' do
+  context '.report_exception' do
     let(:exception) { RuntimeError.new('boom') }
 
     before do
@@ -69,7 +69,7 @@ describe Gitlab::Sentry do
       expect(Raven).to receive(:capture_exception)
                          .with(exception, extra: a_hash_including(expected_extras))
 
-      described_class.track_acceptable_exception(
+      described_class.report_exception(
         exception,
         issue_url: 'http://gitlab.com/gitlab-org/gitlab-ce/issues/1',
         extra: { some_other_info: 'info' }
