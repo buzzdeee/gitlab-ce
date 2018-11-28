@@ -60,9 +60,14 @@ module Gitlab
         extra[:issue_url] = issue_url if issue_url
 
         if sentry_enabled
+          # if Sentry is configured, send exception to Sentry
           Raven.capture_exception(exception, extra)
         else
+          # otherwise, send it to log file
+          details = extra.merge(user_context.to_h).merge(
+            exception_details(exception))
 
+          logger.error(details)
         end
       end
 
@@ -79,6 +84,26 @@ module Gitlab
 
       def should_raise_for_dev?
         Rails.env.development? || Rails.env.test?
+      end
+
+      def logger
+        Gitlab::Sentry::Logger.build
+      end
+
+      def exception_details(exception)
+        { class: exception.class.to_s,
+          message: exception.message,
+          backtrace: filter_backtrace(exception.backtrace)
+        }
+      end
+
+      # filter backtrace to only include GitLab directories
+      def filter_backtrace(backtrace, limit: 5)
+        root_path = Rails.root.to_s + '/'
+
+        backtrace.select do |line|
+          line.start_with?(root_path)
+        end.first(limit)
       end
     end
   end
