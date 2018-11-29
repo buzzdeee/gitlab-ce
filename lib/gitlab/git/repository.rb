@@ -67,14 +67,15 @@ module Gitlab
       # Relative path of repo
       attr_reader :relative_path
 
-      attr_reader :storage, :gl_repository, :relative_path
+      attr_reader :storage, :gl_repository, :relative_path, :gl_project_name
 
       # This initializer method is only used on the client side (gitlab-ce).
       # Gitaly-ruby uses a different initializer.
-      def initialize(storage, relative_path, gl_repository)
+      def initialize(storage, relative_path, gl_repository, gl_project_name)
         @storage = storage
         @relative_path = relative_path
         @gl_repository = gl_repository
+        @gl_project_name = gl_project_name
 
         @name = @relative_path.split("/").last
       end
@@ -860,7 +861,7 @@ module Gitlab
       end
 
       def gitaly_repository
-        Gitlab::GitalyClient::Util.repository(@storage, @relative_path, @gl_repository)
+        Gitlab::GitalyClient::Util.repository(@storage, @relative_path, @gl_repository, @gl_project_name)
       end
 
       def gitaly_ref_client
