@@ -12,6 +12,10 @@ module Gitlab
               strong_memoize(:content) { fetch_remote_content }
             end
 
+            def matching?
+              super && ::Gitlab::UrlSanitizer.valid?(location)
+            end
+
             private
 
             def validate_location!

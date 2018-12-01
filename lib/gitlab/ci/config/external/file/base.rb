@@ -24,6 +24,10 @@ module Gitlab
               !::File.basename(location).match(YAML_WHITELIST_EXTENSION)
             end
 
+            def matching?
+              !invalid_extension?
+            end
+
             def valid?
               errors.none?
             end

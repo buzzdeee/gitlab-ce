@@ -1631,6 +1631,7 @@ test:
 > Behaviour expanded in GitLab 10.8 to allow more flexible overriding.
 > [Moved](https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/21603)
 to GitLab Core in 11.4
+> Since 11.7 it supports including of templates.
 
 Using the `include` keyword, you can allow the inclusion of external YAML files.
 
@@ -1676,11 +1677,12 @@ include: '/templates/.after-script-template.yml'
 include:
   - 'https://gitlab.com/awesome-project/raw/master/.before-script-template.yml'
   - '/templates/.after-script-template.yml'
+  - ~Auto-DevOps.gitlab-ci.yml
 ```
 
 ---
 
-`include` supports two types of files:
+`include` supports three types of files:
 
 - **local** to the same repository, referenced by using full paths in the same
   repository, with `/` being the root directory. For example:
@@ -1712,6 +1714,18 @@ include:
     In order to include files from another repository inside your local network, 
     you may need to enable the **Allow requests to the local network from hooks and services** checkbox
     located in the **Settings > Network > Outbound requests** section within the **Admin area**.
+
+- **template** included in GitLab. For example:
+
+    ```yaml
+    include: ~Auto-DevOps.gitlab-ci.yml
+    ```
+
+    NOTE: **Note:**
+    Feature is supported since 11.7.
+
+    NOTE: **Note:**
+    List of templates is available in [lib/gitlab/ci/templates](https://gitlab.com/gitlab-org/gitlab-ce/tree/master/lib/gitlab/ci/templates).
 
 ---
 

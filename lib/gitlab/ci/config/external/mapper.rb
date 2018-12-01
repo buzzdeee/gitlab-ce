@@ -5,6 +5,12 @@ module Gitlab
     class Config
       module External
         class Mapper
+          FILE_CLASSES = [
+            External::File::Remote,
+            External::File::Template,
+            External::File::Local
+          ].freeze
+
           def initialize(values, project, sha)
             @locations = Array(values.fetch(:include, []))
             @project = project
@@ -20,11 +26,15 @@ module Gitlab
           attr_reader :locations, :project, :sha
 
           def build_external_file(location)
-            if ::Gitlab::UrlSanitizer.valid?(location)
-              External::File::Remote.new(location)
-            else
-              External::File::Local.new(location, project: project, sha: sha)
+            options = { project: project, sha: sha }
+
+            FILE_CLASSES.each do |file_class|
+              file = file_class.new(location, options)
+              return file if file.matching?
             end
+
+            External::File::NotSupported.new(
+              location, options)
           end
         end
       end
