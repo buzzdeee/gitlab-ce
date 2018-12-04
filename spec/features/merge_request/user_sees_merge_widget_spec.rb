@@ -169,8 +169,8 @@ describe 'Merge request > User sees merge widget', :js do
   context 'view merge request where project has CI set up but no CI status' do
     let!(:pipeline) do
       create(:ci_pipeline, project: project,
-        sha: merge_request.diff_head_sha,
-        ref: merge_request.source_branch)
+             sha: merge_request.diff_head_sha,
+             ref: merge_request.source_branch)
     end
 
     before do
