@@ -173,6 +173,10 @@ module Ci
 
     scope :for_user, -> (user) { where(user: user) }
 
+    scope :for_merge_request, -> (ref, sha) do
+      where(ref: ref, sha: sha).order(id: :desc)
+    end
+
     # Returns the pipelines in descending order (= newest first), optionally
     # limited to a number of references.
     #
@@ -258,6 +262,10 @@ module Ci
 
     def self.internal_sources
       sources.reject { |source| source == "external" }.values
+    end
+
+    def self.latest_for_merge_request(ref, sha)
+      for_merge_request(ref, sha).first
     end
 
     def stages_count

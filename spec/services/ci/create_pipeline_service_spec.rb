@@ -140,7 +140,8 @@ describe Ci::CreatePipelineService do
                                                    target_branch: "branch_1",
                                                    source_project: project)
 
-            allow_any_instance_of(Ci::Pipeline).to receive(:latest?).and_return(false)
+            allow_any_instance_of(MergeRequest)
+              .to receive(:get_head_pipeline) { }
 
             execute_service
 
