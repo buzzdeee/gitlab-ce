@@ -201,7 +201,7 @@ class MergeRequest < ActiveRecord::Base
   # branch head commit, for example checking if a merge request can be merged.
   # For more information check: https://gitlab.com/gitlab-org/gitlab-ce/issues/40004
   def actual_head_pipeline
-    head_pipeline&.sha == diff_head_sha ? head_pipeline : get_head_pipeline
+    head_pipeline&.sha == diff_head_sha ? head_pipeline : nil
   end
 
   def merge_pipeline
@@ -1061,7 +1061,7 @@ class MergeRequest < ActiveRecord::Base
   end
 
   def update_head_pipeline
-    self.head_pipeline = actual_head_pipeline
+    self.head_pipeline = find_head_pipeline
 
     update_column(:head_pipeline_id, head_pipeline.id) if head_pipeline_id_changed?
   end
@@ -1225,7 +1225,7 @@ class MergeRequest < ActiveRecord::Base
                     .latest_for_merge_request(target_branch, diff_base_sha)
   end
 
-  def get_head_pipeline
+  def find_head_pipeline
     source_project&.pipelines
                   &.latest_for_merge_request(source_branch, diff_head_sha)
   end
