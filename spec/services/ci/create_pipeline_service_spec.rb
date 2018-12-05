@@ -141,7 +141,7 @@ describe Ci::CreatePipelineService do
                                                    source_project: project)
 
             allow_any_instance_of(MergeRequest)
-              .to receive(:find_head_pipeline) { }
+              .to receive(:find_actual_head_pipeline) { }
 
             execute_service
 

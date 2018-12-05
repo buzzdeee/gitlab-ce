@@ -1061,7 +1061,7 @@ class MergeRequest < ActiveRecord::Base
   end
 
   def update_head_pipeline
-    self.head_pipeline = find_head_pipeline
+    self.head_pipeline = find_actual_head_pipeline
 
     update_column(:head_pipeline_id, head_pipeline.id) if head_pipeline_id_changed?
   end
@@ -1225,7 +1225,7 @@ class MergeRequest < ActiveRecord::Base
                     .latest_for_merge_request(target_branch, diff_base_sha)
   end
 
-  def find_head_pipeline
+  def find_actual_head_pipeline
     source_project&.pipelines
                   &.latest_for_merge_request(source_branch, diff_head_sha)
   end
