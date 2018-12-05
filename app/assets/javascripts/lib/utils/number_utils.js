@@ -1,3 +1,7 @@
+/**
+ * @module number utils
+ */
+
 import { BYTES_IN_KIB } from './constants';
 
 /**

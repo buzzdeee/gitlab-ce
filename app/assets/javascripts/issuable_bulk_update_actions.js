@@ -1,5 +1,9 @@
 /* eslint-disable consistent-return, func-names, array-callback-return, prefer-arrow-callback, no-unused-vars */
 
+/**
+ * @module IssuableBulkUpdateActions
+ */
+
 import $ from 'jquery';
 import _ from 'underscore';
 import axios from './lib/utils/axios_utils';

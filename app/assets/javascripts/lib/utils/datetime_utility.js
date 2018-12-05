@@ -1,3 +1,7 @@
+/**
+ * @module datetime utils
+ */
+
 import $ from 'jquery';
 import _ from 'underscore';
 import timeago from 'timeago.js';

@@ -1,3 +1,7 @@
+/**
+ * @module tick formats
+ */
+
 import { createDateTimeFormat } from '../../locale';
 
 let dateTimeFormats;

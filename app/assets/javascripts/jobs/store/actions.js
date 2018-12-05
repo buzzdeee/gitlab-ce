@@ -1,3 +1,7 @@
+/**
+ * @module Jobs store actions
+ */
+
 import Visibility from 'visibilityjs';
 import * as types from './mutation_types';
 import axios from '~/lib/utils/axios_utils';

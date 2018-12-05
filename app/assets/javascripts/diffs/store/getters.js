@@ -1,3 +1,7 @@
+/**
+ * @module Diffs store getters
+ */
+
 import { PARALLEL_DIFF_VIEW_TYPE, INLINE_DIFF_VIEW_TYPE } from '../constants';
 
 export const isParallelView = state => state.diffViewType === PARALLEL_DIFF_VIEW_TYPE;

@@ -1,12 +1,12 @@
 import $ from 'jquery';
 
 /**
- * Linked Tabs
+ * @class LinkedTabs
  *
  * Handles persisting and restores the current tab selection and content.
  * Reusable component for static content.
  *
- * ### Example Markup
+ * @example
  *
  *  <ul class="nav-links tab-links">
  *    <li class="active">
@@ -29,9 +29,6 @@ import $ from 'jquery';
  *      Tab 2 Content
  *    </div>
  * </div>
- *
- *
- * ### How to use
  *
  *  new LinkedTabs({
  *    action: "#{controller.action_name}",

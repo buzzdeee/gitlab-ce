@@ -1,3 +1,7 @@
+/**
+ *
+ */
+
 import Vue from 'vue';
 import commitPipelinesTable from './pipelines_table.vue';
 

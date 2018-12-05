@@ -1,3 +1,7 @@
+/**
+ * @module axios-utils
+ */
+
 import axios from 'axios';
 import csrf from './csrf';
 

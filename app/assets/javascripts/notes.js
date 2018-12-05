@@ -4,6 +4,10 @@ prefer-template, consistent-return, no-alert, no-return-assign,
 no-param-reassign, prefer-arrow-callback, no-else-return, vars-on-top,
 no-unused-vars, no-shadow, no-useless-escape, class-methods-use-this */
 
+/**
+ * @module Notes
+ */
+
 /* global ResolveService */
 /* global mrRefreshWidgetUrl */
 

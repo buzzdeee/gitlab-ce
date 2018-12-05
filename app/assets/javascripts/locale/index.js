@@ -1,3 +1,7 @@
+/**
+ * @module locale
+ */
+
 import Jed from 'jed';
 import ensureSingleLine from './ensure_single_line';
 import sprintf from './sprintf';

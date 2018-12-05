@@ -1,3 +1,7 @@
+/**
+ * @module Reports store actions
+ */
+
 import Visibility from 'visibilityjs';
 import $ from 'jquery';
 import axios from '../../lib/utils/axios_utils';

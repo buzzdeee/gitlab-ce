@@ -1,4 +1,8 @@
 /**
+ * @module text utils
+ */
+
+/**
  * Adds a , to a string composed by numbers, at every 3 chars.
  *
  * 2333 -> 2,333

@@ -1,3 +1,4 @@
+
 import Vue from 'vue';
 import { mapActions } from 'vuex';
 import Translate from '~/vue_shared/translate';
@@ -9,12 +10,18 @@ import { parseBoolean } from '../lib/utils/common_utils';
 Vue.use(Translate);
 
 /**
+ * Function that returns extra properties to seed initial data.
+ * @callback extraInitialData
+ * @param {Element}
+ * @return {Object}
+ */
+
+/**
  * Initialize the IDE on the given element.
  *
  * @param {Element} el - The element that will contain the IDE.
  * @param {Object} options - Extra options for the IDE (Used by EE).
- * @param {(e:Element) => Object} options.extraInitialData -
- *   Function that returns extra properties to seed initial data.
+ * @param {extraInitialData} options.extraInitialData
  * @param {Component} options.rootComponent -
  *   Component that overrides the root component.
  */
