@@ -167,24 +167,20 @@ describe 'Merge request > User sees merge widget', :js do
   end
 
   context 'view merge request where project has CI set up but no CI status' do
-    let!(:pipeline) do
-      create(:ci_pipeline, project: project,
-             sha: merge_request.diff_head_sha,
-             ref: merge_request.source_branch)
-    end
-
     before do
+      pipeline = create(:ci_pipeline, project: project,
+                                      sha: merge_request.diff_head_sha,
+                                      ref: merge_request.source_branch)
       create(:ci_build, pipeline: pipeline)
 
       visit project_merge_request_path(project, merge_request)
     end
 
-    it 'shows the head pipeline' do
+    it 'has pipeline error text' do
       # Wait for the `ci_status` and `merge_check` requests
       wait_for_requests
 
-      expect(page)
-        .to have_text("Pipeline ##{pipeline.id} pending for")
+      expect(page).to have_text("Could not retrieve the pipeline status. For troubleshooting steps, read the documentation.")
     end
   end
 
