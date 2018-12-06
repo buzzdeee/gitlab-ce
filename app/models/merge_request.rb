@@ -1225,9 +1225,9 @@ class MergeRequest < ActiveRecord::Base
   end
 
   def base_pipeline
-    @base_pipeline ||=
-      target_project.ci_pipelines
-                    .latest_for_merge_request(self, target_branch, diff_base_sha)
+    @base_pipeline ||= project.ci_pipelines
+      .order(id: :desc)
+      .find_by(sha: diff_base_sha)
   end
 
   def find_actual_head_pipeline
