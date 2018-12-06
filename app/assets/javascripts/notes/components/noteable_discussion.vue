@@ -194,6 +194,16 @@ export default {
         false,
       );
     },
+    commit() {
+      if (!this.discussion.for_commit) {
+        return null;
+      }
+
+      return {
+        id: this.discussion.commit_id,
+        url: this.discussion.discussion_path,
+      };
+    },
   },
   watch: {
     isReplying() {
@@ -357,6 +367,7 @@ Please check your network connection and try again.`;
                   <component
                     :is="componentName(initialDiscussion)"
                     :note="componentData(initialDiscussion)"
+                    :commit="commit"
                     @handleDeleteNote="deleteNoteHandler"
                   >
                     <slot slot="avatar-badge" name="avatar-badge"></slot>
