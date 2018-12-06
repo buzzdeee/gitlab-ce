@@ -47,6 +47,17 @@ describe Import::BitbucketServerController do
       expect(response).to have_gitlab_http_status(200)
     end
 
+    it 'allows project names with tildes' do
+      project_name = "~someuser"
+      allow(Gitlab::BitbucketServerImport::ProjectCreator)
+        .to receive(:new).with(project_name, repo_slug, anything, 'my-project', user.namespace, user, anything)
+        .and_return(double(execute: project))
+
+      post :create, new_name: project_name, repository: repo_slug, format: :json
+
+      expect(response).to have_gitlab_http_status(200)
+    end
+
     it 'returns an error when an invalid project key is used' do
       post :create, project: 'some&project'
 

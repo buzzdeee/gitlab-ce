@@ -8,7 +8,7 @@ module ImportHelper
   end
 
   def sanitize_project_name(name)
-    name.gsub(/[^\w\-]/, '-')
+    name.gsub(/\A~+/, '').gsub(/[^\w\-]/, '-')
   end
 
   def import_project_target(owner, name)
