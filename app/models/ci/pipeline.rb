@@ -185,8 +185,9 @@ module Ci
 
     scope :for_user, -> (user) { where(user: user) }
 
-    scope :for_merge_request, -> (ref, sha) do
-      where(ref: ref, sha: sha).order(id: :desc)
+    scope :for_merge_request, -> (merge_request, ref, sha) do
+      where(ref: ref, sha: sha, merge_request: [nil, merge_request])
+      .sort_by_merge_request_pipelines
     end
 
     # Returns the pipelines in descending order (= newest first), optionally
@@ -276,8 +277,8 @@ module Ci
       sources.reject { |source| source == "external" }.values
     end
 
-    def self.latest_for_merge_request(ref, sha)
-      for_merge_request(ref, sha).first
+    def self.latest_for_merge_request(merge_request, ref, sha)
+      for_merge_request(merge_request, ref, sha).first
     end
 
     def self.ci_sources_values
