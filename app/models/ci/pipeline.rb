@@ -186,6 +186,9 @@ module Ci
     scope :for_user, -> (user) { where(user: user) }
 
     scope :for_merge_request, -> (merge_request, ref, sha) do
+      ##
+      # We have to filter out unrelated MR pipelines, in case,
+      # there are two merge requests from the same source branch
       where(merge_request: [nil, merge_request], ref: ref, sha: sha)
       .sort_by_merge_request_pipelines
     end
