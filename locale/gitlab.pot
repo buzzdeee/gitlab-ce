@@ -2656,6 +2656,9 @@ msgstr ""
 msgid "Edit identity for %{user_name}"
 msgstr ""
 
+msgid "Edit issues"
+msgstr ""
+
 msgid "Email"
 msgstr ""
 
@@ -3029,6 +3032,9 @@ msgid "File moved"
 msgstr ""
 
 msgid "File templates"
+msgstr ""
+
+msgid "File upload error."
 msgstr ""
 
 msgid "Files"
@@ -3534,6 +3540,9 @@ msgstr ""
 msgid "Import"
 msgstr ""
 
+msgid "Import CSV"
+msgstr ""
+
 msgid "Import Projects from Gitea"
 msgstr ""
 
@@ -3550,6 +3559,9 @@ msgid "Import an exported GitLab project"
 msgstr ""
 
 msgid "Import in progress"
+msgstr ""
+
+msgid "Import issues"
 msgstr ""
 
 msgid "Import multiple repositories by uploading a manifest file."
@@ -3688,6 +3700,9 @@ msgid "Issues can be bugs, tasks or ideas to be discussed. Also, issues are sear
 msgstr ""
 
 msgid "Issues, merge requests, pushes and comments."
+msgstr ""
+
+msgid "It must have a header row and at least two columns: the first column is the issue title and the second column is the issue description. The separator is automatically detected."
 msgstr ""
 
 msgid "It's you"
@@ -6365,6 +6380,12 @@ msgstr ""
 msgid "Subscribe at project level"
 msgstr ""
 
+msgid "Subscribe to RSS feed"
+msgstr ""
+
+msgid "Subscribe to calendar"
+msgstr ""
+
 msgid "Subscribed"
 msgstr ""
 
@@ -6525,6 +6546,9 @@ msgid "The issue stage shows the time it takes from creating an issue to assigni
 msgstr ""
 
 msgid "The maximum file size allowed is %{max_attachment_size}mb"
+msgstr ""
+
+msgid "The maximum file size allowed is %{size}."
 msgstr ""
 
 msgid "The maximum file size allowed is 200KB."
@@ -7203,6 +7227,9 @@ msgstr ""
 msgid "Upload <code>GoogleCodeProjectHosting.json</code> here:"
 msgstr ""
 
+msgid "Upload CSV file"
+msgstr ""
+
 msgid "Upload New File"
 msgstr ""
 
@@ -7750,6 +7777,12 @@ msgid "Your device was successfully set up! Give it a name and register it with 
 msgstr ""
 
 msgid "Your groups"
+msgstr ""
+
+msgid "Your issues are being imported. Once finished, you'll get a confirmation email."
+msgstr ""
+
+msgid "Your issues will be imported in the background. Once finished, you'll get a confirmation email."
 msgstr ""
 
 msgid "Your name"
