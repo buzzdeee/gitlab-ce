@@ -186,7 +186,7 @@ module Ci
     scope :for_user, -> (user) { where(user: user) }
 
     scope :for_merge_request, -> (merge_request, ref, sha) do
-      where(ref: ref, sha: sha, merge_request: [nil, merge_request])
+      where(merge_request: [nil, merge_request], ref: ref, sha: sha)
       .sort_by_merge_request_pipelines
     end
 
