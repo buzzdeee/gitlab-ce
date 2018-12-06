@@ -27,8 +27,6 @@ module API
         requirements: { ref_name: /.+/ } do
         authorize_download_artifacts!
 
-        latest_build = user_project.latest_successful_build_for!(params[:job], params[:ref_name])
-
         present_carrierwave_file!(
           user_project.latest_successful_build_for!(params[:job], params[:ref_name])
             .artifacts_file
