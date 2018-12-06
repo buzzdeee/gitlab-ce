@@ -190,7 +190,7 @@ module Ci
       # We have to filter out unrelated MR pipelines, in case,
       # there are two merge requests from the same source branch
       where(merge_request: [nil, merge_request], ref: ref, sha: sha)
-      .sort_by_merge_request_pipelines
+        .sort_by_merge_request_pipelines
     end
 
     # Returns the pipelines in descending order (= newest first), optionally
