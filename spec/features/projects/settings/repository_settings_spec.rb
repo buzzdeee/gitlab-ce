@@ -121,25 +121,23 @@ describe 'Projects > Settings > Repository settings' do
     end
 
     context 'remote mirror settings' do
-      let(:user2) { create(:user) }
-
       before do
-        project.add_maintainer(user2)
-
         visit project_settings_repository_path(project)
       end
 
-      it 'shows push mirror settings', :js do
+      it 'shows push mirror settings' do
         expect(page).to have_selector('#mirror_direction')
       end
 
-      it 'creates a push mirror that mirrors all branches', :js do
+      it 'creates a password based push mirror that mirrors all branches', :js do
         expect(find('.js-mirror-protected-hidden', visible: false).value).to eq('0')
 
         fill_in 'url', with: 'ssh://user@localhost/project.git'
-        select 'SSH public key', from: 'Authentication method'
+        select 'Password', from: 'Authentication method'
 
-        select_direction
+        screenshot_and_open_image
+
+        fill_in 'js-auth-password', with: 'password'
 
         Sidekiq::Testing.fake! do
           click_button 'Mirror repository'
@@ -195,6 +193,15 @@ describe 'Projects > Settings > Repository settings' do
           direction_select.select(direction.capitalize)
         end
       end
+    end
+
+    it 'remote mirror settings has password authentication if project_cleanup feature is unavailable', :js do
+      project.add_maintainer(user)
+      allow(Feature).to receive(:enabled?).with(:project_cleanup, project).and_return(false)
+
+      visit project_settings_repository_path(project)
+
+      expect(page).to have_selector('#js-auth-password')
     end
 
     context 'repository cleanup settings' do
