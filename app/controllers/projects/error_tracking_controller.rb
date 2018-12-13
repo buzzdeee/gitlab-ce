@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 class Projects::ErrorTrackingController < Projects::ApplicationController
-  before_action :check_feature_flag!
+  before_action do
+    :check_feature_flag!
+    push_frontend_feature_flag(:error_tracking)
+  end
 
   def list
   end
