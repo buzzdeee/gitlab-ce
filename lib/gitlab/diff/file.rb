@@ -217,7 +217,7 @@ module Gitlab
       end
 
       def text?
-        !binary?
+        !binary? && !raw_binary?
       end
 
       def external_storage_error?

@@ -2,6 +2,8 @@
 
 module DiffViewer
   class Base
+    include TreeHelper
+
     PARTIAL_PATH_PREFIX = 'projects/diffs/viewers'.freeze
 
     class_attribute :partial_name, :type, :extensions, :file_types, :binary, :switcher_icon, :switcher_title
@@ -82,8 +84,37 @@ module DiffViewer
       end
     end
 
+    def render_error_message
+      return unless render_error
+
+      _("This %{viewer} could not be displayed because %{reason}. You can %{options} instead.") %
+        {
+          viewer: switcher_title,
+          reason: render_error_reason,
+          options: render_error_options.to_sentence(two_words_connector: ' or ', last_word_connector: ', or ')
+        }
+    end
+
     def prepare!
       # To be overridden by subclasses
+    end
+
+    private
+
+    def render_error_options
+      options = []
+
+      blob_url = Rails.application.routes.url_helpers.project_blob_path(diff_file.repository.project,
+                                                                        tree_join(diff_file.content_sha, diff_file.file_path))
+      options << ActionController::Base.helpers.link_to('view the blob', blob_url)
+
+      options
+    end
+
+    def render_error_reason
+      if render_error == :too_large
+        "it is too large"
+      end
     end
   end
 end

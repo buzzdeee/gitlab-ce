@@ -6656,7 +6656,7 @@ msgstr ""
 msgid "Third party offers"
 msgstr ""
 
-msgid "This %{viewer} could not be displayed because %{reason}."
+msgid "This %{viewer} could not be displayed because %{reason}. You can %{options} instead."
 msgstr ""
 
 msgid "This GitLab instance does not provide any shared Runners yet. Instance administrators can register shared Runners in the admin area."
