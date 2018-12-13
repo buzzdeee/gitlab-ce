@@ -3,7 +3,9 @@
 require 'spec_helper'
 
 describe Gitlab::Ci::Config::External::Mapper do
-  let(:project) { create(:project, :repository) }
+  set(:project) { create(:project, :repository) }
+  set(:user) { create(:user) }
+
   let(:file_content) do
     <<~HEREDOC
     image: 'ruby:2.2'
@@ -11,7 +13,7 @@ describe Gitlab::Ci::Config::External::Mapper do
   end
 
   describe '#process' do
-    subject { described_class.new(values, project, '123456').process }
+    subject { described_class.new(values, project: project, sha: '123456', user: user).process }
 
     context "when 'include' keyword is defined as string" do
       context 'when the string is a local file' do

@@ -4,7 +4,15 @@ require 'spec_helper'
 
 describe Gitlab::Ci::Config::External::File::Local do
   let(:project) { create(:project, :repository) }
-  let(:local_file) { described_class.new(location, { project: project, sha: '12345' }) }
+  set(:user) { create(:user) }
+
+  let(:context) { described_class::Context.new(project, '12345', user) }
+  let(:params) { { "file" => location } }
+  let(:local_file) { described_class.new(params, context) }
+
+  before do
+    project.add_developer(user)
+  end
 
   describe '#valid?' do
     context 'when is a valid local path' do

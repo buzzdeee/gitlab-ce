@@ -8,24 +8,26 @@ module Gitlab
           class Base
             include Gitlab::Utils::StrongMemoize
 
-            attr_reader :location, :opts, :errors
+            attr_reader :location, :params, :context, :errors
 
             YAML_WHITELIST_EXTENSION = /.+\.(yml|yaml)$/i.freeze
 
-            def initialize(location, opts = {})
-              @location = location
-              @opts = opts
+            Context = Struct.new(:project, :sha, :user)
+
+            def initialize(params, context)
+              @params = params
+              @context = context
               @errors = []
 
               validate!
             end
 
-            def invalid_extension?
-              !::File.basename(location).match(YAML_WHITELIST_EXTENSION)
+            def has_location?
+              @location.present?
             end
 
-            def matching?
-              !invalid_extension?
+            def invalid_extension?
+              location.nil? || !::File.basename(location).match(YAML_WHITELIST_EXTENSION)
             end
 
             def valid?
@@ -55,7 +57,9 @@ module Gitlab
             end
 
             def validate_location!
-              if invalid_extension?
+              if !has_location?
+                errors.push("Missing location!")
+              elsif invalid_extension?
                 errors.push("Included file `#{location}` does not have YAML extension!")
               end
             end

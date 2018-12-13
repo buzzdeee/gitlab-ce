@@ -8,12 +8,14 @@ module Gitlab
           class Remote < Base
             include Gitlab::Utils::StrongMemoize
 
-            def content
-              strong_memoize(:content) { fetch_remote_content }
+            def initialize(params, context = {})
+              @location = params["remote"]
+
+              super
             end
 
-            def matching?
-              super && ::Gitlab::UrlSanitizer.valid?(location)
+            def content
+              strong_memoize(:content) { fetch_remote_content }
             end
 
             private

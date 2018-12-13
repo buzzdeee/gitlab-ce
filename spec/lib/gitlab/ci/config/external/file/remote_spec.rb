@@ -3,7 +3,12 @@
 require 'spec_helper'
 
 describe Gitlab::Ci::Config::External::File::Remote do
-  let(:remote_file) { described_class.new(location) }
+  set(:project) { create(:project) }
+  set(:user) { create(:user) }
+
+  let(:context) { described_class::Context.new(project, '12345', user) }
+  let(:params) { { "remote" => location } }
+  let(:remote_file) { described_class.new(params, context) }
   let(:location) { 'https://gitlab.com/gitlab-org/gitlab-ce/blob/1234/.gitlab-ci-1.yml' }
   let(:remote_file_content) do
     <<~HEREDOC

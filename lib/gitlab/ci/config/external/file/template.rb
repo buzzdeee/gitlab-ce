@@ -11,12 +11,14 @@ module Gitlab
             PREFIX = '~'.freeze
             SUFFIX = '.gitlab-ci.yml'.freeze
 
-            def content
-              strong_memoize(:content) { fetch_template_content }
+            def initialize(params, context = {})
+              @location = params["template"]
+
+              super
             end
 
-            def matching?
-              super && template_name.present?
+            def content
+              strong_memoize(:content) { fetch_template_content }
             end
 
             private
@@ -30,6 +32,7 @@ module Gitlab
             end
 
             def template_name
+              return unless location
               return unless location.start_with?(PREFIX)
               return unless location.end_with?(SUFFIX)
 

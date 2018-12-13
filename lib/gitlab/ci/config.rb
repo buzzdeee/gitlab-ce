@@ -72,7 +72,7 @@ module Gitlab
 
       def build_config(config, opts = {})
         initial_config = Gitlab::Config::Loader::Yaml.new(config).load!
-        project = opts.fetch(:project, nil)
+        project = opts.fetch(:project)
 
         if project
           process_external_files(initial_config, project, opts)
@@ -83,7 +83,9 @@ module Gitlab
 
       def process_external_files(config, project, opts)
         sha = opts.fetch(:sha) { project.repository.root_ref_sha }
-        Config::External::Processor.new(config, project, sha).perform
+        user = opts.fetch(:user)
+
+        Config::External::Processor.new(config, project: project, sha: sha, user: user).perform
       end
     end
   end
