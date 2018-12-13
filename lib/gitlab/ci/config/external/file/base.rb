@@ -22,8 +22,8 @@ module Gitlab
               validate!
             end
 
-            def has_location?
-              @location.present?
+            def matching?
+              location.present?
             end
 
             def invalid_extension?
@@ -57,9 +57,7 @@ module Gitlab
             end
 
             def validate_location!
-              if !has_location?
-                errors.push("Missing location!")
-              elsif invalid_extension?
+              if invalid_extension?
                 errors.push("Included file `#{location}` does not have YAML extension!")
               end
             end

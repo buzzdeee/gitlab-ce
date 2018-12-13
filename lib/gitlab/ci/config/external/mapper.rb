@@ -53,7 +53,7 @@ module Gitlab
           def find_all_matching(location)
             FILE_CLASSES.map do |file_class|
               file_class.new(location, context)
-            end.select(&:has_location?)
+            end.select(&:matching?)
           end
 
           def select_first_matching(matching)
