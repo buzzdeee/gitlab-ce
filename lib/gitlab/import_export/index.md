@@ -3,7 +3,7 @@
 Based on the [Import/Export 201 presentation available on YouTube](https://www.youtube.com/watch?v=V3i1OfExotE)
 
 - [Troubleshooting commands](#troubleshooting-commands)
-- [Troubleshooting - performance](#troubleshooting---performance)
+- [Troubleshooting - performance](#troubleshooting-performance-issues)
 - [Security](#security)
 - [Versioning](#versioning)
 - [Version history](#version-history)
@@ -24,7 +24,7 @@ grep "Import/Export error" /var/log/gitlab/sidekiq/current
 grep "Import/Export backtrace" /var/log/gitlab/sidekiq/current
 ```
 
-## Troubleshooting - performance
+## Troubleshooting performance issues
 
 ### OOM errors
 
@@ -350,6 +350,7 @@ module Projects
 ```
 
 # Links
+
 [Import/Export documentation](https://docs.gitlab.com/ee/user/project/settings/import_export.html)
 
 [Import/Export admin documentation](https://docs.gitlab.com/ee/administration/raketasks/project_import_export.html)
