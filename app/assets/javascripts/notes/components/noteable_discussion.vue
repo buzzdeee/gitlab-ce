@@ -178,14 +178,29 @@ export default {
         commitId = `<span class="commit-sha">${truncateSha(commitId)}</span>`;
       }
 
-      let text = s__('MergeRequests|started a discussion');
+      const {
+        for_commit: isForCommit,
+        diff_discussion: isDiffDiscussion,
+        active: isActive,
+      } = this.discussion;
 
-      if (this.discussion.for_commit) {
+      let text = s__('MergeRequests|started a discussion');
+      if (isForCommit) {
         text = s__(
           'MergeRequests|started a discussion on commit %{linkStart}%{commitId}%{linkEnd}',
         );
-      } else if (this.discussion.diff_discussion) {
-        if (this.discussion.active) {
+      } else if (isDiffDiscussion && commitId) {
+        if (isActive) {
+          text = s__(
+            'MergeRequests|started a discussion on commit %{linkStart}%{commitId}%{linkEnd}',
+          );
+        } else {
+          text = s__(
+            'MergeRequests|started a discussion on an outdated change in commit %{linkStart}%{commitId}%{linkEnd}',
+          );
+        }
+      } else if (isDiffDiscussion) {
+        if (isActive) {
           text = s__('MergeRequests|started a discussion on %{linkStart}the diff%{linkEnd}');
         } else {
           text = s__(
