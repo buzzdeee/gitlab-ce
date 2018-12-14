@@ -1,8 +1,15 @@
 # Import/Export Development documentation
 
-Based on the [Import/Export 201 presentation available on YouTube](https://www.youtube.com/watch?v=V3i1OfExotE) 
+Based on the [Import/Export 201 presentation available on YouTube](https://www.youtube.com/watch?v=V3i1OfExotE)
 
-## Troubleshooting
+- [Troubleshooting commands](#troubleshooting-commands)
+- [Troubleshooting - performance](#troubleshooting---performance)
+- [Security](#security)
+- [Versioning](#versioning)
+- [Version history](#version-history)
+- [A quick dive into the code](#a-quick-dive-into-the-code) 
+
+## Troubleshooting commands
 
 ```ruby
 # Rails console
@@ -193,7 +200,9 @@ module Gitlab
     VERSION = '0.2.4'
 ```
 
-## Version history <https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/user/project/settings/import_export.md>
+## Version history
+
+[Current version history]((https://gitlab.com/gitlab-org/gitlab-ce/blob/master/doc/user/project/settings/import_export.md))
 
 | GitLab version   | Import/Export version |
 | ---------------- | --------------------- |
