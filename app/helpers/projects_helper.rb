@@ -564,6 +564,7 @@ module ProjectsHelper
       environments
       clusters
       functions
+      error_tracking
       user
       gcp
     ]
