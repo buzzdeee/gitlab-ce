@@ -409,6 +409,18 @@ class MergeRequest < ActiveRecord::Base
     merge_request_diffs.where.not(id: merge_request_diff.id)
   end
 
+  def note_diff_files
+    NoteDiffFile
+      .where(diff_note: notes.diff_notes)
+      .includes(diff_note: :project)
+  end
+
+  def discussions_diffs
+    strong_memoize(:discussions_diffs) do
+      Gitlab::DiscussionsDiff::FileCollection.new(note_diff_files.to_a)
+    end
+  end
+
   def diff_size
     # Calling `merge_request_diff.diffs.real_size` will also perform
     # highlighting, which we don't need here.

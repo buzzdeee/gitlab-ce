@@ -220,6 +220,14 @@ class Projects::MergeRequestsController < Projects::MergeRequests::ApplicationCo
     head :ok
   end
 
+  def discussions
+    merge_request
+      .discussions_diffs
+      .load_highlight(merge_request.note_diff_files.unresolved.to_a)
+
+    super
+  end
+
   protected
 
   alias_method :subscribable_resource, :merge_request
