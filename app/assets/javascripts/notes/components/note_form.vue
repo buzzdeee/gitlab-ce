@@ -226,11 +226,7 @@ export default {
         <button
           :disabled="isDisabled"
           type="button"
-<<<<<<< HEAD
           class="js-vue-issue-save btn btn-success js-comment-button qa-reply-comment-button"
-=======
-          class="js-vue-issue-save btn btn-success js-comment-button"
->>>>>>> master
           @click="handleUpdate();"
         >
           {{ saveButtonTitle }}
