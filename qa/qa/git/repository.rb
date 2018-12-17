@@ -84,6 +84,10 @@ module QA
         run("git push #{uri} #{branch}")
       end
 
+      def merge(branch)
+        run("git merge #{branch}")
+      end
+
       def commits
         run('git log --oneline').split("\n")
       end
