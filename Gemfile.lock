@@ -627,8 +627,6 @@ GEM
       rack
     rack-test (0.6.3)
       rack (>= 1.0)
-    rack-tracer (0.8.0)
-      opentracing (~> 0.4)
     rails (5.0.7)
       actioncable (= 5.0.7)
       actionmailer (= 5.0.7)
@@ -1104,7 +1102,6 @@ DEPENDENCIES
   rack-cors (~> 1.0.0)
   rack-oauth2 (~> 1.2.1)
   rack-proxy (~> 0.6.0)
-  rack-tracer (~> 0.8.0)
   rails (= 5.0.7)
   rails-controller-testing
   rails-deprecated_sanitizer (~> 1.0.3)

@@ -19,8 +19,8 @@ module Gitlab
             nil
           end
         rescue => e
-          # Can't create the tracer? Then we don't use a tracer.
-          Rails.logger.warn("Unable to instantiate logged: #{e}")
+          # Can't create the tracer? Warn and continue sans tracer
+          warn "Unable to instantiate tracer: #{e}"
           nil
         end
       end

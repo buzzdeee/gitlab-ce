@@ -182,28 +182,3 @@ if Gitlab::Metrics.enabled? && !Rails.env.test? && !(Rails.env.development? && d
     prepend TrackNewRedisConnections
   end
 end
-
-if Gitlab::Tracing.enabled?
-  ## Only load opentracing modules if they're required
-  require 'opentracing'
-  require 'rack/tracer'
-
-  tracer = Gitlab::Tracing::Factory.create_tracer(Sidekiq.server? ? "sidekiq" : "rails")
-  if tracer
-    OpenTracing.global_tracer = tracer
-
-    # Extract trace information from incoming requests
-    Gitlab::Application.configure do |config|
-      config.middleware.use(Rack::Tracer)
-    end
-
-    # Instrument Redis calls
-    Gitlab::Tracing::Redis.instrument_client
-
-    # Instrument Rails
-    Gitlab::Tracing::Rails.instrument
-
-    Gitlab::Tracing.configured = true
-    Rails.logger.info("Tracing configured")
-  end
-end

@@ -326,7 +326,6 @@ group :metrics do
   gem 'opentracing', '~> 0.4.3'
   # gem 'zipkin-tracer', '~0.28.0'
   # gem 'rails-tracer', :github => 'iaintshine/ruby-rails-tracer', :branch => 'master'
-  gem 'rack-tracer', '~> 0.8.0'
   gem 'jaeger-client', '~> 0.7.1'
 end
 
