@@ -91,6 +91,12 @@ module QA
           end
         end
 
+        def click_branches
+          within_sidebar do
+            click_link('Branches')
+          end
+        end
+
         def click_repository_settings
           hover_settings do
             within_submenu do
