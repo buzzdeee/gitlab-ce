@@ -32,10 +32,17 @@ module QA
           click_element :comment_button
         end
 
+        def wait_for_ajax
+          Timeout.timeout(Capybara.default_max_wait_time) do
+            loop until page.evaluate_script("jQuery.active").zero?
+          end
+        end
+
+
         def reply_to_discussion(reply_text)
           all_elements(:discussion_reply).last.click
           fill_element :reply_input, reply_text
-          sleep 1
+          wait_for_ajax
           all_elements(:reply_comment_button).last.click
         end
 
