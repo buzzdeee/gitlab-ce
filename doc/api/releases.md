@@ -5,27 +5,29 @@
 A list of the published Releases are available to everyone.
 
 ## List releases
-Paginated list of releases, sorted by `created_at`
+
+Paginated list of releases, sorted by `created_at`.
 
 ```
 GET /projects/:id/releases
 ```
 
 ## Release by tag name
-Get a release for the given tag
+
+Get a release for the given tag.
 
 ```
 GET /projects/:id/release/:tag_name
 ```
 
 ## Create a release
+
 Users with push access to the repository can create a release.
 
 ```
 POST /projects/:id/releases
 ```
 
-### Request Body
 
 |Attribute    |Type         |Required     |Description                              |
 |:------------|:------------|:------------|:----------------------------------------|
@@ -36,8 +38,8 @@ POST /projects/:id/releases
 |`assets`     |object       |yes          |todo      |
 |`assets`     |array        |yes          |Array with assets links                  |
 
+Example request:
 
-#### Post data using JSON content
 ```json
 {
   "name": "Bionic Beaver",
@@ -60,12 +62,14 @@ POST /projects/:id/releases
 ```
 
 ## Update a release
+
 ```
 PUT /projects/:id/release/:tag_name
 ```
 
 ## Delete a release
-Deleting a release will not delete the associated tag
+
+Deleting a release will not delete the associated tag.
 
 ```
 DELETE /projects/:id/release/:tag_name
