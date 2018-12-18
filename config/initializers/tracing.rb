@@ -13,8 +13,30 @@ if Gitlab::Tracing.enabled?
   # Instrument Rails
   Gitlab::Tracing::Rails.instrument
 
+  # Instrument Sidekiq
+  if Sidekiq.server?
+    Sidekiq.configure_server do |config|
+      config.client_middleware do |chain|
+        chain.add Gitlab::Tracing::SidekiqClientMiddleware
+      end
+
+      config.server_middleware do |chain|
+        chain.add Gitlab::Tracing::SidekiqServerMiddleware
+      end
+    end
+  else
+    Sidekiq.configure_client do |config|
+      config.client_middleware do |chain|
+        chain.add Gitlab::Tracing::SidekiqClientMiddleware
+      end
+    end
+  end
+
+  # In multi-processed clustered architectures (puma, unicorn) don't
+  # start tracing until the worker processes are spawned. This works
+  # around issues when the opentracing implementation spawns threads
   Gitlab::Cluster::LifecycleEvents.on_worker_start do
-    tracer = Gitlab::Tracing::Factory.create_tracer(Sidekiq.server? ? "sidekiq" : "rails")
+    tracer = Gitlab::Tracing::Factory.create_tracer(Sidekiq.server? ? 'sidekiq' : 'rails')
     OpenTracing.global_tracer = tracer if tracer
   end
 end

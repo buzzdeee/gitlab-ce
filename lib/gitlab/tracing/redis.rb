@@ -5,6 +5,7 @@ require 'opentracing'
 module Gitlab
   module Tracing
     module Redis
+      include Common
 
       def self.instrument_client
         ::Redis::Client.class_exec do
@@ -15,31 +16,24 @@ module Gitlab
       private
 
       module RedisTracingInstrumented
+        include Common
         def call(*args, &block)
-          span = OpenTracing.start_span("redis.call",
-            tags: {
-              'component':     'redis',
-              'span.kind':     'client',
-              'db.host':       self.host,
-              'db.port':       self.port,
-              'redis.db':      self.db,
-              'redis.command': quantize_redis_arguments(*args)
-            })
+          # For Redis calls, certain systems (Sidekiq in particular) will poll Redis
+          # periodically, outside of a trace scope. In this event, don't trace the
+          # call
+          scope = OpenTracing.scope_manager.active
+          return super(*args, &block) unless scope
 
-          begin
+          start_active_span(operation_name: "redis.call",
+            tags: {
+              component:      'redis',
+              :'span.kind' => 'client',
+              :'db.host' =>   self.host,
+              :'db.port' =>   self.port,
+              :'redis.db' =>  self.db,
+              :'redis.command' => quantize_redis_arguments(*args)
+            }) do |span|
             super(*args, &block)
-          rescue => exception
-            span.set_tag('error', true)
-            span.log_kv(
-              'event':        'error',
-              'error.kind':   exception.class.to_s,
-              'error.object': exception,
-              'message':      exception.message,
-              'stack':        exception.backtrace.join("\n")
-            )
-            raise exception
-          ensure
-            span.finish
           end
         end
 

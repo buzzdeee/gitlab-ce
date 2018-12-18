@@ -321,11 +321,11 @@ group :metrics do
   # Prometheus
   gem 'prometheus-client-mmap', '~> 0.9.4'
   gem 'raindrops', '~> 0.18'
+end
 
+group :tracing do
   # OpenTracing
   gem 'opentracing', '~> 0.4.3'
-  # gem 'zipkin-tracer', '~0.28.0'
-  # gem 'rails-tracer', :github => 'iaintshine/ruby-rails-tracer', :branch => 'master'
   gem 'jaeger-client', '~> 0.7.1'
 end
 

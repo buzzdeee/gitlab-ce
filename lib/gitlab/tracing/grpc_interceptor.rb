@@ -5,6 +5,7 @@ require 'opentracing'
 module Gitlab
   module Tracing
     class GRPCInterceptor < GRPC::ClientInterceptor
+      include Common
       include Singleton
 
       def initialize(tracer: OpenTracing.global_tracer)
@@ -38,33 +39,15 @@ module Gitlab
       private
 
       def wrap_with_tracing(method, grpc_type, metadata)
-        return yield if OpenTracing.active_span == nil
-
-        span = OpenTracing.start_span(method,
+        start_active_span(operation_name: method,
           tags: {
-            'component' => 'gRPC',
-            'span.kind' => 'client',
-            'grpc.method' => method,
-            'grpc.type' => grpc_type,
-          }
-        )
-
-        OpenTracing.inject(span.context, OpenTracing::FORMAT_TEXT_MAP, metadata)
-
-        begin
+            component: 'grpc',
+            :'span.kind' => 'client',
+            :'grpc.method' => method,
+            :'grpc.type' => grpc_type,
+          }) do |span|
+          OpenTracing.inject(span.context, OpenTracing::FORMAT_TEXT_MAP, metadata)
           yield
-        rescue StandardError => e
-          span.set_tag('error', true)
-          span.log_kv(
-            event: 'error',
-            :'error.kind' => e.class.to_s,
-            :'error.object' => e,
-            message: e.message,
-            stack: e.backtrace.join("\n")
-          )
-          raise e
-        ensure
-          span.finish
         end
       end
     end
