@@ -606,22 +606,22 @@ rollout 100%:
 
   # Its own function so that we can isolate IFS
   function create_application_secret() {
-    prefix="K8S_SECRET_"
-    k8s_variables=$(env | (grep "^${prefix}" || [[ $? == 1 ]]))
+    bash -c '
+      prefix="K8S_SECRET_"
+      k8s_variables=$(env | (grep "^${prefix}" || [[ $? == 1 ]]))
+      IFS=$(echo -en "\n\b")
 
-    local IFS=$(echo -en "\n\b")
-    for k8s_variable in $k8s_variables; do
-      param="${k8s_variable#K8S_SECRET_}"
+      for k8s_variable in $k8s_variables; do
+        param="${k8s_variable#K8S_SECRET_}"
 
-      fromLiteralArgs+=("--from-literal")
-      fromLiteralArgs+=("${param}")
-    done
+        fromLiteralArgs+=("--from-literal")
+        fromLiteralArgs+=("${param}")
+      done
 
-    # We want fromLiteralArgs to be interpreted as args, so don't quote it!
-    kubectl create secret -n "$KUBE_NAMESPACE" \
-      generic "$application_secret_name" \
-      ${fromLiteralArgs[@]} \
-      -o yaml --dry-run | kubectl replace -n "$KUBE_NAMESPACE" --force -f -
+      kubectl create secret \
+        -n "$KUBE_NAMESPACE" generic "$APPLICATION_SECRET_NAME" ${fromLiteralArgs[@]} -o yaml \
+        --dry-run | kubectl replace -n "$KUBE_NAMESPACE" --force -f -
+    '
   }
 
   function deploy() {
