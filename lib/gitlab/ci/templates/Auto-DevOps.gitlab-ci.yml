@@ -916,6 +916,7 @@ rollout 100%:
   function delete() {
     track="${1-stable}"
     name="$CI_ENVIRONMENT_SLUG"
+    application_secret_name="${name}-secret"
 
     if [[ "$track" != "stable" ]]; then
       name="$name-$track"
@@ -924,6 +925,8 @@ rollout 100%:
     if [[ -n "$(helm ls -q "^$name$")" ]]; then
       helm delete --purge "$name"
     fi
+
+    kubectl delete secret --ignore-not-found -n "$KUBE_NAMEPSPACE" "$application_secret_name"
   }
 
 before_script:
