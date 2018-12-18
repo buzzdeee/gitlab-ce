@@ -232,6 +232,15 @@
     @extend .d-flex;
     justify-content: space-between;
     align-items: center;
+
+    // Allows the Reveal/Hide button to be centered with
+    // the "Trigger variables" label without expanding the
+    // height of the container, which leads to inconsistent
+    // spacing between the lines in the sidebar.
+    button {
+      margin-top:-5px;
+      margin-bottom:-5px;
+    }
   }
 
   .trigger-build-variables {
