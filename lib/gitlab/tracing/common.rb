@@ -22,11 +22,11 @@ module Gitlab
       rescue StandardError => e
         span.set_tag('error', true)
         span.log_kv(
-          event: 'error',
-          :'error.kind' => e.class.to_s,
+          :event =>          'error',
+          :'error.kind' =>   e.class.to_s,
           :'error.object' => e,
-          message: e.message,
-          stack: e.backtrace.join("\n")
+          :message =>        e.message,
+          :stack =>          e.backtrace.join("\n")
         )
         raise
       ensure
@@ -35,7 +35,7 @@ module Gitlab
 
       def tags_from_job(job, kind)
         {
-          component: 'sidekiq',
+          :component => 'sidekiq',
           :'span.kind' => kind,
           :'sidekiq.queue' => job['queue'],
           :'sidekiq.jid' => job['jid'],

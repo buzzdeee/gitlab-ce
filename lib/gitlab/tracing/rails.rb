@@ -15,15 +15,14 @@ module Gitlab
                                       start_time: start,
                                       end_time: finish,
                                       tags: {
-                                      'component' => 'ActiveRecord',
-                                      'span.kind' => 'client',
-                                      'db.user' => connection_config.fetch(:username, 'unknown'),
-                                      'db.instance' => connection_config.fetch(:database),
-                                      'db.vendor' => connection_config.fetch(:adapter),
-                                      'db.connection_id' => payload.fetch(:connection_id, 'unknown'),
-                                      'db.cached' => payload.fetch(:cached, false),
-                                      'db.statement' => payload.fetch(:sql),
-                                      'db.type' => 'sql'
+                                        :'component' => 'ActiveRecord',
+                                        :'span.kind' => 'client',
+                                        :'db.instance' => connection_config.fetch(:database),
+                                        :'db.vendor' => connection_config.fetch(:adapter),
+                                        :'db.connection_id' => payload.fetch(:connection_id, 'unknown'),
+                                        :'db.cached' => payload.fetch(:cached, false),
+                                        :'db.statement' => payload.fetch(:sql),
+                                        :'db.type' => 'sql'
                                       },
                                       exception: payload[:exception])
         end
@@ -34,10 +33,10 @@ module Gitlab
             start_time:          start,
             end_time:            finish,
             tags: {
-              'component':       'ActionView',
-              'span.kind':       'client',
-              'template.id':     payload.fetch(:identifier),
-              'template.layout': payload.fetch(:layout)
+              :component =>         'ActionView',
+              :'span.kind' =>       'client',
+              :'template.id' =>     payload.fetch(:identifier),
+              :'template.layout' => payload.fetch(:layout)
             },
             exception:           payload[:exception])
         end
@@ -53,11 +52,11 @@ module Gitlab
         if exception
           span.set_tag('error', true)
           span.log_kv(
-            'event':        'error',
-            'error.kind':   exception.class.to_s,
-            'error.object': exception,
-            'message':      exception.message,
-            'stack':        exception.backtrace.join("\n")
+            :event =>          'error',
+            :'error.kind' =>   exception.class.to_s,
+            :'error.object' => exception,
+            :'message' =>      exception.message,
+            :stack =>          exception.backtrace.join("\n")
           )
         end
 
